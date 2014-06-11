@@ -1,0 +1,35 @@
+Generic Project Template for individual projects working with the ISMLL Matrices project.
+
+
+
+=============  Installation ================
+
+Copy 
+	project.properties.sample 
+to
+	project.properties 
+
+and adjust the parameters:
+	libs.ismllmatrices		reference to project downloaded from 
+				svn+ssh://svn.ismll.de/srv/svn/repositories/software/buza/Matrix
+	module.name				some meaningful name
+
+=============  Usage        ================
+
+place additional libraries to ./lib
+
+place scripts to ./scripts
+
+Add them to src/java/META-INF/MANIFEST.MF only by their name.
+
+=============  Building     ================
+
+type 
+	ant all
+to build all source code, build a jar-file out of it, and copy all referenced libraries to
+	./output
+
+type 
+	ant jar
+to only build a library out of this project. It is also placed in
+	./output 

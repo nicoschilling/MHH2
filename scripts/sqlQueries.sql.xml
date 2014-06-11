@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE queries [
+<!ENTITY xs "http://www.w3.org/2001/XMLSchema#" >
+    
+<!ENTITY DELIMITER "_">
+]>
+
+<queries xmlns="http://ismll.uni-hildesheim.de/xmedia/sparql"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://ismll.uni-hildesheim.de/xmedia/sparql file:sparqlRepository.xsd">
+
+	<query id="kombis">
+	<implementation>
+		select
+		
+		proband
+		, split
+		, max(accuracy) accuracy
+		, count(*)
+		
+		from 
+		iter
+		
+		group by proband, split
+		order by proband, split
+		
+	</implementation>
+	</query>
+
+	<query id="best_result">
+	<implementation>
+
+		select
+		run_id
+		from
+		iter
+		where
+		proband=%1$s
+		and
+		split=%2$s
+		and 
+		accuracy>=%3$s
+		and
+		run_id>0
+		order by iteration_nr
+		limit 1
+
+	</implementation>
+	</query>
+	
+</queries>
