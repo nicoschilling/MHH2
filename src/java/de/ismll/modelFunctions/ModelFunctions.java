@@ -10,6 +10,12 @@ import de.ismll.table.Vector;
 
 public abstract class ModelFunctions {
 	
+	public void initialize(float[] functionParameters) {
+		log.fatal("The given model function cannot initialize itself!");
+	}
+	
+	
+
 	// every model function has its own form of parameters that are learned... they will be stored in the function class 
 	
 	// every model function should implement some SGD method on data given a multiplier that will be computed depending on the loss

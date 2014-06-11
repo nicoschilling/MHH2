@@ -27,6 +27,7 @@ import de.ismll.mhh.featureExtractors.UpperMiddleExtractor;
 import de.ismll.mhh.io.Parser;
 import de.ismll.mhh.io.DataInterpretation;
 import de.ismll.mhh.io.SwallowData;
+import de.ismll.modelFunctions.FmModel;
 import de.ismll.modelFunctions.LinearRegressionPrediction;
 import de.ismll.modelFunctions.ModelFunctions;
 import de.ismll.processing.Normalizer;
@@ -66,8 +67,7 @@ public class AlgorithmController  implements Runnable{
 	 * number of leading meta columns
 	 */
 	public static final int NUM_META_COLUMNS = META_COLUMNS.length;
-
-
+	
 	@Parameter(cmdline="applyFolder" , description="the folder to apply a learned model on")
 	public String applyFolder;
 
@@ -95,8 +95,7 @@ public class AlgorithmController  implements Runnable{
 	@Parameter(cmdline="maxIterations", description="number of maximum iterations for train() Method")
 	public int maxIterations = 1000;
 
-	@Parameter(cmdline="stepSize", description="Hyperparameter: constant stepSize for gradient based optimization methods")
-	public float stepSize = 0.001f;
+	
 
 	@Parameter(cmdline="batchSize", description="Hyperparameter: number of instances used to compute a gradient, i.e. 1 -> stochastic  trainInstances -> full")
 	public int batchSize = 0;
@@ -109,12 +108,9 @@ public class AlgorithmController  implements Runnable{
 
 	@Parameter(cmdline="smoothReg" , description="Parameter, that specifies the influence of the Laplacian regularization")
 	private float smoothReg;
-
-	@Parameter(cmdline="lambda" , description="Hyperparameter: regularization constant in front of L2 regularizer, measures how strong regularization should be.")
-	public float lambda = 0.01f;
-
+	
 	@Parameter(cmdline="descentDirection" , description="Abstract Class. Input a String that specifies the loss function, e.g. \"logisticLoss\".")
-	public LossFunction descentDirection;
+	public LossFunction lossFunction;
 
 	@Parameter(cmdline="useValidation" , description="specifies, if validation is used (true) or test (false).")
 	public boolean useValidation;
@@ -145,7 +141,46 @@ public class AlgorithmController  implements Runnable{
 
 	@Parameter(cmdline="annotationBaseDir")
 	private String annotationBaseDir;
+	
+	@Parameter(cmdline="splitNumber")
+	private int splitNumber;
 
+	@Parameter(cmdline="probandNumber")
+	private int probandNumber;
+	
+	
+	// Generelle Hyperparameter
+	
+	@Parameter(cmdline="stepSize", description="Hyperparameter: constant stepSize for gradient based optimization methods")
+	public float stepSize = 0.001f;
+	
+	@Parameter(cmdline="reg0" , description="Hyperparameter: regularization constant in front of L2 regularizer, measures how strong regularization should be.")
+	public float reg0 = 0.01f;
+	
+	@Parameter(cmdline="stDev", description="Hyperparameter: Standard Deviation of the Gaussian where parameters are initialized")
+	private float stDev = 1;
+	
+
+	// Modellparameter:
+	
+	@Parameter(cmdline="fm_regV", description="Hyperparameter: Specifies the regularization of the V Vector of a Factorization Machine")
+	private float fm_regV;
+	
+	@Parameter(cmdline="fm_regW", description="Hyperparameter: Specifies the regularization of the W Matrix of a Factorization Machine")
+	private float fm_regW;
+	
+	@Parameter(cmdline="fm_numFactors", description="Hyperparameter: Specifies the size of the W Matrix of a Factorization Machine, i.e. the number of latent features")
+	private int fm_numFactors;
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	public String outputFolder;
 
 
@@ -171,400 +206,11 @@ public class AlgorithmController  implements Runnable{
 
 
 
-
-
-
-	// DOES NOT WORK AS PMAX IS COMPUTED INSTEAD OF READ FROM ANNOTATIONS
-	public void buildDataforSVMStruct() throws ModelApplicationException {
-
-		System.out.println(readSplit.splitFolder);
-
-		int proband = 11;
-		String type = "Inter";
-		int nrSplits = 10;
-
-		for (int split = 1; split <= nrSplits ; split++) {
-			this.readSplit  = new ReadSplit(new File("/home/nico/acogpr/Splits/"+type+"Proband/Proband"+proband+"/split-" + split) );
-
-			System.out.println(readSplit.splitFolder);
-
-			log.info("Converting data for " + readSplit.splitFolder);
-			readSplit.run();
-
-			if (columnSelector.getUsedIndexes() == null) {
-				log.warn("Column Selector not yet used!");
-			}
-
-			log.info("Raw Data Object will be built with " + readSplit.trainFolders.length + " Training Swallows, "
-					+ "with " + readSplit.testFolders.length + " Test Swallows, and with " + readSplit.validationFolders.length 
-					+" Validation Swallows!");
-
-			rawData = new MhhRawData(readSplit.testFolders.length,
-					readSplit.validationFolders.length, readSplit.trainFolders.length);
-
-			sample2Labels = new MhhEval(readSplit.testFolders.length,
-					readSplit.validationFolders.length, readSplit.trainFolders.length);
-
-			// TRAIN!
-
-			for(int i = 0; i < readSplit.trainFolders.length; i ++) {
-				log.info("Training data ... " + readSplit.trainFolders[i].getSwallowId());
-				DataInterpretation folder = readSplit.trainFolders[i];
-
-				int annotation = getAnnotation(folder);
-
-				SwallowDS d = preprocessSwallow(folder, annotation, -1, skipLeading, skipBetween);
-				rawData.trainData[i]=d.data;
-				rawData.trainDataLabels[i]=d.labels;
-
-				for (int row = 0; row < d.data.getNumRows() ; row++) {
-					rawData.trainData[i].set(row, COL_SWALLOW_IDX, i);
-				}
-
-				Matrix[] sampletoLabels = createSample2Labels(d.data);
-
-				sample2Labels.predictedTrainLabels[i] = sampletoLabels[0];
-				sample2Labels.avgTrainLabels[i] = sampletoLabels[1];
-			}
-
-			// VALIDATION
-
-			for(int i = 0; i < readSplit.validationFolders.length; i ++) {
-				log.info("Validation data ... " + readSplit.validationFolders[i].getSwallowId());
-				DataInterpretation folder = readSplit.validationFolders[i];
-
-				int annotation = getAnnotation(folder);
-
-				SwallowDS d = preprocessSwallow(folder, annotation, -1, skipLeading, skipBetween);
-				rawData.validationData[i]=d.data;
-				rawData.validationDataLabels[i]=d.labels;
-
-				for (int row = 0; row < d.data.getNumRows() ; row++) {
-					rawData.validationData[i].set(row, COL_SWALLOW_IDX, i);
-				}
-
-				Matrix[] sampletoLabels = createSample2Labels(d.data);
-
-				sample2Labels.predictedValidationLabels[i] = sampletoLabels[0];
-				sample2Labels.avgValidationLabels[i] = sampletoLabels[1];
-			}
-
-			// TEST
-
-			for(int i = 0; i < readSplit.testFolders.length; i ++) {
-				log.info("Test data ... " + readSplit.testFolders[i].getSwallowId());
-				DataInterpretation folder = readSplit.testFolders[i];
-
-				int annotation = getAnnotation(folder);
-
-				SwallowDS d = preprocessTestSwallow(folder, annotation, -1 , skipLeading, skipBetween);
-				rawData.testData[i]=d.data;
-				rawData.testDataLabels[i]=d.labels;
-				rawData.testRuhedruck[i]=d.ruheDruck;
-				rawData.testRuhedruckLabels[i]=d.ruheDruckLabels;
-
-				// Wird nicht gebraucht da immer nur ein TestSwallow!!! 
-
-				//				for (int row = 0; row < d.data.getNumRows() ; row++) {
-				//					rawData.testData[i].set(row, COL_SWALLOW_IDX, i);
-				//				}
-
-				Matrix[] sampletoLabels = createSample2Labels(d.data);
-
-				sample2Labels.predictedTestLabels[i] = sampletoLabels[0];
-				sample2Labels.avgTestLabels[i] = sampletoLabels[1];
-
-			}
-
-			data.testData = new RowUnionMatrixView(rawData.testData);
-			data.trainData = new RowUnionMatrixView(rawData.trainData);
-			data.validationData = new RowUnionMatrixView(rawData.validationData);
-			data.testDataLabels = new RowUnionMatrixView(rawData.testDataLabels);
-			data.trainDataLabels = new RowUnionMatrixView(rawData.trainDataLabels);
-			data.validationDataLabels = new RowUnionMatrixView(rawData.validationDataLabels);
-
-			Matrix trainFull;
-			Matrix testFull;
-			Matrix validationFull;
-
-			Matrix testData = new DefaultMatrix(data.testData);
-			Matrix testLabels = new DefaultMatrix(data.testDataLabels);
-
-			Matrix trainData = new DefaultMatrix(data.trainData);
-			Matrix trainLabels = new DefaultMatrix(data.trainDataLabels);
-
-			Matrix validationData = new DefaultMatrix(data.validationData);
-			Matrix validationLabels = new DefaultMatrix(data.validationDataLabels);
-
-			for (int j = 0 ; j < testLabels.getNumRows() ; j++) {
-
-				if (testLabels.get(j, COL_LABEL_IN_LABELS) == -1) {
-					testLabels.set(j, COL_LABEL_IN_LABELS, 2);
-				}
-			}
-
-			for (int j = 0 ; j < trainLabels.getNumRows() ; j++) {
-				if (trainLabels.get(j, COL_LABEL_IN_LABELS) == -1) {
-					trainLabels.set(j, COL_LABEL_IN_LABELS, 2);
-				}
-			}
-
-			for (int j = 0 ; j < validationLabels.getNumRows() ; j++) {
-				if (validationLabels.get(j, COL_LABEL_IN_LABELS) == -1) {
-					validationLabels.set(j, COL_LABEL_IN_LABELS, 2);
-				}
-			}
-
-			log.info("-1 Labels have been set to the value 2");
-
-			this.columnSelector = new IntRange("33,166");
-
-
-
-			testFull = new ColumnUnionMatrixView(
-					new Matrix[] {
-							new VectorAsMatrixView(Matrices.col(testLabels, COL_LABEL_IN_LABELS)),
-							new VectorAsMatrixView(Matrices.col(testData, COL_SWALLOW_IDX)),
-							preprocess(testData, columnSelector),
-							new VectorAsMatrixView(Matrices.col(testData, COL_REL_SAMPLE_IDX))
-					});
-
-			trainFull = new ColumnUnionMatrixView(
-					new Matrix[] {
-							new VectorAsMatrixView(Matrices.col(trainLabels, COL_LABEL_IN_LABELS)),
-							new VectorAsMatrixView(Matrices.col(trainData, COL_SWALLOW_IDX)),
-							preprocess(trainData, columnSelector),
-							new VectorAsMatrixView(Matrices.col(trainData, COL_REL_SAMPLE_IDX))
-					});
-			validationFull = new ColumnUnionMatrixView(
-					new Matrix[] {
-							new VectorAsMatrixView(Matrices.col(validationLabels, COL_LABEL_IN_LABELS)),
-							new VectorAsMatrixView(Matrices.col(validationData, COL_SWALLOW_IDX)),
-							preprocess(validationData, columnSelector),
-							new VectorAsMatrixView(Matrices.col(validationData, COL_REL_SAMPLE_IDX))
-
-					});
-
-
-			// for test first
-
-			try {
-				FileOutputStream testStream = new FileOutputStream(new File(readSplit.splitFolder.getAbsolutePath()
-						+ "/test-P"+proband+"-split"+split+".data"));
-
-				for (int i = 0; i < testFull.getNumRows() ; i++ ) {
-					String line = "";
-					for (int k = 0; k < testFull.getNumColumns(); k++) {
-						if (k == 0) {
-							line = line + testFull.get(i, k) + " ";  //gets the label
-						}
-						else if (k == 1) {
-							line = line + "qid:" + (int) (testFull.get(i, k)) + " "; //gets the swallowIDx
-						}
-						else if (k == testFull.getNumColumns() - 1) {
-							line = line + "# " + testFull.get(i, k) + "\n"; //gets the rel Sample as comment 
-						}
-						else {
-							line = line + (k-1) + ":" + testFull.get(i, k) + " "; //gets data
-						}
-					}
-					testStream.write(line.getBytes());
-				}
-				testStream.flush();
-				testStream.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} 
-
-			log.info("TestData has been successfully written!");
-
-			try {
-				FileOutputStream trainStream = new FileOutputStream((new File(readSplit.splitFolder.getAbsolutePath()
-						+ "/train-P"+proband+"-split"+split+".data")));
-
-				for (int i = 0; i < trainFull.getNumRows() ; i++ ) {
-					String line = "";
-					for (int k = 0; k < trainFull.getNumColumns(); k++) {
-						if (k == 0) {
-							line = line + trainFull.get(i, k) + " "; //gets the label
-						}
-						else if (k == 1) {
-							line = line + "qid:" + (int) (trainFull.get(i, k)) + " "; //gets the swallowIDx
-						}
-						else if (k == trainFull.getNumColumns() - 1) {
-							line = line + "# " + trainFull.get(i, k) + "\n"; //gets the rel Sample as comment 
-						}
-						else {
-							line = line + (k-1) + ":" + trainFull.get(i, k) + " "; //gets data
-						}
-					}
-					trainStream.write(line.getBytes());
-				}
-				trainStream.flush();
-				trainStream.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} 
-			log.info("TrainData has been successfully written!");
-
-			try {
-				FileOutputStream validationStream = new FileOutputStream((new File(readSplit.splitFolder.getAbsolutePath()
-						+ "/validation-P"+proband+"-split"+split+".data")));
-
-				for (int i = 0; i < validationFull.getNumRows() ; i++ ) {
-					String line = "";
-					for (int k = 0; k < validationFull.getNumColumns(); k++) {
-						if (k == 0) {
-							line = line + validationFull.get(i, k) + " "; //gets the label
-						}
-						else if (k == 1) {
-							line = line + "qid:" + (int) (validationFull.get(i, k)) + " "; //gets the swallowIDx
-						} 
-						else if (k == validationFull.getNumColumns() - 1) {
-							line = line + "# " + validationFull.get(i, k) + "\n"; //gets the rel Sample as comment 
-						}
-						else {
-							line = line + (k-1) + ":" + validationFull.get(i, k) + " "; //gets data
-						}
-					}
-					validationStream.write(line.getBytes());
-				}
-				validationStream.flush();
-				validationStream.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} 
-			log.info("ValidationData has been successfully written!");
-
-			log.info("Data for Split " + split +" by Proband " + proband +" has been successfully written!" );
-
-
-		}
-
-
-
-		//		this.columnSelector = new IntRange()
-
-		log.info("Data has been built successfully!!!!");
-	}
-
-	/**
-	 * Method that reads parameters and data and then predicts annotation and computes Accuracy and the likes.
-	 * @throws ModelApplicationException 
-	 */
-	public void apply() throws ModelApplicationException {
-
-		this.modelFunction = new LinearRegressionPrediction();
-
-		this.columnSelector = new IntRange("5,159");
-
-		Matrix[] swallowData;
-		Matrix[] swallowLabels;
-		Matrix[] predictedLabels;
-		Matrix[] avgLabels;
-
-		DataInterpretation swallowFolder = new DataInterpretation();
-
-		swallowFolder.setDataInterpretation(new File(applyFolder));
-
-		swallowFolder.run();
-
-		log.info("Apply Data is Swallow  " + swallowFolder.getSwallowId() + "  by Proband  " + swallowFolder.getProband() );
-
-		int annotation = getAnnotation(swallowFolder);
-		annotation = annotation - swallowFolder.getFirstSample();
-		int[] trueAnnotations = new int[] {annotation};
-
-		SwallowDS d = preprocessSwallow(swallowFolder, annotation, -1 , skipLeading, skipBetween);
-
-
-		swallowData = new Matrix[]{ d.data };
-		swallowLabels = new Matrix[] {d.labels};
-
-
-
-		Matrix[] sampletoLabels = createSample2Labels(swallowData[0]);  // always 1 since we only predict for one swallow
-
-		predictedLabels = new Matrix[] {sampletoLabels[0]};
-		avgLabels = new Matrix[] {sampletoLabels[1]};
-
-		Accuracy acc = new Accuracy();
-
-		predictLabels(swallowData, predictedLabels);
-
-		computeSample2avgLabel(windowExtent, predictedLabels, avgLabels);
-
-
-		int[] swallowAnnotations = predictAnnotations(avgLabels);
-
-
-		float accuracy = acc.evaluate(Vectors.col(avgLabels[0], COL_LABEL_IN_SAMPLE2LABEL), 
-				Vectors.col(swallowLabels[0], COL_LABEL_IN_LABELS));
-
-		predictions = Vectors.col(avgLabels[0], COL_LABEL_IN_SAMPLE2LABEL);
-
-		String writePath;
-
-		writePath = outputFolder + "/P" + swallowFolder.getProband() + "/Schluck" + swallowFolder.getSwallowId();
-
-		File directory = new File(writePath);
-		directory.mkdirs();
-
-		try {
-			IntVectors.write( DefaultIntVector.wrap(swallowAnnotations), new File(writePath+"/predictedAnnotation" ), false);
-			IntVectors.write( DefaultIntVector.wrap(trueAnnotations), new File(writePath+"/trueAnnotation" ), false);
-			//Schreibe Sample2AvgLabels
-			Matrices.write(new ColumnSubsetMatrixView(avgLabels[0], new int[] { COL_REL_SAMPLE_IDX, COL_LABEL_IN_SAMPLE2LABEL}),
-					new File(writePath +"/sample2avgLabels"), false);
-			//Schreibe Sample2predictedLabels
-			Matrices.write(new ColumnSubsetMatrixView(predictedLabels[0], new int[] { COL_REL_SAMPLE_IDX, COL_LABEL_IN_SAMPLE2LABEL}),
-					new File(writePath+"/sample2predictedLabels"), false);
-
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		System.out.println("Everything successfull!");
-
-	}
-
-	@Parameter(cmdline="splitNumber")
-	private int splitNumber;
-
-	@Parameter(cmdline="probandNumber")
-	private int probandNumber;
-
 	@Override
 	public void run() {
+			
 		log.info("Working on " + readSplit.getSplitFolder());
 		readSplit.run();
-
-		// Stuff for saving in the end Ist aber mittlerweile stale, weil alles in DB geht...
-
-
-//		String splitPath = readSplit.getSplitFolder().getAbsolutePath();
-//		String[] splits = splitPath.split("split-");
-
-		
-//		int probandNumber = 0;
-
-//		try {
-//			String probandPath = readSplit.getSplitFolder().getParent();
-//			String[] probandSplit = probandPath.split("Proband");
-//			probandNumber = Integer.parseInt(probandSplit[1]);
-//		}
-//		catch (IndexOutOfBoundsException e) 
-//		{
-//			e.printStackTrace();
-//		}
-
-
-
 
 		try {
 			// Initialize Database
@@ -723,7 +369,7 @@ public class AlgorithmController  implements Runnable{
 		// Save current Run in Database
 		if (laplacian) {
 			try {
-				runKey = database.addRunLaplacian(lambda, stepSize, windowExtent,
+				runKey = database.addRunLaplacian(reg0, stepSize, windowExtent,
 						batchSize, readSplit.getSplitFolder().getAbsolutePath(), smoothReg, smoothWindow);
 			} catch (DataStoreException e1) {
 				// TODO Auto-generated catch block
@@ -732,45 +378,67 @@ public class AlgorithmController  implements Runnable{
 		}
 		else {
 			try {
-				runKey = database.addRun(lambda, stepSize, windowExtent,
+				runKey = database.addRun(reg0, stepSize, windowExtent,
 						batchSize, readSplit.getSplitFolder().getAbsolutePath());
 			} catch (DataStoreException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 		}
+		
+		// Initialize ModelFunction
+		
+		if (modelFunction.getClass() == FmModel.class) {
+			modelFunction
+		}
+		else if (modelFunction.getClass() == LinearRegressionPrediction.class) {
+			
+		}
+		else { log.fatal("Class of the model Function could not be parsed!"); }
+		
+		
+		
+		
+		// Initialize LossFunction
+		
+		
 
 		// Algorithm Objekt initialisieren
 		Algorithm algorithm = new Algorithm();
 
-		// Parameter an den Algorithmus übergeben		
+		// Parameter an den Algorithmus übergeben	
+		
+		// Datensatz
 		setDatasets(algorithm);
-
-		algorithm.setSplitNumber(splitNumber);
-		algorithm.setProbandNumber(probandNumber);
-
-		algorithm.setValidationFolders(readSplit.validationFolders);
-
-		algorithm.setColumnSelector(columnSelector);
-
+		
+		// Unabhängige Parameter
 		algorithm.setMaxIterations(maxIterations);
-		algorithm.setStepSize(stepSize);
 		algorithm.setBatchSize(batchSize);
-		algorithm.setLambda(lambda);
-		algorithm.setLaplacian(laplacian);
 		algorithm.setWindowExtent(windowExtent);
-		algorithm.setSmoothReg(smoothReg);
-		algorithm.setSmoothWindow(smoothWindow);
-		algorithm.setModelFunction(modelFunction);
-		algorithm.setLossFunction(descentDirection);
-		algorithm.lossFunction.setLambda(lambda);
-		algorithm.lossFunction.setLearnRate(stepSize);
-
+		algorithm.setColumnSelector(columnSelector);
+		
 		algorithm.setAnnotationBaseDir(annotationBaseDir);
 		algorithm.setAnnotator(annotator);
-
 		algorithm.setDatabase(database);
 		algorithm.setRunKey(runKey);
+		algorithm.setSplitNumber(splitNumber);
+		algorithm.setProbandNumber(probandNumber);
+		algorithm.setValidationFolders(readSplit.validationFolders);
+		
+		
+		algorithm.setModelFunction(modelFunction);
+		
+		
+		algorithm.setLossFunction(lossFunction);
+//		algorithm.setLaplacian(laplacian);	
+//		algorithm.setSmoothReg(smoothReg);
+//		algorithm.setSmoothWindow(smoothWindow);
+//		algorithm.setStepSize(stepSize);
+		
+
+		
+
+		
 
 		algorithm.run(); 
 
@@ -1834,12 +1502,12 @@ public class AlgorithmController  implements Runnable{
 		this.laplacian = laplacian;
 	}
 
-	public float getLambda() {
-		return lambda;
+	public float getReg0() {
+		return reg0;
 	}
 
-	public void setLambda(float lambda) {
-		this.lambda = lambda;
+	public void setReg0(float lambda) {
+		this.reg0 = lambda;
 	}
 
 	public boolean isUseValidation() {
@@ -1858,12 +1526,12 @@ public class AlgorithmController  implements Runnable{
 		this.finalParameters = finalParameters;
 	}
 
-	public LossFunction getDescentDirection() {
-		return descentDirection;
+	public LossFunction getLossFunction() {
+		return lossFunction;
 	}
 
-	public void setDescentDirection(LossFunction descentDirection) {
-		this.descentDirection = descentDirection;
+	public void setLossFunction(LossFunction descentDirection) {
+		this.lossFunction = descentDirection;
 	}
 
 	public ModelFunctions getModelFunction() {
@@ -2028,6 +1696,46 @@ public class AlgorithmController  implements Runnable{
 
 	public void setProbandNumber(int probandNumber) {
 		this.probandNumber = probandNumber;
+	}
+
+	public String getModelString() {
+		return modelString;
+	}
+
+	public void setModelString(String modelString) {
+		this.modelString = modelString;
+	}
+
+	public float getStDev() {
+		return stDev;
+	}
+
+	public void setStDev(float stDev) {
+		this.stDev = stDev;
+	}
+
+	public float getFm_regV() {
+		return fm_regV;
+	}
+
+	public void setFm_regV(float fm_regV) {
+		this.fm_regV = fm_regV;
+	}
+
+	public float getFm_regW() {
+		return fm_regW;
+	}
+
+	public void setFm_regW(float fm_regW) {
+		this.fm_regW = fm_regW;
+	}
+
+	public int getFm_numFactors() {
+		return fm_numFactors;
+	}
+
+	public void setFm_numFactors(int fm_numFactors) {
+		this.fm_numFactors = fm_numFactors;
 	}
 
 

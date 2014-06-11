@@ -63,10 +63,11 @@ public class Algorithm implements Runnable{
 
 	private String forWhat = "accuracy";
 
-	private Vector finalParameters;
+
 	private float bestAccuracySoFar = 0;
-	private float bestSampleDifference = 9999;
-	public float[] finalParametersArray;
+	private float bestSampleDifference = Integer.MAX_VALUE;
+	
+	
 	private Database database;
 	private long runKey;
 
@@ -86,16 +87,11 @@ public class Algorithm implements Runnable{
 
 	@Override 
 	public void run() {
-		if (trainData.length == trainDataLabels.length) {
-			log.info("Train Data and Train Labels have the same length, will continue... ");
-		}
-		else {
+		if (trainData.length != trainDataLabels.length) {
 			log.fatal("Train Data and Train Labels have not the same length!!");
 		}
 		
-//		System.out.println(trainData[0].length);
-		
-		// Intialize parameters
+		// Intialize model function parameters depending on datasize and hyperparameters
 		
 		float[] parameters = initializeParameters(trainData); // TODO
 

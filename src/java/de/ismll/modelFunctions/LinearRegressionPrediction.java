@@ -1,6 +1,7 @@
 package de.ismll.modelFunctions;
 
 import java.util.Random;
+import java.util.StringTokenizer;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -24,6 +25,32 @@ public class LinearRegressionPrediction extends ModelFunctions {
 	private float reg0;
 	
 	private float bias;
+	
+	
+	public void initialize(int nrAttributes, float stDev, float reg0) {
+		Random random = new Random();
+		bias = (float) (random.nextGaussian()*stDev);
+		this.parameters = new float[nrAttributes];
+		for (int i = 0; i < parameters.length ; i++) {
+			parameters[i] = (float) (random.nextGaussian()*stDev);
+		}
+		
+		this.reg0 = reg0;
+	}
+	
+	@Override
+	public void initialize(float[] functionParameters) {
+		if(functionParameters.length != 3) {
+			log.fatal("Function Parameters are not set correctly for initialization!");
+		}
+		
+		int nrAttributes = (int) functionParameters[0];
+		float stDev = functionParameters[1];
+		float reg0 = functionParameters[2];
+		
+		initialize(nrAttributes, stDev, reg0);
+	}
+	
 	
 	
 	private Logger logger = LogManager.getLogger(getClass());

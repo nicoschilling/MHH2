@@ -19,7 +19,7 @@ import de.ismll.table.projections.VectorAsMatrixView;
 
 public class FmModel extends ModelFunctions {
 
-	public float w0;
+	public float bias;
 	public Vector w;
 	public Matrix v;
 
@@ -57,6 +57,50 @@ public class FmModel extends ModelFunctions {
 	private float minTarget;
 
 	private TIntIntHashMap newAttributeIds;
+	
+	
+	public void initialize(int nrAttributes, float stDev, int nrFactors, float reg0, float regV, float regW ) {
+		
+		// Initialize Parameters
+		
+		this.w = new DefaultVector(nrAttributes);
+		this.v = new DefaultMatrix(nrAttributes, nrFactors);
+
+		Random random = new Random();
+		setBias((float) (random.nextGaussian()*stDev));
+		
+		this.w = new DefaultVector(getNumAttributes());
+		for (int i = 0; i < w.size() ; i++) {
+			this.w.set(i, (float) ( random.nextGaussian()*init_stdev) );
+		}
+		v = new DefaultMatrix(getNumAttributes(), getNumFactor());
+		for (int i = 0; i < v.getNumRows() ; i++) {
+			for (int j = 0; j < v.getNumColumns() ; j++) {
+				this.v.set(i, j, (float) ( random.nextGaussian()*init_stdev));
+			}
+		}
+		
+		this.reg0 = reg0;
+		this.regV = regV;
+		this.regW = regW;
+	}
+	
+	
+	@Override
+	public void initialize(float[] functionParameters) {
+		if(functionParameters.length != 6) {
+			log.fatal("Function Parameters are not set correctly for initialization!");
+		}
+		
+		int nrAttributes = (int) functionParameters[0];
+		float stDev = functionParameters[1];
+		int nrFactors = (int) functionParameters[2];
+		float reg0 = functionParameters[3];
+		float regV = functionParameters[4];
+		float regW = functionParameters[5];
+		
+		initialize(nrAttributes, stDev, nrFactors, reg0, regV, regW);
+	}
 
 
 	public void debug() {
@@ -71,23 +115,7 @@ public class FmModel extends ModelFunctions {
 	}
 
 	public void initializeModel(int nrAttributes) {
-		this.w = new DefaultVector(nrAttributes);
-		this.v = new DefaultMatrix(nrAttributes, this.getNumFactor());
-
-		Random random = new Random();
-		//		random.setSeed(1);
-		setW0(0);
-		this.w = new DefaultVector(getNumAttributes());
-		for (int i = 0; i < w.size() ; i++) {
-			//this.w.set(i, (float) (init_mean + random.nextGaussian()*init_stdev) );
-			this.w.set(i, 0);
-		}
-		v = new DefaultMatrix(getNumAttributes(), getNumFactor());
-		for (int i = 0; i < v.getNumRows() ; i++) {
-			for (int j = 0; j < v.getNumColumns() ; j++) {
-				this.v.set(i, j, (float) (init_mean + random.nextGaussian()*init_stdev));
-			}
-		}
+		
 	}
 
 	public void printLatentFeatures() {
@@ -123,19 +151,6 @@ public class FmModel extends ModelFunctions {
 	}
 
 
-
-
-
-
-	//	public void setTaskAndLoss(String task, String loss) {
-	//
-	//		if (task.equals("r")) { setTask(REGRESSION_TASK); }
-	//		else if (task.equals("c")) { setTask(CLASSIFICATION_TASK) ; }
-	//		else if (task.equals("rank")) {setTask(RANKING_TASK); }
-	//
-	//		if (loss.equals("lsq")) { setLoss(LEAST_SQUARES_LOSS); }	
-	//		else if (loss.equals("bpr")) {setLoss(BPR_LOSS); }
-	//	}
 
 	public float convertPrediction(float in) {
 		if (this.task == REGRESSION_TASK) {
@@ -240,7 +255,7 @@ public class FmModel extends ModelFunctions {
 		float result = 0;
 		int[] keys = tIntFloatHashMap.keys();
 		if (useW0) {
-			result += getW0();
+			result += getBias();
 		}
 		if (useW) {
 			for (int ind = 0; ind < keys.length ; ind++) {
@@ -352,12 +367,12 @@ public class FmModel extends ModelFunctions {
 	@Override
 	public void SGD(TIntFloatHashMap x, float multiplier, float learnRate) {
 		if (this.isUseW0()) {
-			float updated = this.w0 - learnRate *( multiplier + this.getReg0()*this.w0);
+			float updated = this.bias - learnRate *( multiplier + this.getReg0()*this.bias);
 			if (Float.isNaN(updated) || Float.isInfinite(updated)) {
 				System.out.println("Update of Bias is about to be NaN...");
 				System.exit(1);
 			}
-			this.setW0(updated);
+			this.setBias(updated);
 		}
 		if (this.isUseW()) {	
 			int[] keys = x.keys();	
@@ -412,11 +427,11 @@ public class FmModel extends ModelFunctions {
 
 
 
-	public float getW0() {
-		return w0;
+	public float getBias() {
+		return bias;
 	}
-	public void setW0(float w0) {
-		this.w0 = w0;
+	public void setBias(float w0) {
+		this.bias = w0;
 	}
 	public Vector getW() {
 		return w;
