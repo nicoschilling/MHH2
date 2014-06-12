@@ -14,6 +14,7 @@ import de.ismll.exceptions.ModelApplicationException;
 import de.ismll.lossFunctions.LossFunction;
 import de.ismll.mhh.io.DataInterpretation;
 import de.ismll.mhh.io.SwallowData;
+import de.ismll.modelFunctions.LinearRegressionPrediction;
 import de.ismll.modelFunctions.ModelFunctions;
 import de.ismll.table.Matrices;
 import de.ismll.table.Matrix;
@@ -46,17 +47,10 @@ public class Algorithm implements Runnable{
 	private static final int COL_SAMPLE_IN_LABELS = 0;
 	private static final int COL_LABEL_IN_LABELS = 1;
 
-	// Values for randomly initializing the parameters
-	private float variance = 1;
-	private float expectationValue = 0;
-	private Random random = new Random(0);
 
-	private float[][] trainData;
-	private float[] trainDataLabels;
-	private float[][] trainInstanceWeights;
-	
-	private float[][] holdData;
-	private float[] holdDataLabels;
+
+	private MhhDataset data;
+	private MhhRawData rawData;
 	
 
 	private DataInterpretation[] validationFolders;
@@ -87,21 +81,7 @@ public class Algorithm implements Runnable{
 
 	@Override 
 	public void run() {
-		if (trainData.length != trainDataLabels.length) {
-			log.fatal("Train Data and Train Labels have not the same length!!");
-		}
-		
-		// Intialize model function parameters depending on datasize and hyperparameters
-		
-		float[] parameters = initializeParameters(trainData); // TODO
-
-		if (parameters==null) {log.warn("Parameters have not been initialized!"); }
-		else { log.debug("Parameters have been initialized"); }
-
-		this.finalParametersArray = new float[parameters.length];
-		
-		
-		
+				
 		// Set the validation data for evaluating iterations
 		
 		try {
@@ -123,54 +103,24 @@ public class Algorithm implements Runnable{
 
 		for (int iteration = 0; iteration < maxIterations ; iteration++) {
 			
-			// Compute a batch of instances
-
-			int[] idxInstances = computeRandomBatch();
+			int randomInstanceIdx = (int) (Math.random()*data.trainData.getNumRows());
 			
-			idxInstances=new int[trainData.length];
-			for (int i = 0; i < trainData.length; i++)
-				idxInstances[i]=i;
+			Vector instance = Matrices.row(data.trainData, randomInstanceIdx);
+			float label = data.trainDataLabels.get(randomInstanceIdx, 1);
 				
-					
-//			float[] instanceWeights = new float[idxInstances.length];
-//			
-//			for (int i = 0 ; i < idxInstances.length ; i++ ) {
-//				int instance = idxInstances[i];
-//				
-//				for ( int j = 0; j < trainInstanceWeights.length ; j++) {
-//					if (instance == trainInstanceWeights[j][0]) {
-//						instanceWeights[j] = trainInstanceWeights[j][1];
-//					}
-//				}
-//			}
 			
 			// Do the iteration
-
-			if (laplacian){
-				lossFunction.iterateLaplacian(parameters, idxInstances, trainData, trainDataLabels,
-						modelFunction, smoothWindow, smoothReg);
-			}
-			else {
-				lossFunction.iterate(parameters, idxInstances, trainData, trainDataLabels, modelFunction);
-			}
+			
+			lossFunction.iterate(modelFunction, instance, label);
+	
 			
 			// Evaluate the iteration and store best Parameters so Far
+
 			
-			Quality quality = null;
-			try {
-				quality = storeParametersBestSoFar(parameters, getForWhat());
-			} catch (ModelApplicationException e1) {
-				e1.printStackTrace();
-				System.exit(1);
-			}
-			double rss = 0;
-			for (float f : parameters)
-				rss += f*f;
-			if (rss > oldRSS) {
-				throw new RuntimeException("RSS did not decrease (stepsize=" + stepSize + " too large?) - early stopping.");
-			}
-			oldRSS = rss;
+			Quality quality;
+			quality = modelFunction.saveBestParameters(rawData, randomInstanceIdx, forWhat, columnSelector);
 			
+						
 			float accuracy = quality.getAccuracy();
 			history[historyIdx++] = accuracy;
 			if (historyIdx>=history.length)
@@ -179,9 +129,13 @@ public class Algorithm implements Runnable{
 				double accuracyVariance = Vectors.variance(DefaultVector.wrap(history));
 				log.info("Variance: " + accuracyVariance);
 				if (accuracyVariance > 0.03) { // uggh - hard-coded number :-(
-					throw new RuntimeException("Converence variance too high - early stopping.");
+					throw new RuntimeException("Convergence variance too high - early stopping.");
 				}
 			}
+			
+			log.info(" Average Accuracy on Validation is: " + quality.getAccuracy() + " Average SampleDifference is: " + 
+					quality.getSampleDifference() + " Average Overshoot is: " + quality.getOvershootPercentage() 
+					+ " RSS: " + quality.getRss() );
 			
 			float sampleDifference = quality.getSampleDifference();
 			float overshootPercentage = quality.getOvershootPercentage();
@@ -189,7 +143,7 @@ public class Algorithm implements Runnable{
 			// Write the evaluation into the Database Table
 			
 			try {
-				database.addIteration(iteration, accuracy, sampleDifference, overshootPercentage, parameters,
+				database.addIteration(iteration, accuracy, sampleDifference, overshootPercentage, new float[] {1.5f},
 							splitNumber, probandNumber, runKey );
 				} catch (DataStoreException e) {
 					log.fatal("Unable to connect to database!");
@@ -197,65 +151,7 @@ public class Algorithm implements Runnable{
 				}
 			}
 		
-		// End with final best parameters
-		this.finalParameters = DefaultVector.wrap(finalParametersArray);
-	}
-
-
-	/** 
-	 * Evaluates current parameters on holdData, keeps track of the best Parameters on the holdData!!
-	 * @param parameters, forWhat
-	 * @throws ModelApplicationException 
-	 */
-	private Quality storeParametersBestSoFar(float[] parameters, String forWhat) throws ModelApplicationException {
 		
-		// Use the output of apply on validation for storing best parameters
-		
-		Quality quality = apply.predictForValidation(Vectors.floatArraytoVector(parameters));
-		double rss = 0;
-		for (float f : parameters)
-			rss += f*f;
-		
-		log.info(" Average Accuracy on Validation is: " + quality.getAccuracy() + " Average SampleDifference is: " + 
-					quality.getSampleDifference() + " Average Overshoot is: " + quality.getOvershootPercentage() + " RSS: " + rss + ((printParameters)?" Parameters: " + Arrays.toString(parameters):""));
-		
-		if( getForWhat() == "accuracy") {
-			if (quality.getAccuracy() > bestAccuracySoFar) {
-				bestAccuracySoFar = quality.getAccuracy();
-				finalParametersArray = parameters;
-			}
-		}
-		else if (getForWhat() == "sampleDifference") {
-			if (quality.getSampleDifference() < bestSampleDifference) {
-				bestSampleDifference = quality.getSampleDifference();
-				finalParametersArray = parameters;
-			}
-		}
-		else {
-			log.error("The Algorithm does not know what to optimize for!! accuracy or sampleDifference?");
-			System.exit(1);
-		}
-		
-		return quality;
-	}
-
-	public float[] initializeParameters(float[][] data) {
-		float[] ret = new float[data[0].length];
-
-		for (int i = 0; i < ret.length; i++) {
-			ret[i] = (float) (random.nextGaussian() * variance + expectationValue);
-		}
-
-		return ret;
-	}
-
-
-	public int[] computeRandomBatch() {
-		int[] batch = new int[batchSize];
-		for (int dimension = 0; dimension < batchSize ; dimension++)
-		{
-			batch[dimension] =  (int) (random.nextDouble()*trainData.length);	}
-		return batch;
 	}
 
 
@@ -273,10 +169,6 @@ public class Algorithm implements Runnable{
 
 
 	//Getters and Setters!
-
-
-
-
 
 	public int getMaxIterations() {
 		return maxIterations;
@@ -326,13 +218,6 @@ public class Algorithm implements Runnable{
 		this.algorithmType = algorithmType;
 	}
 
-	public Vector getFinalParameters() {
-		return finalParameters;
-	}
-
-	public void setFinalParameters(Vector finalParameters) {
-		this.finalParameters = finalParameters;
-	}
 
 	public ModelFunctions getModelFunction() {
 		return modelFunction;
@@ -354,21 +239,6 @@ public class Algorithm implements Runnable{
 		this.database = db;
 	}
 
-	public float[][] getTrainData() {
-		return trainData;
-	}
-
-	public void setTrainData(float[][] trainData) {
-		this.trainData = trainData;
-	}
-
-	public float[] getTrainDataLabels() {
-		return trainDataLabels;
-	}
-
-	public void setTrainDataLabels(float[] trainDataLabels) {
-		this.trainDataLabels = trainDataLabels;
-	}
 
 	public long getRunKey() {
 		return runKey;
@@ -480,36 +350,6 @@ public class Algorithm implements Runnable{
 	}
 
 
-	public float[][] getTrainInstanceWeights() {
-		return trainInstanceWeights;
-	}
-
-
-	public void setTrainInstanceWeights(float[][] trainInstanceWeights) {
-		this.trainInstanceWeights = trainInstanceWeights;
-	}
-
-
-	public float[][] getHoldData() {
-		return holdData;
-	}
-
-
-	public void setHoldData(float[][] holdData) {
-		this.holdData = holdData;
-	}
-
-
-	public float[] getHoldDataLabels() {
-		return holdDataLabels;
-	}
-
-
-	public void setHoldDataLabels(float[] holdDataLabels) {
-		this.holdDataLabels = holdDataLabels;
-	}
-
-
 	public boolean isPrintParameters() {
 		return printParameters;
 	}
@@ -517,6 +357,26 @@ public class Algorithm implements Runnable{
 
 	public void setPrintParameters(boolean printParameters) {
 		this.printParameters = printParameters;
+	}
+
+
+	public MhhDataset getData() {
+		return data;
+	}
+
+
+	public void setData(MhhDataset data) {
+		this.data = data;
+	}
+
+
+	public MhhRawData getRawData() {
+		return rawData;
+	}
+
+
+	public void setRawData(MhhRawData rawData) {
+		this.rawData = rawData;
 	}
 
 }

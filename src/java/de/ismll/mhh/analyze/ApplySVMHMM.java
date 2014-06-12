@@ -13,7 +13,7 @@ import de.ismll.evaluation.Accuracy;
 import de.ismll.exceptions.ModelApplicationException;
 import de.ismll.mhh.io.DataInterpretation;
 import de.ismll.secondversion.AlgorithmController;
-import de.ismll.secondversion.AlgorithmController.SwallowDS;
+import de.ismll.secondversion.SwallowDS;
 import de.ismll.secondversion.ApplyMHHModelImpl;
 import de.ismll.secondversion.Database;
 import de.ismll.secondversion.DatasetFormat;

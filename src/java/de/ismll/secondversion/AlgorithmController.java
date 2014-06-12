@@ -182,6 +182,8 @@ public class AlgorithmController  implements Runnable{
 	
 	
 	public String outputFolder;
+	
+	private int nrAttributes;
 
 
 	protected Logger log = LogManager.getLogger(getClass());
@@ -265,6 +267,7 @@ public class AlgorithmController  implements Runnable{
 			rawData.trainData[i]=d.data;
 			rawData.trainDataLabels[i]=d.labels;
 			rawData.instanceWeights[i]=d.instanceWeights;
+			rawData.trainDataAnnotations[i] = annotation;
 
 			Matrix[] sampletoLabels = createSample2Labels(d.data);
 
@@ -290,6 +293,7 @@ public class AlgorithmController  implements Runnable{
 			}
 			rawData.validationData[i]=d.data;
 			rawData.validationDataLabels[i]=d.labels;
+			rawData.validationDataAnnotations[i] = annotation;
 
 			Matrix[] sampletoLabels = createSample2Labels(d.data);
 
@@ -317,6 +321,7 @@ public class AlgorithmController  implements Runnable{
 			rawData.testDataLabels[i]=d.labels;
 			rawData.testRuhedruck[i]=d.ruheDruck;
 			rawData.testRuhedruckLabels[i]=d.ruheDruckLabels;
+			rawData.testDataAnnotations[i]=annotation;
 
 			Matrix[] sampletoLabels = createSample2Labels(d.data);
 
@@ -353,17 +358,12 @@ public class AlgorithmController  implements Runnable{
 
 		log.info("Maximum number of predictors: " + (data.testData.getNumColumns()) + " where we have " + NUM_META_COLUMNS + " Meta Columns.");
 		log.info("In total we have " + (data.testData.getNumColumns() - NUM_META_COLUMNS) + " predictors for learning!");
+		
+		this.nrAttributes = data.trainData.getNumColumns() - NUM_META_COLUMNS;
 
 		int trainInstances = data.trainData.getNumRows();
 
 		log.info("Working on " + trainInstances + " Training Instances.");
-
-		int smallBatchSize = (int) ( trainInstances*0.2);
-
-		System.out.println("Small Batch is: " + smallBatchSize + "where Batch Size is: " + trainInstances);
-
-		if (isSmallBatch() == true){ setBatchSize(smallBatchSize);}
-		else { setBatchSize(trainInstances);}
 
 
 		// Save current Run in Database
@@ -388,28 +388,25 @@ public class AlgorithmController  implements Runnable{
 		
 		// Initialize ModelFunction
 		
-		if (modelFunction.getClass() == FmModel.class) {
-			modelFunction
-		}
-		else if (modelFunction.getClass() == LinearRegressionPrediction.class) {
-			
-		}
-		else { log.fatal("Class of the model Function could not be parsed!"); }
-		
-		
+		modelFunction.initialize(this);
 		
 		
 		// Initialize LossFunction
+		
+		lossFunction.setLearnRate(stepSize);
+		
+		
 		
 		
 
 		// Algorithm Objekt initialisieren
 		Algorithm algorithm = new Algorithm();
+		
+		algorithm.setData(data);
+		algorithm.setRawData(rawData);
 
 		// Parameter an den Algorithmus übergeben	
 		
-		// Datensatz
-		setDatasets(algorithm);
 		
 		// Unabhängige Parameter
 		algorithm.setMaxIterations(maxIterations);
@@ -435,34 +432,11 @@ public class AlgorithmController  implements Runnable{
 //		algorithm.setSmoothWindow(smoothWindow);
 //		algorithm.setStepSize(stepSize);
 		
-
-		
-
-		
-
 		algorithm.run(); 
 
-		finalParametersArray = algorithm.finalParametersArray;
-
-		
-
-
-	}
-
-	public void predictLabels(Matrix[] data, Matrix[] sample2labels) {
-
-		if (sample2labels.length!=data.length) {
-			log.error("Number of swallows does not match!");
 		}
-		for (int i = 0; i < sample2labels.length ; i++) {
-			float[] predict = modelFunction.predictAsClassification(modelFunction.evaluate(Matrices.asArray( 
-					preprocess(data[i], columnSelector) )
-					, finalParametersArray));
-			Vector predictVector = Vectors.floatArraytoVector(predict);
-			Vectors.copy(predictVector, Matrices.col(sample2labels[i],COL_LABEL_IN_SAMPLE2LABEL ));
-			//			Matrices.setCol(sample2labels[i], COL_LABEL_IN_SAMPLE2LABEL, predictVector);
-		}
-	}
+
+	
 
 
 
@@ -535,25 +509,6 @@ public class AlgorithmController  implements Runnable{
 	public static Matrix preprocess(Matrix data, IntRange columnSelector) {
 		Matrix ret = new ColumnSubsetMatrixView(data, columnSelector.getUsedIndexes());
 		return ret;
-	}
-
-	/**
-	 * Sets the float Array Datasets for the given Algorithm Object
-	 * @param alg
-	 */
-	public void setDatasets(Algorithm alg) {
-
-
-		if (includeRD) {
-			alg.setTrainInstanceWeights(Matrices.asArray(data.instanceWeights));
-			alg.setTrainData( Matrices.asArray( preprocess(data.ruheDruckTrainData, columnSelector) ) );
-			alg.setTrainDataLabels(Vectors.toFloatArray(Vectors.col(data.ruheDruckTrainDataLabels, COL_LABEL_IN_LABELS)));
-		}
-		else {
-			alg.setTrainInstanceWeights(Matrices.asArray(data.instanceWeights));
-			alg.setTrainData( Matrices.asArray( preprocess(data.trainData, columnSelector) ) );
-			alg.setTrainDataLabels(Vectors.toFloatArray(Vectors.col(data.trainDataLabels, COL_LABEL_IN_LABELS)));
-		}
 	}
 
 
@@ -1698,14 +1653,6 @@ public class AlgorithmController  implements Runnable{
 		this.probandNumber = probandNumber;
 	}
 
-	public String getModelString() {
-		return modelString;
-	}
-
-	public void setModelString(String modelString) {
-		this.modelString = modelString;
-	}
-
 	public float getStDev() {
 		return stDev;
 	}
@@ -1736,6 +1683,14 @@ public class AlgorithmController  implements Runnable{
 
 	public void setFm_numFactors(int fm_numFactors) {
 		this.fm_numFactors = fm_numFactors;
+	}
+
+	public int getNrAttributes() {
+		return nrAttributes;
+	}
+
+	public void setNrAttributes(int nrAttributes) {
+		this.nrAttributes = nrAttributes;
 	}
 
 

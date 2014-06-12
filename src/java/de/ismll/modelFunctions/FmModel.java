@@ -9,6 +9,7 @@ import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import de.ismll.myfm.core.FmDataset;
 import de.ismll.myfm.util.Printers;
+import de.ismll.secondversion.AlgorithmController;
 import de.ismll.table.Matrices;
 import de.ismll.table.Matrix;
 import de.ismll.table.Vector;
@@ -87,17 +88,14 @@ public class FmModel extends ModelFunctions {
 	
 	
 	@Override
-	public void initialize(float[] functionParameters) {
-		if(functionParameters.length != 6) {
-			log.fatal("Function Parameters are not set correctly for initialization!");
-		}
-		
-		int nrAttributes = (int) functionParameters[0];
-		float stDev = functionParameters[1];
-		int nrFactors = (int) functionParameters[2];
-		float reg0 = functionParameters[3];
-		float regV = functionParameters[4];
-		float regW = functionParameters[5];
+	public void initialize(AlgorithmController algcon) {
+				
+		int nrAttributes = algcon.getNrAttributes();
+		float stDev = algcon.getStDev();
+		int nrFactors = algcon.getFm_numFactors();
+		float reg0 = algcon.getReg0();
+		float regV = algcon.getFm_regV();
+		float regW = algcon.getFm_regW();
 		
 		initialize(nrAttributes, stDev, nrFactors, reg0, regV, regW);
 	}

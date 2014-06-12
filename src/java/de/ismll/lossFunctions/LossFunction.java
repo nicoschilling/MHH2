@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import gnu.trove.map.hash.TIntFloatHashMap;
 import de.ismll.modelFunctions.ModelFunctions;
 import de.ismll.myfm.core.FmModel;
+import de.ismll.secondversion.AlgorithmController;
 import de.ismll.secondversion.Calculations;
 import de.ismll.table.Matrix;
 import de.ismll.table.Vector;
@@ -32,6 +33,7 @@ public abstract class LossFunction {
 			throw new RuntimeException("Loss specifier " + str + " unknown. Only values ... are allowed");
 		}
 	}
+
 	
 	
 	//Aufgabe der LossFunctions:

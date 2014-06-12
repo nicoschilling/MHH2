@@ -6,6 +6,7 @@ public class Quality {
 	private float accuracy;
 	private float sampleDifference;
 	private float overshootPercentage;
+	private float rss;
 	
 	
 	public float getAccuracy() {
@@ -25,6 +26,12 @@ public class Quality {
 	}
 	public void setOvershootPercentage(float overshootPercentage) {
 		this.overshootPercentage = overshootPercentage;
+	}
+	public float getRss() {
+		return rss;
+	}
+	public void setRss(float rss) {
+		this.rss = rss;
 	}
 	
 	

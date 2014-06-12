@@ -16,7 +16,7 @@ import de.ismll.mhh.io.DataInterpretation;
 import de.ismll.mhh.io.SwallowData;
 import de.ismll.modelFunctions.LinearRegressionPrediction;
 import de.ismll.modelFunctions.ModelFunctions;
-import de.ismll.secondversion.AlgorithmController.SwallowDS;
+import de.ismll.secondversion.SwallowDS;
 import de.ismll.table.Matrices;
 import de.ismll.table.Matrix;
 import de.ismll.table.Vector;
@@ -118,7 +118,78 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 			Matrix predictedLabels = sampleToLabels[0];
 			Matrix avgLabels = sampleToLabels[1];
 
-			predictLabels(validationData[val], parameters, predictedLabels);
+//			predictLabels(validationData[val], parameters, predictedLabels);
+
+			AlgorithmController.computeSample2avgLabel(getWindowExtent(), predictedLabels, avgLabels);
+
+			int predictedAnnotation = AlgorithmController.predictAnnotation(avgLabels, log);
+
+			Accuracy accuracy = new Accuracy();
+
+			double currentAcc = accuracy.evaluate(new DefaultVector(Matrices.col(validationLabels[val], COL_LABEL_IN_LABELS)),
+					new DefaultVector(Matrices.col(predictedLabels, COL_LABEL_IN_SAMPLE2LABEL)));
+
+			double currentSampleDiff = Math.abs(predictedAnnotation-validationAnnotations[val]);
+
+			double overshootPercentage = 0;
+
+			accuracies[val] = currentAcc;
+			sampleDifferences[val] = currentSampleDiff;
+			overshootPercentages[val] = overshootPercentage;
+		}
+
+		double accuracySum = 0;
+		double sampleDifferenceSum = 0;
+		double overshootPercentagesSum = 0;
+
+
+		for (int i = 0; i < accuracies.length ; i++) {
+			accuracySum += accuracies[i];
+			sampleDifferenceSum += sampleDifferences[i];
+			overshootPercentagesSum += overshootPercentages[i];
+		}
+
+		float avgAccuracy = (float) (accuracySum/accuracies.length);
+		float avgSampleDiff = (float) (sampleDifferenceSum/accuracies.length);
+		float avgOvershootPercentage = (float) (overshootPercentagesSum/accuracies.length);
+
+		ret.setAccuracy(avgAccuracy);
+		ret.setSampleDifference(avgSampleDiff);
+		ret.setOvershootPercentage(avgOvershootPercentage);
+
+
+		return ret;
+	}
+	
+	public Quality predictForValidation(ModelFunctions modelFunction) {
+		Quality ret = new Quality();
+
+		double[] accuracies = new double[validationData.length];
+		double[] sampleDifferences = new double[validationData.length];
+		double[] overshootPercentages = new double[validationData.length]; 
+
+
+		//DAten sind eingelesen!
+
+		// Parameter werden übergeben
+
+
+		if (columnSelector == null) {
+			int offset=5;
+			//			columnSelector = new IntRange(offset + "," + (parameters.size()+offset-1));
+			//			columnSelector = new IntRange("5,24;26,"+ (parameters.size()+offset));  // PMAX FIX FOR OLD MODELS!
+			columnSelector = new IntRange("33,166"); // All features
+		}
+
+		for (int val = 0; val < validationData.length ; val++) {
+
+
+			Matrix[] sampleToLabels = createSample2Labels(validationData[val]);
+
+			Matrix predictedLabels = sampleToLabels[0];
+			Matrix avgLabels = sampleToLabels[1];
+
+//			predictLabels(validationData[val], modelFunction, predictedLabels);
 
 			AlgorithmController.computeSample2avgLabel(getWindowExtent(), predictedLabels, avgLabels);
 
@@ -531,33 +602,7 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 		Vectors.copy(predictVector, Matrices.col(predictedLabels,COL_LABEL_IN_SAMPLE2LABEL ));
 	}
 
-	/** 
-	 * Predicts Labels of a given swallow as input data, uses learned model parameters,
-	 *  writes the predicted labels into the sample2Labels Matrix
-	 * @param data
-	 * @param parameters
-	 * @param sample2labels
-	 */
-	public void predictLabels(Matrix data, Vector parameters, Matrix predictedLabels) {
-
-		float[] predict = modelFunction.predictAsClassification(
-				modelFunction.evaluate(
-					AlgorithmController.preprocess(data, getColumnSelector()) 
-				, parameters));
-//		float[] predict = modelFunction.predictAsClassification(
-//				modelFunction.evaluate(
-//						Matrices.asArray(
-//								AlgorithmController.preprocess(data, getColumnSelector()) 
-//								)
-//				, Vectors.toFloatArray(parameters)));
-		Vector predictVector = Vectors.floatArraytoVector(predict);
-
-		//		for (Integer j : swallow.throwAway) {
-		//			predictVector.set(j, 0);
-		//		}
-
-		Vectors.copy(predictVector, Matrices.col(predictedLabels,COL_LABEL_IN_SAMPLE2LABEL ));
-	}
+	
 
 
 	public SwallowDS preprocessValidationSwallow(DataInterpretation folder, boolean skipLeading, boolean skipBetween,

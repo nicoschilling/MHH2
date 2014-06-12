@@ -17,14 +17,17 @@ public class MhhRawData {
 		trainRuhedruck = new Matrix[trainSwallows+testSwallows];
 		trainRuhedruckLabels = new Matrix[trainSwallows+testSwallows];
 		instanceWeights = new Matrix[trainSwallows];
+		trainDataAnnotations = new int[trainSwallows];
 		
 		validationData = new Matrix[validationSwallows];
 		validationDataLabels = new Matrix[validationSwallows];
+		validationDataAnnotations = new int[validationSwallows];
 		
 		testData = new Matrix[testSwallows];
 		testDataLabels = new Matrix[testSwallows];
 		testRuhedruck = new Matrix[testSwallows];
 		testRuhedruckLabels = new Matrix[testSwallows];
+		testDataAnnotations = new int[testSwallows];
 		
 	}
 	
@@ -33,14 +36,17 @@ public class MhhRawData {
 	Matrix[] trainDataLabels;
 	Matrix[] trainRuhedruck; 
 	Matrix[] trainRuhedruckLabels;
+	int[] trainDataAnnotations;
 	
 	Matrix[] validationData;
 	Matrix[] validationDataLabels;
+	int[] validationDataAnnotations;
 	
 	Matrix[] testData;
 	Matrix[] testDataLabels;
 	Matrix[] testRuhedruck;
 	Matrix[] testRuhedruckLabels;
+	int[] testDataAnnotations;
 	
 	
 	
@@ -80,6 +86,30 @@ public class MhhRawData {
 	}
 	public void setTestDataLabels(Matrix[] testDataLabels) {
 		this.testDataLabels = testDataLabels;
+	}
+
+	public int[] getTrainDataAnnotations() {
+		return trainDataAnnotations;
+	}
+
+	public void setTrainDataAnnotations(int[] trainAnnotations) {
+		this.trainDataAnnotations = trainAnnotations;
+	}
+
+	public int[] getValidationDataAnnotations() {
+		return validationDataAnnotations;
+	}
+
+	public void setValidationDataAnnotations(int[] validationDataAnnotations) {
+		this.validationDataAnnotations = validationDataAnnotations;
+	}
+
+	public int[] getTestDataAnnotations() {
+		return testDataAnnotations;
+	}
+
+	public void setTestDataAnnotations(int[] testDataAnnotations) {
+		this.testDataAnnotations = testDataAnnotations;
 	}
 
 }

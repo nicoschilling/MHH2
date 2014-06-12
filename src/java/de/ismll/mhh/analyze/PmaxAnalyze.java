@@ -13,7 +13,7 @@ import de.ismll.database.pgsql.PostgresSQL;
 import de.ismll.exceptions.ModelApplicationException;
 import de.ismll.mhh.io.DataInterpretation;
 import de.ismll.secondversion.AlgorithmController;
-import de.ismll.secondversion.AlgorithmController.SwallowDS;
+import de.ismll.secondversion.SwallowDS;
 import de.ismll.secondversion.ApplyMHHModelImpl;
 import de.ismll.secondversion.AnalysisResult;
 import de.ismll.secondversion.DatasetFormat;
