@@ -1,6 +1,8 @@
 package de.ismll.lossFunctions;
 
 
+import java.util.Random;
+
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -71,6 +73,16 @@ public abstract class LossFunction {
 	}
 	public void iterate(ModelFunctions function, TIntFloatHashMap[] data, float[] labels) {
 		log.fatal("The given loss Function does not implement iterate!");
+	}
+	
+	
+	public int[] computeRandomBatch(int nrInstances, int batchSize) {
+		int[] ret = new int[batchSize];
+		Random random = new Random();
+		for (int i = 0; i < ret.length ; i++) {
+			ret[i] = (int) Math.random()*nrInstances;
+		}
+		return ret;
 	}
 	
 

@@ -39,13 +39,7 @@ public class LinearRegressionPrediction extends ModelFunctions {
 	
 	
 	@Override
-	public Quality saveBestParameters(MhhRawData rawData, int windowExtent, String forWhat, IntRange columnSelector) {
-		
-		// execute predicton Validation
-		Quality quality = this.evaluateModelFunctionOnValidation(rawData, windowExtent,columnSelector);
-				
-		// check if better and save
-		
+	public void saveBestParameters(Quality quality, String forWhat) {
 		if(forWhat=="accuracy") {
 			if (quality.getAccuracy() > this.getBestAccuracy()) {
 				this.setBestAccuracy(quality.getAccuracy());
@@ -60,8 +54,6 @@ public class LinearRegressionPrediction extends ModelFunctions {
 				this.setBias_copy(bias);
 			}
 		}
-		
-		return quality;
 	}
 
 
@@ -99,20 +91,12 @@ public class LinearRegressionPrediction extends ModelFunctions {
 		}
 		float ret = this.getBias();
 		for (int i = 0 ; i < instance.size() ; i++) {
-			ret += parameters[i]*instance.get(i);
+			ret += this.parameters[i]*instance.get(i);
 		}
 		return ret;
 	}
 
-	@Override
-	public float[] evaluate(Matrix data) {
-		float[] ret = new float[data.getNumRows()];
 
-		for (int i = 0; i < ret.length ; i++) {
-			ret[i] = evaluate(Matrices.row(data, i));
-		}
-		return ret;
-	}
 
 	@Override
 	public void SGD(Vector instance, float multiplier , float learnRate) {
@@ -128,6 +112,31 @@ public class LinearRegressionPrediction extends ModelFunctions {
 			float update = this.parameters[i] - learnRate*multiplier*instance.get(i) - this.reg0*this.parameters[i];
 			this.parameters[i] = update;
 		}
+	}
+	
+	@Override
+	public void GD(Matrix data, float[] multipliers, float learnRate) {
+		float multiplierSum=0;
+		for (int i = 0; i < multipliers.length ; i++) {
+			multiplierSum += multipliers[i];
+		}
+		// Update of Bias...
+		float updatedBias = this.bias - learnRate*multiplierSum;
+		this.bias = updatedBias;
+		
+		float[] grad;
+		grad = new float[this.parameters.length];
+		for (int dim = 0; dim < parameters.length ; dim++) {
+			for (int instance = 0; instance < multipliers.length ; instance++) {
+				grad[dim] += multipliers[instance]*data.get(instance,dim);
+			}
+		}
+		
+		for (int dim = 0; dim < grad.length ; dim++) {
+			float updated = this.parameters[dim] - learnRate*grad[dim] - this.reg0*this.parameters[dim];	
+			this.parameters[dim] = updated;
+		}
+		
 	}
 
 

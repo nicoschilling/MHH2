@@ -20,8 +20,8 @@ public class LogisticLoss extends LossFunction{
 	public void iterate(ModelFunctions function, Vector instance, float label) {
 
 		// Multiplier for logistic loss is -label*exp/(1+exp) wobei exp = Math.exp(-label*function.evaluate)
-		
-		float exp = (float) Math.exp(-label*function.evaluate(instance));
+		float predicted = function.evaluate(instance);
+		float exp = (float) Math.exp(-label*predicted);
 		float multiplier = -label*exp/(1+exp);
 
 		function.SGD(instance, multiplier, this.learnRate);
@@ -31,12 +31,17 @@ public class LogisticLoss extends LossFunction{
 	@Override
 	public void iterate(ModelFunctions function, Matrix data, float[] labels) {
 		
-		for (int row = 0; row < data.getNumRows() ; row++) {
-			float label = labels[row];
-			Vector instance = Matrices.row(data, row);
-			
-			iterate(function, instance, label);
+		float[] multipliers = new float[labels.length];
+		
+		float[] predicted = function.evaluate(data);
+		
+		for (int i = 0; i < labels.length ; i++) {
+			float exp = (float) Math.exp(-labels[i]*predicted[i]);
+			multipliers[i] = -labels[i]*exp/(1+exp);
 		}
+		
+		function.GD(data, multipliers, this.learnRate);
+		
 		
 	}
 	

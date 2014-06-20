@@ -17,6 +17,7 @@ import de.ismll.table.Matrices;
 import de.ismll.table.Matrix;
 import de.ismll.table.Vector;
 import de.ismll.table.Vectors;
+import de.ismll.table.impl.DefaultMatrix;
 import de.ismll.table.impl.DefaultVector;
 
 public abstract class ModelFunctions {
@@ -28,39 +29,89 @@ public abstract class ModelFunctions {
 		log.fatal("The given model function cannot initialize itself!");
 	}
 
-	public Quality saveBestParameters(MhhRawData rawData, int windowExtent, String forWhat, IntRange columnSelector) {
+	public void saveBestParameters(Quality quality,  String forWhat) {
 		log.fatal("The given model function cannot save the best parameters found so far!");
-		return null;
+		}
+	
+	public float computeMajorityClassAccuracy(Vector labels) {
+		int countPositive = 0;
+		int countNegative = 0;
+		for (int i = 0; i < labels.size() ; i++) {
+			if (labels.get(i) > 0) {
+				countPositive++;
+			}
+			else {
+				countNegative++;
+			}
+		}
+		float majority1 = (float) countNegative/ ( (float) labels.size() );
+		float majority2 = (float) countPositive/ ( (float) labels.size() );
+		float ret = 0;
+		if (majority1 > majority2) {
+			ret = majority1;
+		}
+		else {
+			ret = majority2;
+		}
+		return ret;
 	}
 	
 		
-	public Quality evaluateModelFunctionOnValidation(MhhRawData rawData, int windowExtent, IntRange columnSelector) {
+	public Quality evaluateModel(MhhRawData rawData, int windowExtent, IntRange columnSelector, String forWhat) {
 		
 		Quality ret = new Quality();
 		
-		double[] accuracies = new double[rawData.getValidationData().length];
-		double[] sampleDifferences = new double[rawData.getValidationData().length];
-		double[] overshootPercentages = new double[rawData.getValidationData().length]; 
+		Matrix[] applyData = null;
+		Matrix[] applyLabels = null;
+		int[] applyAnnotations = null;
 		
-//		IntRange columnSelector = new IntRange("33,166");
+		switch ( forWhat) {
+		
+		case "validation":
+			applyData = rawData.getValidationData();
+			applyLabels = rawData.getValidationDataLabels();
+			applyAnnotations = rawData.getValidationDataRelativeAnnotations();
+			break;
+			
+		case "train":
+			applyData = rawData.getTrainData();
+			applyLabels = rawData.getTrainDataLabels();
+			applyAnnotations = rawData.getTrainDataRelativeAnnotations();
+			break;
+			
+		case "test":
+			applyData = rawData.getTestData();
+			applyLabels = rawData.getTestDataLabels();
+			applyAnnotations = rawData.getTestDataRelativeAnnotations();
+			break;
+			
+		default: 
+			log.error("The string " + forWhat + " is not a valid choice of where to evaluate!");
+			break;
+		}
+		
+		double[] accuracies = new double[applyData.length];
+		double[] sampleDifferences = new double[applyData.length];
+		double[] overshootPercentages = new double[applyData.length]; 
 
-		for (int val = 0; val < rawData.getValidationData().length ; val++) {
+		for (int data = 0; data < applyData.length ; data++) {
 
-
-			Matrix[] sampleToLabels = AlgorithmController.createSample2Labels(rawData.getValidationData()[val]);
+			Matrix[] sampleToLabels = AlgorithmController.createSample2Labels(applyData[data]);
 
 			Matrix predictedLabels = sampleToLabels[0];
 			Matrix avgLabels = sampleToLabels[1];
 			
-			float[] predictedVal = this.evaluate(rawData.getValidationData()[val]);
+			Matrix apply2Data = new DefaultMatrix(AlgorithmController.preprocess(applyData[data] , columnSelector));
+			
+			float[] predicted = this.evaluate(apply2Data);
 			
 			// convert to classification i.e. -1 and 1
 			
-			float[] predictedValClassification = this.predictAsClassification(predictedVal);
+			float[] predictedClassification = this.predictAsClassification(predicted);
 		
 			// make a vector
 
-			Vector predictVector = Vectors.floatArraytoVector(predictedValClassification);
+			Vector predictVector = Vectors.floatArraytoVector(predictedClassification);
 
 			// copy it to the sample2labels object
 
@@ -70,41 +121,30 @@ public abstract class ModelFunctions {
 
 			int predictedAnnotation = AlgorithmController.predictAnnotation(avgLabels, log);
 
+			int trueAnnotation = applyAnnotations[data];
+			
+//			System.out.println("predicted annotation: " + predictedAnnotation);
+//			System.out.println("true annotation: " + trueAnnotation);
+			
+			double currentSampleDiff = Math.abs(predictedAnnotation-trueAnnotation);
+
 			Accuracy accuracy = new Accuracy();
+			
+			Vector trueLabels = Matrices.col(applyLabels[data] , COL_LABEL_IN_LABELS);
+			
+			double currentAcc = accuracy.evaluate(trueLabels, predictVector);
 
-			double currentAcc = accuracy.evaluate(new DefaultVector(Matrices.col(rawData.getValidationData()[val], COL_LABEL_IN_LABELS)),
-					new DefaultVector(Matrices.col(predictedLabels, COL_LABEL_IN_SAMPLE2LABEL)));
+//			double currentAcc = accuracy.evaluate(new DefaultVector(Matrices.col(rawData.getValidationData()[val], COL_LABEL_IN_LABELS)),
+//					new DefaultVector(Matrices.col(predictedLabels, COL_LABEL_IN_SAMPLE2LABEL)));
 
-			double currentSampleDiff = Math.abs(predictedAnnotation-rawData.getValidationDataAnnotations()[val]);
+			
 
 			double overshootPercentage = 0;
 
-			accuracies[val] = currentAcc;
-			sampleDifferences[val] = currentSampleDiff;
-			overshootPercentages[val] = overshootPercentage;
+			accuracies[data] = currentAcc;
+			sampleDifferences[data] = currentSampleDiff;
+			overshootPercentages[data] = overshootPercentage;
 		}
-		
-		float[] allRSS = new float[rawData.getTrainData().length];
-		
-		for (int train = 0; train < rawData.getTrainData().length ; train++) {
-			float[] predictedTrain = this.evaluate(rawData.getTrainData()[train]);
-			
-			float rss=0;
-			
-			for (int instance = 0; instance < predictedTrain.length ; instance++) {
-				float error	= predictedTrain[instance] - rawData.getTrainDataLabels()[train].get(instance, COL_LABEL_IN_LABELS);
-				rss += error*error;
-			}
-			
-			allRSS[train] = rss;
-		}
-		
-		float allRSSSum = 0;
-		
-		for (int i = 0; i < allRSS.length ; i++) {
-			allRSSSum += allRSS[i];
-		}
-		allRSSSum = allRSSSum/allRSS.length;
 
 		double accuracySum = 0;
 		double sampleDifferenceSum = 0;
@@ -124,7 +164,6 @@ public abstract class ModelFunctions {
 		ret.setAccuracy(avgAccuracy);
 		ret.setSampleDifference(avgSampleDiff);
 		ret.setOvershootPercentage(avgOvershootPercentage);
-		ret.setRss(allRSSSum);
 
 
 		return ret;
@@ -176,13 +215,21 @@ public abstract class ModelFunctions {
 	}
 
 	public float[] evaluate(Matrix data) {
-		log.fatal("The chosen model function does not implement evaluate()");
-		return null;
+		float[] ret = new float[data.getNumRows()];
+
+		for (int i = 0; i < ret.length ; i++) {
+			ret[i] = evaluate(Matrices.row(data, i));
+		}
+		return ret;
 	}
 
 	public float[] evaluate(TIntFloatHashMap[] data) {
-		log.fatal("The chosen model function does not implement evaluate()");
-		return null;
+		float[] ret = new float[data.length];
+		
+		for (int i = 0; i < ret.length ; i++) {
+			ret[i] = this.evaluate(data[i]);
+		}
+		return ret;
 	}
 
 	public void SGD(TIntFloatHashMap x, float multiplier , float learnRate) {
@@ -191,6 +238,10 @@ public abstract class ModelFunctions {
 
 	public void SGD(Vector instance, float multiplier , float learnRate) {
 		log.fatal("The chosen model function does not implement SGD()");
+	}
+	
+	public void GD(Matrix data, float[] multipliers, float learnRate) {
+		log.fatal("The chosen model function does not implement GD()");
 	}
 
 

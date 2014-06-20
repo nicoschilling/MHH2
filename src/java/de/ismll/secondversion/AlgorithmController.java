@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import javax.sound.midi.SysexMessage;
+
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -30,6 +32,7 @@ import de.ismll.mhh.io.SwallowData;
 import de.ismll.modelFunctions.FmModel;
 import de.ismll.modelFunctions.LinearRegressionPrediction;
 import de.ismll.modelFunctions.ModelFunctions;
+import de.ismll.myfm.util.Printers;
 import de.ismll.processing.Normalizer;
 import de.ismll.table.IntMatrix;
 import de.ismll.table.IntVector;
@@ -67,7 +70,7 @@ public class AlgorithmController  implements Runnable{
 	 * number of leading meta columns
 	 */
 	public static final int NUM_META_COLUMNS = META_COLUMNS.length;
-	
+
 	@Parameter(cmdline="applyFolder" , description="the folder to apply a learned model on")
 	public String applyFolder;
 
@@ -95,7 +98,7 @@ public class AlgorithmController  implements Runnable{
 	@Parameter(cmdline="maxIterations", description="number of maximum iterations for train() Method")
 	public int maxIterations = 1000;
 
-	
+
 
 	@Parameter(cmdline="batchSize", description="Hyperparameter: number of instances used to compute a gradient, i.e. 1 -> stochastic  trainInstances -> full")
 	public int batchSize = 0;
@@ -108,7 +111,7 @@ public class AlgorithmController  implements Runnable{
 
 	@Parameter(cmdline="smoothReg" , description="Parameter, that specifies the influence of the Laplacian regularization")
 	private float smoothReg;
-	
+
 	@Parameter(cmdline="descentDirection" , description="Abstract Class. Input a String that specifies the loss function, e.g. \"logisticLoss\".")
 	public LossFunction lossFunction;
 
@@ -141,48 +144,51 @@ public class AlgorithmController  implements Runnable{
 
 	@Parameter(cmdline="annotationBaseDir")
 	private String annotationBaseDir;
-	
+
 	@Parameter(cmdline="splitNumber")
 	private int splitNumber;
 
 	@Parameter(cmdline="probandNumber")
 	private int probandNumber;
-	
-	
+
+	@Parameter(cmdline="useDatabase", description="Specifies, whether iterations are being written to the database")
+	private boolean useDatabase;
+
+
 	// Generelle Hyperparameter
-	
+
 	@Parameter(cmdline="stepSize", description="Hyperparameter: constant stepSize for gradient based optimization methods")
 	public float stepSize = 0.001f;
-	
+
 	@Parameter(cmdline="reg0" , description="Hyperparameter: regularization constant in front of L2 regularizer, measures how strong regularization should be.")
 	public float reg0 = 0.01f;
-	
+
 	@Parameter(cmdline="stDev", description="Hyperparameter: Standard Deviation of the Gaussian where parameters are initialized")
-	private float stDev = 1;
-	
+	private float stDev = 0.1f;
+
 
 	// Modellparameter:
-	
+
 	@Parameter(cmdline="fm_regV", description="Hyperparameter: Specifies the regularization of the V Vector of a Factorization Machine")
 	private float fm_regV;
-	
+
 	@Parameter(cmdline="fm_regW", description="Hyperparameter: Specifies the regularization of the W Matrix of a Factorization Machine")
 	private float fm_regW;
-	
+
 	@Parameter(cmdline="fm_numFactors", description="Hyperparameter: Specifies the size of the W Matrix of a Factorization Machine, i.e. the number of latent features")
 	private int fm_numFactors;
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+
+
+
+
 	public String outputFolder;
-	
+
 	private int nrAttributes;
 
 
@@ -210,20 +216,22 @@ public class AlgorithmController  implements Runnable{
 
 	@Override
 	public void run() {
-			
+
 		log.info("Working on " + readSplit.getSplitFolder());
 		readSplit.run();
 
-		try {
-			// Initialize Database
-			database = new Database();
-			if (laplacian) { database.setRunLapTable(runLapTable);}
-			else { database.setRunTable(runTable); }
-			database.setIterationTable(iterTable);
-			database.init();
-		} catch (IOException | DataStoreException e1) {
-			log.fatal("Could not connect to database", e1);
-			throw new BootstrapException("Could not connect to database", e1);						
+		if (this.useDatabase) {
+			try {
+				// Initialize Database
+				database = new Database();
+				if (laplacian) { database.setRunLapTable(runLapTable);}
+				else { database.setRunTable(runTable); }
+				database.setIterationTable(iterTable);
+				database.init();
+			} catch (IOException | DataStoreException e1) {
+				log.fatal("Could not connect to database", e1);
+				throw new BootstrapException("Could not connect to database", e1);						
+			}
 		}
 
 
@@ -252,14 +260,15 @@ public class AlgorithmController  implements Runnable{
 			log.info("Training data ... " + readSplit.trainFolders[i].getSwallowId());
 			DataInterpretation folder = readSplit.trainFolders[i];
 
-			int annotation = getAnnotation(folder);
+			int absoluteAnnotation = getAnnotation(folder);
+			int relativeAnnotation = absoluteAnnotation - folder.getFirstSample();
 
 
 			int pmax = getPmax(folder);
 
 			SwallowDS d = null;
 			try {
-				d = preprocessSwallow(folder, annotation, pmax, skipLeading, skipBetween);
+				d = preprocessSwallow(folder, absoluteAnnotation, pmax, skipLeading, skipBetween);
 			} catch (ModelApplicationException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -267,7 +276,8 @@ public class AlgorithmController  implements Runnable{
 			rawData.trainData[i]=d.data;
 			rawData.trainDataLabels[i]=d.labels;
 			rawData.instanceWeights[i]=d.instanceWeights;
-			rawData.trainDataAnnotations[i] = annotation;
+			rawData.trainDataAbsoluteAnnotations[i]=absoluteAnnotation;
+			rawData.trainDataRelativeAnnotations[i]=relativeAnnotation;
 
 			Matrix[] sampletoLabels = createSample2Labels(d.data);
 
@@ -281,19 +291,22 @@ public class AlgorithmController  implements Runnable{
 			log.info("Validation data ... " + readSplit.validationFolders[i].getSwallowId());
 			DataInterpretation folder = readSplit.validationFolders[i];
 
-			int annotation = getAnnotation(folder);
+			int absoluteAnnotation = getAnnotation(folder);
+			int relativeAnnotation = absoluteAnnotation - folder.getFirstSample();
+
 			int pmax = getPmax(folder);
 
 			SwallowDS d = null;
 			try {
-				d = preprocessSwallow(folder, annotation, pmax, skipLeading, skipBetween);
+				d = preprocessSwallow(folder, absoluteAnnotation, pmax, skipLeading, skipBetween);
 			} catch (ModelApplicationException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			rawData.validationData[i]=d.data;
 			rawData.validationDataLabels[i]=d.labels;
-			rawData.validationDataAnnotations[i] = annotation;
+			rawData.validationDataAbsoluteAnnotations[i] = absoluteAnnotation;
+			rawData.validationDataRelativeAnnotations[i] = relativeAnnotation;
 
 			Matrix[] sampletoLabels = createSample2Labels(d.data);
 
@@ -307,12 +320,17 @@ public class AlgorithmController  implements Runnable{
 			log.info("Test data ... " + readSplit.testFolders[i].getSwallowId());
 			DataInterpretation folder = readSplit.testFolders[i];
 
-			int annotation = getAnnotation(folder);
+			int absoluteAnnotation = getAnnotation(folder);
+			int relativeAnnotation = absoluteAnnotation - folder.getFirstSample();
+
+
+
+
 			int pmax = getPmax(folder);
 
 			SwallowDS d = null;
 			try {
-				d = preprocessTestSwallow(folder, annotation, pmax, skipLeading, skipBetween);
+				d = preprocessTestSwallow(folder, absoluteAnnotation, pmax, skipLeading, skipBetween);
 			} catch (ModelApplicationException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -321,7 +339,8 @@ public class AlgorithmController  implements Runnable{
 			rawData.testDataLabels[i]=d.labels;
 			rawData.testRuhedruck[i]=d.ruheDruck;
 			rawData.testRuhedruckLabels[i]=d.ruheDruckLabels;
-			rawData.testDataAnnotations[i]=annotation;
+			rawData.testDataAbsoluteAnnotations[i]=absoluteAnnotation;
+			rawData.testDataRelativeAnnotations[i]=relativeAnnotation;
 
 			Matrix[] sampletoLabels = createSample2Labels(d.data);
 
@@ -349,7 +368,7 @@ public class AlgorithmController  implements Runnable{
 		data.testData = new RowUnionMatrixView(rawData.testData);
 		data.trainData = new RowUnionMatrixView(rawData.trainData);
 		data.instanceWeights = new RowUnionMatrixView(rawData.instanceWeights);
-//		data.ruheDruckTrainData = new RowUnionMatrixView(rawData.trainRuhedruck);
+		//		data.ruheDruckTrainData = new RowUnionMatrixView(rawData.trainRuhedruck);
 		data.ruheDruckTrainDataLabels = new RowUnionMatrixView(rawData.trainRuhedruckLabels);
 		data.validationData = new RowUnionMatrixView(rawData.validationData);
 		data.testDataLabels = new RowUnionMatrixView(rawData.testDataLabels);
@@ -358,62 +377,72 @@ public class AlgorithmController  implements Runnable{
 
 		log.info("Maximum number of predictors: " + (data.testData.getNumColumns()) + " where we have " + NUM_META_COLUMNS + " Meta Columns.");
 		log.info("In total we have " + (data.testData.getNumColumns() - NUM_META_COLUMNS) + " predictors for learning!");
-		
-		this.nrAttributes = data.trainData.getNumColumns() - NUM_META_COLUMNS;
+
+		this.nrAttributes = columnSelector.getUsedIndexes().length;
 
 		int trainInstances = data.trainData.getNumRows();
 
 		log.info("Working on " + trainInstances + " Training Instances.");
 
 
-		// Save current Run in Database
-		if (laplacian) {
-			try {
-				runKey = database.addRunLaplacian(reg0, stepSize, windowExtent,
-						batchSize, readSplit.getSplitFolder().getAbsolutePath(), smoothReg, smoothWindow);
-			} catch (DataStoreException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+		if(this.useDatabase) {
+			// Save current Run in Database
+			if (laplacian) {
+				try {
+					runKey = database.addRunLaplacian(reg0, stepSize, windowExtent,
+							batchSize, readSplit.getSplitFolder().getAbsolutePath(), smoothReg, smoothWindow);
+				} catch (DataStoreException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			}
-		}
-		else {
-			try {
-				runKey = database.addRun(reg0, stepSize, windowExtent,
-						batchSize, readSplit.getSplitFolder().getAbsolutePath());
-			} catch (DataStoreException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+			else {
+				try {
+					runKey = database.addRun(reg0, stepSize, windowExtent,
+							batchSize, readSplit.getSplitFolder().getAbsolutePath());
+				} catch (DataStoreException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			}
 		}
 		
+
+
+
+
 		// Initialize ModelFunction
-		
+
+
+
 		modelFunction.initialize(this);
-		
-		
+
+
 		// Initialize LossFunction
-		
+
 		lossFunction.setLearnRate(stepSize);
-		
-		
-		
-		
+
+
+
+
 
 		// Algorithm Objekt initialisieren
 		Algorithm algorithm = new Algorithm();
-		
+
 		algorithm.setData(data);
 		algorithm.setRawData(rawData);
 
 		// Parameter an den Algorithmus übergeben	
-		
-		
+
+
 		// Unabhängige Parameter
 		algorithm.setMaxIterations(maxIterations);
 		algorithm.setBatchSize(batchSize);
 		algorithm.setWindowExtent(windowExtent);
 		algorithm.setColumnSelector(columnSelector);
 		
+		algorithm.setUseDatabase(this.useDatabase);
+
 		algorithm.setAnnotationBaseDir(annotationBaseDir);
 		algorithm.setAnnotator(annotator);
 		algorithm.setDatabase(database);
@@ -421,22 +450,22 @@ public class AlgorithmController  implements Runnable{
 		algorithm.setSplitNumber(splitNumber);
 		algorithm.setProbandNumber(probandNumber);
 		algorithm.setValidationFolders(readSplit.validationFolders);
-		
-		
+
+
 		algorithm.setModelFunction(modelFunction);
-		
-		
+
+
 		algorithm.setLossFunction(lossFunction);
-//		algorithm.setLaplacian(laplacian);	
-//		algorithm.setSmoothReg(smoothReg);
-//		algorithm.setSmoothWindow(smoothWindow);
-//		algorithm.setStepSize(stepSize);
-		
+		//		algorithm.setLaplacian(laplacian);	
+		//		algorithm.setSmoothReg(smoothReg);
+		//		algorithm.setSmoothWindow(smoothWindow);
+		//		algorithm.setStepSize(stepSize);
+
 		algorithm.run(); 
 
-		}
+	}
 
-	
+
 
 
 
@@ -446,8 +475,8 @@ public class AlgorithmController  implements Runnable{
 		int probandId = folder.getProband();
 		int swallowId = folder.getSwallowId();
 
-		String annotationPath = annotationBaseDir + probandId + "-" + annotator + ".tsv";
-		
+		String annotationPath = annotationBaseDir + File.separator + probandId + "-" + annotator + ".tsv";
+
 
 		// Parser modifizieren!
 
@@ -480,7 +509,7 @@ public class AlgorithmController  implements Runnable{
 		int probandId = folder.getProband();
 		int swallowId = folder.getSwallowId();
 
-		String annotationPath = annotationBaseDir + probandId + "-" + annotator + ".tsv";
+		String annotationPath = annotationBaseDir + File.separator + probandId + "-" + annotator + ".tsv";
 
 		try {
 			annotations = Parser.readAnnotations(new File(annotationPath), folder.getSamplerateAsInt());
@@ -1221,6 +1250,7 @@ public class AlgorithmController  implements Runnable{
 	public static void computeSample2avgLabel( int windowExtent, Matrix predictedLabels, Matrix avgLabels) {
 
 		// TODO: Andre added
+
 		predictedLabels = new DefaultMatrix(predictedLabels);
 		int leftSide;
 		int rightSide;
@@ -1300,7 +1330,7 @@ public class AlgorithmController  implements Runnable{
 			}
 			else if ( leftSide < 0 && rightSide >= numPredictedLabelsRows) // beidseitig zu kurz
 			{
-				System.out.println("WindowExtent is too high, will be halved...");
+				//				System.out.println("WindowExtent is too high, will be halved...");
 				windowExtent = (int) windowExtent/2;
 			}
 			else  // default alles falsch :-)
@@ -1691,6 +1721,22 @@ public class AlgorithmController  implements Runnable{
 
 	public void setNrAttributes(int nrAttributes) {
 		this.nrAttributes = nrAttributes;
+	}
+
+
+
+
+
+	public boolean isUseDatabase() {
+		return useDatabase;
+	}
+
+
+
+
+
+	public void setUseDatabase(boolean useDatabase) {
+		this.useDatabase = useDatabase;
 	}
 
 

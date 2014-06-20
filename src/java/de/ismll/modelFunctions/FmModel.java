@@ -10,9 +10,13 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 import de.ismll.myfm.core.FmDataset;
 import de.ismll.myfm.util.Printers;
 import de.ismll.secondversion.AlgorithmController;
+import de.ismll.secondversion.IntRange;
+import de.ismll.secondversion.MhhRawData;
+import de.ismll.secondversion.Quality;
 import de.ismll.table.Matrices;
 import de.ismll.table.Matrix;
 import de.ismll.table.Vector;
+import de.ismll.table.Vectors;
 import de.ismll.table.impl.DefaultMatrix;
 import de.ismll.table.impl.DefaultVector;
 import de.ismll.table.projections.RowUnionMatrixView;
@@ -21,8 +25,13 @@ import de.ismll.table.projections.VectorAsMatrixView;
 public class FmModel extends ModelFunctions {
 
 	public float bias;
+	private float bias_copy;
+
 	public Vector w;
+	private Vector w_copy;
+
 	public Matrix v;
+	private Matrix v_copy;
 
 	public Matrix vAdd;
 	public Vector wAdd;
@@ -36,6 +45,7 @@ public class FmModel extends ModelFunctions {
 
 	private boolean useW0;
 	private boolean useW;
+	private boolean useV;
 
 	private float init_stdev;
 	private float init_mean;
@@ -58,62 +68,87 @@ public class FmModel extends ModelFunctions {
 	private float minTarget;
 
 	private TIntIntHashMap newAttributeIds;
+
+
+
+	@Override
+	public float evaluate(Vector instance) {
+		float ret = 0;
+		if (this.useW0) {
+			ret = this.bias;
+		}
+		if (this.useW) {
+			for (int ind = 0; ind < instance.size() ; ind++) {
+				ret += this.w.get(ind)*instance.get(ind);
+			}
+		}
+		if (this.useV) {
+			for (int f = 0; f < this.getNumFactor() ; f++) {
+				float sum = 0;
+				float sum_sqr = 0;
+				for (int ind = 0; ind < instance.size() ; ind++) {
+					float d = (float) (this.v.get(ind, f)*instance.get(ind));
+					sum += d;
+					sum_sqr += d*d;
+				}
+				ret += 0.5 * (sum*sum - sum_sqr);
+			}
+		}
+		return ret;
+	}
 	
 	
+
+
 	public void initialize(int nrAttributes, float stDev, int nrFactors, float reg0, float regV, float regW ) {
-		
+
 		// Initialize Parameters
-		
+
+		this.numAttributes=nrAttributes;
+		this.numFactor=nrFactors;
+
 		this.w = new DefaultVector(nrAttributes);
 		this.v = new DefaultMatrix(nrAttributes, nrFactors);
 
 		Random random = new Random();
 		setBias((float) (random.nextGaussian()*stDev));
-		
+
 		this.w = new DefaultVector(getNumAttributes());
 		for (int i = 0; i < w.size() ; i++) {
-			this.w.set(i, (float) ( random.nextGaussian()*init_stdev) );
+			this.w.set(i, (float) ( random.nextGaussian()*stDev) );
 		}
 		v = new DefaultMatrix(getNumAttributes(), getNumFactor());
 		for (int i = 0; i < v.getNumRows() ; i++) {
 			for (int j = 0; j < v.getNumColumns() ; j++) {
-				this.v.set(i, j, (float) ( random.nextGaussian()*init_stdev));
+				this.v.set(i, j, (float) ( random.nextGaussian()*stDev));
 			}
 		}
-		
+
+		setUseW(true);
+		setUseW0(true);
+
 		this.reg0 = reg0;
 		this.regV = regV;
 		this.regW = regW;
+		
+		this.useV=true;
+		this.useW=false;
+		this.useW0=false;
 	}
-	
-	
+
+
 	@Override
 	public void initialize(AlgorithmController algcon) {
-				
+
 		int nrAttributes = algcon.getNrAttributes();
+
 		float stDev = algcon.getStDev();
 		int nrFactors = algcon.getFm_numFactors();
 		float reg0 = algcon.getReg0();
 		float regV = algcon.getFm_regV();
 		float regW = algcon.getFm_regW();
-		
+
 		initialize(nrAttributes, stDev, nrFactors, reg0, regV, regW);
-	}
-
-
-	public void debug() {
-		System.out.println("Number of Attributes: " + getNumAttributes());
-		System.out.println("use W0: " + isUseW0());
-		System.out.println("use W: " + isUseW());
-		System.out.println("dim v: " + getNumFactor());
-		System.out.println("Reg0: " + getReg0());
-		System.out.println("RegW: " + getRegW());
-		System.out.println("RegV: " + getRegV());
-		System.out.println("Initialize V ~ N(" + getInit_mean() + "," + getInit_stdev() +")");
-	}
-
-	public void initializeModel(int nrAttributes) {
-		
 	}
 
 	public void printLatentFeatures() {
@@ -127,117 +162,7 @@ public class FmModel extends ModelFunctions {
 		}
 	}
 
-
-	public void initializeDimensions(String dimString) {
-		StringTokenizer dimStringTok = new StringTokenizer(dimString, ",");
-		int useW0 = Integer.parseInt(dimStringTok.nextToken());
-		if (useW0 == 1) { this.setUseW0(true); }
-		int useW = Integer.parseInt(dimStringTok.nextToken());
-		if (useW == 1) {this.setUseW(true); }
-		int numFactor = Integer.parseInt(dimStringTok.nextToken());
-		this.setNumFactor(numFactor);
-	}
-
-	public void initializeRegularization(String regString) {
-		StringTokenizer regStringTok = new StringTokenizer(regString , ",");
-		float reg0 = Float.parseFloat(regStringTok.nextToken());
-		this.setReg0(reg0);
-		float regW = Float.parseFloat(regStringTok.nextToken());
-		this.setRegW(regW);
-		float regV = Float.parseFloat(regStringTok.nextToken());
-		this.setRegV(regV);
-	}
-
-
-
-	public float convertPrediction(float in) {
-		if (this.task == REGRESSION_TASK) {
-			in = Math.min(in, this.maxTarget);
-			in = Math.max(in, this.minTarget);
-		}
-		else if (this.task == CLASSIFICATION_TASK) {
-			in = Math.min(in, 1);
-			in = Math.max(in, -1);
-		}
-		//		if (this.task == RANKING_TASK) {
-		//			in = Math.min(in, this.maxTarget);
-		//			in = Math.max(in, this.minTarget);
-		//		}
-		return in;
-	}
-
-
-	public float computeError(float predictedValue, float trueValue) {
-		float ret = 0;
-
-		if (this.loss == LEAST_SQUARES_LOSS) {
-			ret = (predictedValue - trueValue)*(predictedValue - trueValue);
-			//			ret = Math.abs(predictedValue - trueValue);
-		}
-		return ret;
-	}
-
-	public float computeBPRLoss(float predictedProb) {
-		float ret = 0;
-
-		float sigmoid = computeSigmoid(predictedProb);
-		ret = (float) Math.log(sigmoid);
-		//		if(Float.isInfinite(ret)) {
-		//			System.out.println("infinite");
-		//		}
-
-		return ret;
-	}
-
-
-	public float computeOverallError(float[] predictedValues, float[] trueValues) {
-		if (predictedValues.length != trueValues.length) {
-			System.err.println("Cannot compute Error as predicted Values and true Values do not have the same length");
-			System.exit(1);
-		}
-		float averageError=0;
-
-		if (this.loss == LEAST_SQUARES_LOSS) {
-			for (int i = 0; i < predictedValues.length ; i++) {
-				averageError += computeError(predictedValues[i], trueValues[i]);
-			}
-			averageError = (float) Math.sqrt(averageError/predictedValues.length);
-			//			averageError = averageError/predictedValues.length;
-		}
-
-		return averageError;
-	}
-
-
-	public float computeOverallBPROpt(TIntObjectHashMap<int[]> orderedPairs, FmDataset data ) {
-		float ret = 0;
-
-		int[] keys = orderedPairs.keys();
-
-		for (int i = 0; i < keys.length ; i++) {
-			int ind = keys[i];
-			float predPos = this.predict(data.getValues()[ind]);
-
-			int[] lowerIndexes = orderedPairs.get(ind);
-
-			for (int j = 0; j < lowerIndexes.length ; j++) {
-				int lowerInd = lowerIndexes[j];
-				float predNeg = this.predict(data.getValues()[lowerInd]);
-
-				float predDiff = predPos - predNeg;
-				ret += computeBPRLoss(predDiff);
-			}
-
-		}
-
-		return ret;
-
-
-	}
-
-
-
-	public static float computeScalarProduct(Vector x, Vector y) {
+		public static float computeScalarProduct(Vector x, Vector y) {
 		float ret = 0;
 		if (x.size() != y.size()) { 
 			System.out.println("Vectors have different size, scalar product cannot be computed!");
@@ -249,37 +174,37 @@ public class FmModel extends ModelFunctions {
 		return ret;
 	}
 
-	public float predict(TIntFloatHashMap tIntFloatHashMap) {
+
+
+	public float evaluate(TIntFloatHashMap instance) {
 		float result = 0;
-		int[] keys = tIntFloatHashMap.keys();
-		if (useW0) {
+		int[] keys = instance.keys();
+		if (this.useW0) {
 			result += getBias();
 		}
-		if (useW) {
+		if (this.useW) {
 			for (int ind = 0; ind < keys.length ; ind++) {
 				int key = keys[ind];
-				result += this.w.get(key)*tIntFloatHashMap.get(key);
+				result += this.w.get(key)*instance.get(key);
 			}
 		}
-		for (int f = 0; f < getNumFactor() ; f++) {
-			float sum = 0;
-			float sum_sqr = 0;
-			for (int ind = 0; ind < keys.length ; ind++) {
-				int i = keys[ind];
-				float d = (float) (this.v.get(i, f)*tIntFloatHashMap.get(i));
-				sum += d;
-				sum_sqr += d*d;
-			}
-			result += 0.5 * (sum*sum - sum_sqr);
-		}	
-		//		System.out.println("Result before converting is: " + result);
-		result = convertPrediction(result);	
+		if (this.useV) {
+			for (int f = 0; f < getNumFactor() ; f++) {
+				float sum = 0;
+				float sum_sqr = 0;
+				for (int ind = 0; ind < keys.length ; ind++) {
+					int i = keys[ind];
+					float d = (float) (this.v.get(i, f)*instance.get(i));
+					sum += d;
+					sum_sqr += d*d;
+				}
+				result += 0.5 * (sum*sum - sum_sqr);
+			}	
+		}
 		if (Float.isNaN(result)) {
 			System.out.println("Prediction is NaN..."); 
 			System.exit(1);
 		}
-		//		System.out.println("Result is: " + result);
-		//return result;
 		return result;
 	}
 
@@ -287,7 +212,7 @@ public class FmModel extends ModelFunctions {
 	public float[] predict(TIntFloatHashMap[] values) {	
 		float[] ret = new float[values.length];
 		for (int i = 0; i < values.length ; i++) {
-			ret[i] = predict(values[i]);
+			ret[i] = evaluate(values[i]);
 		}	
 		return ret;
 	}
@@ -365,7 +290,7 @@ public class FmModel extends ModelFunctions {
 	@Override
 	public void SGD(TIntFloatHashMap x, float multiplier, float learnRate) {
 		if (this.isUseW0()) {
-			float updated = this.bias - learnRate *( multiplier + this.getReg0()*this.bias);
+			float updated = this.bias - learnRate *multiplier;
 			if (Float.isNaN(updated) || Float.isInfinite(updated)) {
 				System.out.println("Update of Bias is about to be NaN...");
 				System.exit(1);
@@ -376,7 +301,7 @@ public class FmModel extends ModelFunctions {
 			int[] keys = x.keys();	
 			for (int ind = 0; ind < keys.length ; ind++) {
 				int i = keys[ind];	
-				float updated = (this.w.get(i) - learnRate*( multiplier*x.get(i) + this.getRegW()*this.w.get(i) ));
+				float updated = (this.w.get(i) - learnRate*multiplier*x.get(i) + this.getRegW()*this.w.get(i) );
 				if (Float.isNaN(updated) || Float.isInfinite(updated)) {
 					System.out.println("Update of a Regression Term is about to be NaN...");
 					System.exit(1);
@@ -384,18 +309,95 @@ public class FmModel extends ModelFunctions {
 				this.w.set(i, updated );
 			}
 		}
-		int[] keys = x.keys();
+		if (this.useV) {
+			int[] keys = x.keys();
+			for (int f = 0; f < this.getNumFactor() ; f++) {
+				float sum = preComputeSum(x, f);
+				for (int ind = 0; ind < keys.length ; ind++) {
+					int i = keys[ind];
+					float grad = x.get(i)*sum - this.v.get(i, f)*x.get(i)*x.get(i);
+					float updated = (this.v.get(i, f) - learnRate*multiplier*grad + this.getRegV()*this.v.get(i, f) );
+					if (Float.isNaN(updated) || Float.isInfinite(updated)) {
+						System.out.println("Update of a latent Feature is about to be NaN...");
+						System.exit(1);
+					}
+					this.v.set(i, f, updated);
+				}
+			}
+		}	
+	}
+	
+	@Override
+	public void GD(Matrix data, float[] multipliers, float learnRate) {
+		float multiplierSum=0;
+		for (int i = 0; i < multipliers.length ; i++) {
+			multiplierSum += multipliers[i];
+		}
+		// Update of Bias...
+		if (this.useW0) {
+			float updatedBias = this.bias - learnRate*multiplierSum;
+			this.bias = updatedBias;
+		}
+		if (this.isUseW()) {
+			float[] grad = new float[this.w.size()];
+			for (int dim = 0; dim < grad.length ; dim++) {
+				for (int instance = 0; instance < multipliers.length ; instance++) {
+					grad[dim] += multipliers[instance]*data.get(instance, dim);
+				}
+				float updated = (this.w.get(dim) - learnRate*grad[dim] - this.getRegW()*this.w.get(dim));
+				this.w.set(dim, updated);
+			}
+		}
+		if (this.useV) {
+			for (int f = 0; f < this.getNumFactor() ; f++) {
+				float[] sums = preComputeSums(data, f);
+				for (int dim=0; dim < this.getNumAttributes() ; dim++) {
+					float gradient = 0;
+					for (int instance = 0; instance < sums.length ; instance++) {
+						Vector instanceVector = Vectors.row(data, instance);
+						gradient += multipliers[instance]*( instanceVector.get(dim)*sums[instance] 
+								 - this.v.get(dim, f)*instanceVector.get(dim)*instanceVector.get(dim) );
+					}
+					float updated = this.v.get(dim, f) - learnRate*gradient - this.getRegV()*this.v.get(dim, f);
+					this.v.set(dim, f, updated);
+				}
+			}
+		}
+		System.out.println("max of V is: " + Matrices.max(this.v));
+		System.out.println("min of V is: " + Matrices.min(this.v));
+	}
+
+	@Override
+	public void SGD(Vector x, float multiplier, float learnRate) {
+		if (this.isUseW0()) {
+			float updated = this.bias - learnRate * multiplier;
+			if (Float.isNaN(updated) || Float.isInfinite(updated)) {
+				System.out.println("Update of Bias is about to be NaN...");
+				System.exit(1);
+			}
+			this.setBias(updated);
+		}
+		if (this.isUseW()) {	
+			for (int ind = 0; ind < x.size(); ind++) {	
+				float updated = (this.w.get(ind) - learnRate*multiplier*x.get(ind) + this.getRegW()*this.w.get(ind) );
+				if (Float.isNaN(updated) || Float.isInfinite(updated)) {
+					System.out.println("Update of a Regression Term is about to be NaN...");
+					System.exit(1);
+				}
+				this.w.set(ind, updated );
+			}
+		}
+
 		for (int f = 0; f < this.getNumFactor() ; f++) {
 			float sum = preComputeSum(x, f);
-			for (int ind = 0; ind < keys.length ; ind++) {
-				int i = keys[ind];
-				float grad = x.get(i)*sum - this.v.get(i, f)*x.get(i)*x.get(i);
-				float updated = (this.v.get(i, f) - learnRate*(multiplier*grad + this.getRegV()*this.v.get(i, f) ));
+			for (int ind = 0; ind < x.size() ; ind++) {
+				float grad = x.get(ind)*sum - this.v.get(ind, f)*x.get(ind)*x.get(ind);
+				float updated = (this.v.get(ind, f) - learnRate*multiplier*grad + this.getRegV()*this.v.get(ind, f) );
 				if (Float.isNaN(updated) || Float.isInfinite(updated)) {
 					System.out.println("Update of a latent Feature is about to be NaN...");
 					System.exit(1);
 				}
-				this.v.set(i, f, updated);
+				this.v.set(ind, f, updated);
 			}
 		}	
 	}
@@ -410,20 +412,45 @@ public class FmModel extends ModelFunctions {
 		return sum;
 	}
 
+	public float preComputeSum(Vector x, int f) {
+		float sum = 0;
+		for (int dim = 0; dim < x.size() ; dim++) {
+			sum += this.v.get(dim, f)*x.get(dim);		
+		}
+		return sum;
+	}
+	
+	public float[] preComputeSums(Matrix data, int f) {
+		float[] sums = new float[data.getNumRows()];
+		
+		for (int i = 0; i < sums.length	; i++) {
+			sums[i] = preComputeSum(Vectors.row(data, i), f);
+		}
+		return sums;
+	}
 
 
 
+	@Override
+	public void saveBestParameters(Quality quality, String forWhat) {
 
-
-
-
-
-
-
-
-
-
-
+		if(forWhat=="accuracy") {
+			if (quality.getAccuracy() > this.getBestAccuracy()) {
+				this.setBestAccuracy(quality.getAccuracy());
+				this.setV_copy(this.getV());;
+				this.setW_copy(this.getW());
+				this.setBias_copy(bias);
+			}
+		}
+		else if (forWhat == "sampleDifference") {
+			if (quality.getSampleDifference() > this.getBestSampleDiff()) {
+				this.setBestSampleDiff(quality.getSampleDifference());;
+				this.setV_copy(this.getV());;
+				this.setW_copy(this.getW());
+				this.setBias_copy(bias);
+			}
+		}
+	}
 
 	public float getBias() {
 		return bias;
@@ -556,6 +583,50 @@ public class FmModel extends ModelFunctions {
 
 	public void setNewAttributeIds(TIntIntHashMap newAttributeIds) {
 		this.newAttributeIds = newAttributeIds;
+	}
+
+
+	public Vector getW_copy() {
+		return w_copy;
+	}
+
+
+	public void setW_copy(Vector w_copy) {
+		this.w_copy = w_copy;
+	}
+
+
+	public Matrix getV_copy() {
+		return v_copy;
+	}
+
+
+	public void setV_copy(Matrix v_copy) {
+		this.v_copy = v_copy;
+	}
+
+
+	public float getBias_copy() {
+		return bias_copy;
+	}
+
+
+	public void setBias_copy(float bias_copy) {
+		this.bias_copy = bias_copy;
+	}
+
+
+
+
+	public boolean isUseV() {
+		return useV;
+	}
+
+
+
+
+	public void setUseV(boolean useV) {
+		this.useV = useV;
 	}
 
 

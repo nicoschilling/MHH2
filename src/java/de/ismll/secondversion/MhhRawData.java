@@ -17,17 +17,20 @@ public class MhhRawData {
 		trainRuhedruck = new Matrix[trainSwallows+testSwallows];
 		trainRuhedruckLabels = new Matrix[trainSwallows+testSwallows];
 		instanceWeights = new Matrix[trainSwallows];
-		trainDataAnnotations = new int[trainSwallows];
+		trainDataRelativeAnnotations = new int[trainSwallows];
+		trainDataAbsoluteAnnotations = new int[trainSwallows];
 		
 		validationData = new Matrix[validationSwallows];
 		validationDataLabels = new Matrix[validationSwallows];
-		validationDataAnnotations = new int[validationSwallows];
+		validationDataRelativeAnnotations = new int[validationSwallows];
+		validationDataAbsoluteAnnotations = new int[validationSwallows];
 		
 		testData = new Matrix[testSwallows];
 		testDataLabels = new Matrix[testSwallows];
 		testRuhedruck = new Matrix[testSwallows];
 		testRuhedruckLabels = new Matrix[testSwallows];
-		testDataAnnotations = new int[testSwallows];
+		testDataRelativeAnnotations = new int[testSwallows];
+		testDataAbsoluteAnnotations = new int[testSwallows];
 		
 	}
 	
@@ -36,17 +39,20 @@ public class MhhRawData {
 	Matrix[] trainDataLabels;
 	Matrix[] trainRuhedruck; 
 	Matrix[] trainRuhedruckLabels;
-	int[] trainDataAnnotations;
+	int[] trainDataRelativeAnnotations;
+	int[] trainDataAbsoluteAnnotations;
 	
 	Matrix[] validationData;
 	Matrix[] validationDataLabels;
-	int[] validationDataAnnotations;
+	int[] validationDataRelativeAnnotations;
+	int[] validationDataAbsoluteAnnotations;
 	
 	Matrix[] testData;
 	Matrix[] testDataLabels;
 	Matrix[] testRuhedruck;
 	Matrix[] testRuhedruckLabels;
-	int[] testDataAnnotations;
+	int[] testDataRelativeAnnotations;
+	int[] testDataAbsoluteAnnotations;
 	
 	
 	
@@ -88,28 +94,28 @@ public class MhhRawData {
 		this.testDataLabels = testDataLabels;
 	}
 
-	public int[] getTrainDataAnnotations() {
-		return trainDataAnnotations;
+	public int[] getTrainDataRelativeAnnotations() {
+		return trainDataRelativeAnnotations;
 	}
 
-	public void setTrainDataAnnotations(int[] trainAnnotations) {
-		this.trainDataAnnotations = trainAnnotations;
+	public void setTrainDataRelativeAnnotations(int[] trainAnnotations) {
+		this.trainDataRelativeAnnotations = trainAnnotations;
 	}
 
-	public int[] getValidationDataAnnotations() {
-		return validationDataAnnotations;
+	public int[] getValidationDataRelativeAnnotations() {
+		return validationDataRelativeAnnotations;
 	}
 
-	public void setValidationDataAnnotations(int[] validationDataAnnotations) {
-		this.validationDataAnnotations = validationDataAnnotations;
+	public void setValidationDataRelativeAnnotations(int[] validationDataAnnotations) {
+		this.validationDataRelativeAnnotations = validationDataAnnotations;
 	}
 
-	public int[] getTestDataAnnotations() {
-		return testDataAnnotations;
+	public int[] getTestDataRelativeAnnotations() {
+		return testDataRelativeAnnotations;
 	}
 
-	public void setTestDataAnnotations(int[] testDataAnnotations) {
-		this.testDataAnnotations = testDataAnnotations;
+	public void setTestDataRelativeAnnotations(int[] testDataAnnotations) {
+		this.testDataRelativeAnnotations = testDataAnnotations;
 	}
 
 }
