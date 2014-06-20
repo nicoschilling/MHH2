@@ -190,10 +190,10 @@ public abstract class ModelFunctions {
 		str = (String) in;
 
 		switch(str) {
-		case "linearModel":
+		case "lm":
 			return new LinearRegressionPrediction();
 
-		case "factorizationMachine":
+		case "fm":
 			return new FmModel();
 
 			//TODO: Add and implement more different Models!!

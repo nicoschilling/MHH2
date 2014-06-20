@@ -117,7 +117,7 @@ public class Algorithm implements Runnable{
 
 		for (int iteration = 0; iteration < maxIterations ; iteration++) {
 			
-			int[] randomBatch = lossFunction.computeRandomBatch(trainData.getNumRows(), 1);
+			int[] randomBatch = lossFunction.computeRandomBatch(trainData.getNumRows(), 1000);
 			
 			Vector pointers1 =  new DefaultVector(randomBatch.length);
 			
@@ -186,6 +186,8 @@ public class Algorithm implements Runnable{
 				
 				}
 			}
+		
+		
 			
 		
 		

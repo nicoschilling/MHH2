@@ -124,16 +124,14 @@ public class FmModel extends ModelFunctions {
 			}
 		}
 
-		setUseW(true);
-		setUseW0(true);
 
 		this.reg0 = reg0;
 		this.regV = regV;
 		this.regW = regW;
 		
 		this.useV=true;
-		this.useW=false;
-		this.useW0=false;
+		this.useW=true;
+		this.useW0=true;
 	}
 
 
@@ -194,7 +192,7 @@ public class FmModel extends ModelFunctions {
 				float sum_sqr = 0;
 				for (int ind = 0; ind < keys.length ; ind++) {
 					int i = keys[ind];
-					float d = (float) (this.v.get(i, f)*instance.get(i));
+					float d = this.v.get(i, f)*instance.get(i);
 					sum += d;
 					sum_sqr += d*d;
 				}
@@ -354,17 +352,16 @@ public class FmModel extends ModelFunctions {
 				for (int dim=0; dim < this.getNumAttributes() ; dim++) {
 					float gradient = 0;
 					for (int instance = 0; instance < sums.length ; instance++) {
-						Vector instanceVector = Vectors.row(data, instance);
-						gradient += multipliers[instance]*( instanceVector.get(dim)*sums[instance] 
-								 - this.v.get(dim, f)*instanceVector.get(dim)*instanceVector.get(dim) );
+						gradient += multipliers[instance]*( data.get(instance, dim)*sums[instance] 
+								 - this.v.get(dim, f)*data.get(instance, dim)*data.get(instance, dim) );
 					}
 					float updated = this.v.get(dim, f) - learnRate*gradient - this.getRegV()*this.v.get(dim, f);
 					this.v.set(dim, f, updated);
 				}
 			}
 		}
-		System.out.println("max of V is: " + Matrices.max(this.v));
-		System.out.println("min of V is: " + Matrices.min(this.v));
+//		System.out.println("max of V is: " + Matrices.max(this.v));
+//		System.out.println("min of V is: " + Matrices.min(this.v));
 	}
 
 	@Override

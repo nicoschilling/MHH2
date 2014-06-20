@@ -78,14 +78,14 @@ public abstract class LossFunction {
 	
 	public int[] computeRandomBatch(int nrInstances, int batchSize) {
 		int[] ret = new int[batchSize];
-		Random random = new Random();
 		for (int i = 0; i < ret.length ; i++) {
-			ret[i] = (int) Math.random()*nrInstances;
+			ret[i] = (int) (Math.random()*nrInstances);
 		}
 		return ret;
 	}
 	
 
+	
 //	/** 
 //	 * Function that updates the parameters (performs one update iteration), according to a given batch of instances
 //	 * @param parameters
