@@ -9,7 +9,7 @@ import de.ismll.table.projections.ColumnSubsetMatrixView;
 
 
 
-public class LowerExtractor implements SphincterFeatureExtractor{
+public class LowerExtractor implements FeatureExtractor{
 	
 	protected Logger log = LogManager.getLogger(getClass());
 

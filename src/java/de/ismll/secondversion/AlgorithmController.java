@@ -24,6 +24,7 @@ import de.ismll.mhh.featureExtractors.AllExtractor;
 import de.ismll.mhh.featureExtractors.LowerExtractor;
 import de.ismll.mhh.featureExtractors.LowerMiddleExtractor;
 import de.ismll.mhh.featureExtractors.MiddleExtractor;
+import de.ismll.mhh.featureExtractors.TimeFeatureExtractor;
 import de.ismll.mhh.featureExtractors.UpperExtractor;
 import de.ismll.mhh.featureExtractors.UpperMiddleExtractor;
 import de.ismll.mhh.io.Parser;
@@ -984,6 +985,23 @@ public class AlgorithmController  implements Runnable{
 		//				log.info("FFT starts at 34!");
 		//				log.info("Sphincter Features start at 162! ");
 
+		Matrix dataBeforeTimeExtraction;
+		
+		dataBeforeTimeExtraction = new ColumnUnionMatrixView(new Matrix[] {
+				normalizedDruck
+				, normalizedMaximumPressure
+				, normalizedFFT
+				, normalizedSphincterFeatures
+		});
+		
+		
+		TimeFeatureExtractor timeFeatureExtractor = new TimeFeatureExtractor();
+		
+		Matrix timeFeatures = timeFeatureExtractor.extractFeatures(dataBeforeTimeExtraction);
+		
+		log.info("Using " + timeFeatures.getNumColumns() + " additional temporal features!");
+		
+		
 		//		VectorAsMatrixView;
 		DefaultMatrix meta = new DefaultMatrix(numRows, 1);
 		DefaultMatrix annotationSampleMatrix = new DefaultMatrix(numRows, 1);
@@ -1019,6 +1037,7 @@ public class AlgorithmController  implements Runnable{
 				, normalizedMaximumPressure
 				, normalizedFFT
 				, normalizedSphincterFeatures
+				, timeFeatures
 		}); 
 
 		Matrix ret = new DefaultMatrix(ret1);

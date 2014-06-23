@@ -6,7 +6,7 @@ import org.apache.log4j.Logger;
 import de.ismll.table.Matrix;
 import de.ismll.table.Vector;
 
-public class LowerMiddleExtractor implements SphincterFeatureExtractor{
+public class LowerMiddleExtractor implements FeatureExtractor{
 	
 	protected Logger log = LogManager.getLogger(getClass());
 
