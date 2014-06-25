@@ -74,12 +74,17 @@ public abstract class LossFunction {
 	public void iterate(ModelFunctions function, TIntFloatHashMap[] data, float[] labels) {
 		log.fatal("The given loss Function does not implement iterate!");
 	}
+	public void iterateLap(ModelFunctions function, Matrix data, int[] randomIndices, float[] labels, int smoothWindow) {
+		log.fatal("The given loss function does not implement iterateLap");
+	}
 	
 	
 	public int[] computeRandomBatch(int nrInstances, int batchSize) {
+		Random random = new Random();
+		random.setSeed(100);
 		int[] ret = new int[batchSize];
 		for (int i = 0; i < ret.length ; i++) {
-			ret[i] = (int) (Math.random()*nrInstances);
+			ret[i] = (int) (random.nextFloat()*nrInstances);
 		}
 		return ret;
 	}

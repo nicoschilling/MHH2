@@ -12,12 +12,19 @@ import de.ismll.database.dao.Entity;
 import de.ismll.database.dao.PgStore;
 import de.ismll.database.dao.Table;
 import de.ismll.database.pgsql.PostgresSQL;
+import de.ismll.mhh.db.LapIterationTable;
+import de.ismll.table.Matrix;
+import de.ismll.table.Vector;
 import de.ismll.table.Vectors;
 
 public class Database {
 
 
 	private Logger log = LogManager.getLogger(getClass());
+	
+	private String typeDelimiter=":";
+	private String columnDelimiter=";";
+	private String valueDelimiter=",";
 
 	@Parameter(cmdline="iterationTable")
 	private String iterationTable="iterations";
@@ -50,6 +57,8 @@ public class Database {
 	private ValidationTable evaluation;
 
 	private PredictionTable prediction;
+	
+	private LapIterationTable lapIteration;
 
 	public Database() throws IOException, DataStoreException {
 		this(new PostgresSQL());
@@ -164,13 +173,19 @@ public class Database {
 		return pgStore.insertOrUpdate(iterInstance);
 	}
 
-	public long addRun(float lambda, float stepSize, int windowExtent, int batchSize, String splitPath) throws DataStoreException {
+	public long addRun(float stepSize, float reg0, float regW, float regV, int nrLatentFeatures,
+			 int windowExtent, int batchSize, String splitPath, float smoothReg, float smoothWindow) throws DataStoreException {
 		Entity runInstance = run.createInstance();
-		runInstance.set(run.lambda, lambda);
 		runInstance.set(run.stepSize, stepSize);
-		runInstance.set(run.batchSize, batchSize);
+		runInstance.set(run.reg0, reg0);
+		runInstance.set(run.regW, regW);
+		runInstance.set(run.regV, regV);
+		runInstance.set(run.nrLatentFeatures, nrLatentFeatures);
 		runInstance.set(run.windowExtent, windowExtent);
+		runInstance.set(run.batchSize, batchSize);
 		runInstance.set(run.splitPath, splitPath);
+		runInstance.set(run.smoothReg, smoothReg);
+		runInstance.set(run.smoothWindow, smoothWindow);
 
 		return pgStore.insertOrUpdate(runInstance);
 
@@ -190,6 +205,48 @@ public class Database {
 		return pgStore.insertOrUpdate(runInstance);
 
 	}
+	
+	public long addLapIteration(float iterationNumber, float accuracy, float sampleDifference, float overshootPercentage, float bias,
+			Vector w, Matrix v, int splitNumber, int probandNumber, int fkRunId) throws DataStoreException {
+		Entity lapIterationInstance = lapIteration.createInstance();
+		
+		lapIterationInstance.set(lapIteration.iterationNumber, iterationNumber);
+		lapIterationInstance.set(lapIteration.accuracy, accuracy);
+		lapIterationInstance.set(lapIteration.sampleDifference, sampleDifference);
+		lapIterationInstance.set(lapIteration.overshootPercentage, overshootPercentage);
+		lapIterationInstance.set(lapIteration.splitNumber, splitNumber);
+		lapIterationInstance.set(lapIteration.probandNumber, probandNumber);
+		lapIterationInstance.set(lapIteration.fkRunId, fkRunId);
+		
+		
+		
+		return pgStore.insertOrUpdate(lapIterationInstance);
+	}
+	
+	
+//	public String convert(float bias, Vector w, Matrix v) {
+//		StringBuilder ret = new StringBuilder();
+//		
+//		// bias
+//		
+//		ret.append(bias);
+//		ret.append(this.typeDelimiter);
+//
+//		// w
+//		
+//		for (int dim = 0; dim < w.size() ; dim++) {
+//			if (dim != w.size()-1) {
+//				ret.append(w.get(dim));
+//				ret.append(this.valueDelimiter);
+//			}
+//			else {
+//				ret.append(w.get(dim));
+//			}	
+//		}
+//		
+//		ret.append(this.typeDelimiter);
+//		
+//	}
 
 
 	public String getIterationTable() {
@@ -270,6 +327,30 @@ public class Database {
 
 	public void setPredictionTable(String predictionTable) {
 		this.predictionTable = predictionTable;
+	}
+
+	public String getTypeDelimiter() {
+		return typeDelimiter;
+	}
+
+	public void setTypeDelimiter(String typeDelimiter) {
+		this.typeDelimiter = typeDelimiter;
+	}
+
+	public String getColumnDelimiter() {
+		return columnDelimiter;
+	}
+
+	public void setColumnDelimiter(String columnDelimiter) {
+		this.columnDelimiter = columnDelimiter;
+	}
+
+	public String getValueDelimiter() {
+		return valueDelimiter;
+	}
+
+	public void setValueDelimiter(String valueDelimiter) {
+		this.valueDelimiter = valueDelimiter;
 	}
 
 

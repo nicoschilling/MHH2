@@ -38,7 +38,7 @@ public class Algorithm implements Runnable{
 	private int maxIterations;
 	private float stepSize;
 	private int batchSize;
-	
+
 	private IntRange columnSelector;
 
 	private int windowExtent;
@@ -46,7 +46,7 @@ public class Algorithm implements Runnable{
 	private String algorithmType;
 	public LossFunction lossFunction;
 	private ModelFunctions modelFunction;
-	
+
 	private String annotator;
 	private String annotationBaseDir;
 
@@ -57,9 +57,9 @@ public class Algorithm implements Runnable{
 
 	private MhhDataset data;
 	private MhhRawData rawData;
-	
+
 	private Matrix trainData;
-	
+
 
 	private DataInterpretation[] validationFolders;
 
@@ -68,8 +68,8 @@ public class Algorithm implements Runnable{
 
 	private float bestAccuracySoFar = 0;
 	private float bestSampleDifference = Integer.MAX_VALUE;
-	
-	
+
+
 	private Database database;
 	private long runKey;
 
@@ -80,117 +80,184 @@ public class Algorithm implements Runnable{
 	private boolean laplacian;
 	private int smoothWindow;
 	private float smoothReg;
-	
+
 	public ApplyMHHModelImpl apply;
 
 	private boolean printParameters=false;
 	private boolean useDatabase;
+	
+	private boolean useValidation;
 
 
 
 	@Override 
-	public void run() {		
-		Matrix rawTrainData = new RowUnionMatrixView(rawData.trainData);
+	public void run() {	
 		
-		this.trainData = new DefaultMatrix( AlgorithmController.preprocess(rawTrainData, columnSelector));
+		Matrix[] rawLearnData;
+		Matrix[] rawLearnLabels;
+		int[] rawLearnAnnotations;
 		
+		
+		Matrix[] rawApplyData;
+		Matrix[] rawApplyLabels;
+		int[] rawApplyAnnotations;
+		
+		
+		if (this.useValidation) {
+			// train is train and val is val
+			rawLearnData = rawData.trainData;
+			rawLearnLabels = rawData.trainDataLabels;
+			rawLearnAnnotations = rawData.trainDataRelativeAnnotations;
+			
+			rawApplyData = rawData.validationData;
+			rawApplyLabels = rawData.validationDataLabels;
+			rawApplyAnnotations = rawData.validationDataRelativeAnnotations;
+		}
+		else {
+			
+			rawLearnData = new Matrix[rawData.trainData.length + rawData.validationData.length];
+			rawLearnLabels = new Matrix[rawData.trainDataLabels.length + rawData.validationDataLabels.length];
+			rawLearnAnnotations = new int[rawData.trainDataRelativeAnnotations.length + rawData.validationDataRelativeAnnotations.length];
+			
+			// unite!
+			
+			for (int i = 0; i < rawData.trainData.length ; i++) {
+				rawLearnData[i] = rawData.trainData[i];
+				rawLearnLabels[i] = rawData.trainDataLabels[i];
+				rawLearnAnnotations[i] = rawData.trainDataRelativeAnnotations[i];
+			}
+			
+			for (int i = 0; i < rawData.validationData.length ; i++) {
+				rawLearnData[i+rawData.trainData.length] = rawData.validationData[i];
+				rawLearnLabels[i+rawData.trainData.length] = rawData.validationDataLabels[i];
+				rawLearnAnnotations[i+rawData.trainData.length] = rawData.validationDataRelativeAnnotations[i];
+			}
+			
+			
+			rawApplyData = rawData.testData;
+			rawApplyLabels = rawData.testDataLabels;
+			rawApplyAnnotations = rawData.testDataRelativeAnnotations;
+			
+		}
+		
+		
+		Matrix learnData = new RowUnionMatrixView(rawLearnData);
+
+		this.trainData = new DefaultMatrix( AlgorithmController.preprocess(learnData, columnSelector));
+		
+		Matrix trainLabels = new RowUnionMatrixView(rawLearnLabels);
+
 		// Start iterating!
 		float[] history = new float[10];
 		int historyIdx=0;
 		double oldRSS=Double.MAX_VALUE;
+
+
+		Quality qualityOnLearn;
+		qualityOnLearn = modelFunction.evaluateModel(rawLearnData, rawLearnLabels, rawLearnAnnotations,
+				this.windowExtent, columnSelector);
+
+		Quality qualityOnApply;
+		qualityOnApply = modelFunction.evaluateModel(rawApplyData, rawApplyLabels, rawApplyAnnotations,
+				 this.windowExtent, columnSelector);
 		
 		
-		Quality qualityOnVal;
-		qualityOnVal = modelFunction.evaluateModel(rawData, this.windowExtent, columnSelector, "validation");
+		// IF USEVALIDATION THEN PREDICT ON Validation, no need to do anything with test!!!
 		
-		Quality qualityOnTrain;
-		qualityOnTrain = modelFunction.evaluateModel(rawData, this.windowExtent, columnSelector, "train");
-		
-		Vector allLabelsVector = Vectors.col(data.trainDataLabels, COL_LABEL_IN_LABELS);
-		float major = modelFunction.computeMajorityClassAccuracy(allLabelsVector);
-		
-		log.info("ValAcc: " + qualityOnVal.getAccuracy() + " TrainAcc: " + qualityOnTrain.getAccuracy()  + " ValSD: " + 
-				qualityOnVal.getSampleDifference() 
-				+ " TrainSD: " + qualityOnTrain.getSampleDifference());
-		
-		
+		// IF TESTRUN, merge validation with train and PREDICT ON TEST :-)
+
+//		Vector allLabelsVector = Vectors.col(data.trainDataLabels, COL_LABEL_IN_LABELS);
+//		float major = modelFunction.computeMajorityClassAccuracy(allLabelsVector);
+
+		log.info("Learn Acc: " + qualityOnLearn.getAccuracy() + " Apply Acc: " + qualityOnApply.getAccuracy()  + " Learn SD: " + 
+				qualityOnLearn.getSampleDifference() 
+				+ " Apply SD: " + qualityOnApply.getSampleDifference());
+
+
 
 		for (int iteration = 0; iteration < maxIterations ; iteration++) {
-			
-			int[] randomBatch = lossFunction.computeRandomBatch(trainData.getNumRows(), 1000);
-			
+
+			int[] randomBatch = lossFunction.computeRandomBatch(trainData.getNumRows(), 10);
+
 			Vector pointers1 =  new DefaultVector(randomBatch.length);
-			
+
 			for (int i = 0; i < pointers1.size() ; i++) {
 				pointers1.set(i, randomBatch[i]);
 			}
-			
+
 			IntVector pointers = new IntVectorView(pointers1);
-		    
+
 			Matrix currentTrainData = new DefaultMatrix( new RowSubsetMatrixView(trainData, pointers) );
-			
-			
-			Matrix labelMatrix = new RowSubsetMatrixView(data.trainDataLabels, pointers);
+
+
+			Matrix labelMatrix = new RowSubsetMatrixView(trainLabels, pointers);
 			Vector labelsVector = Vectors.col(labelMatrix, 1);
-			
-			float[] allLabels = Vectors.toFloatArray(Vectors.col(data.trainDataLabels, 1));
-			
-//			Printers.printFloatArray(allLabels);
-			
-			
+
 			float[] labels = Vectors.toFloatArray(labelsVector);
-			lossFunction.iterate(modelFunction, currentTrainData, labels);
-	
-			
+
+
+			if (!this.isLaplacian()) {
+				lossFunction.iterate(modelFunction, currentTrainData, labels);
+			}
+			else {
+				lossFunction.iterateLap(modelFunction, trainData, randomBatch, labels, this.smoothWindow);
+			}
+
+
 			// Evaluate the iteration and store best Parameters so Far
 
+
+
+			qualityOnLearn = modelFunction.evaluateModel(rawLearnData, rawLearnLabels, rawLearnAnnotations
+					, this.windowExtent, columnSelector);
 			
+			qualityOnApply = modelFunction.evaluateModel(rawApplyData, rawApplyLabels, rawApplyAnnotations,
+					this.windowExtent, columnSelector);
+
+			modelFunction.saveBestParameters(qualityOnApply, "accuracy");
+
+			float accuracy = qualityOnLearn.getAccuracy();
+
+			//			history[historyIdx++] = accuracy;
+			//			if (historyIdx>=history.length)
+			//				historyIdx=0;
+			//			if (iteration>=history.length-1) {
+			//				double accuracyVariance = Vectors.variance(DefaultVector.wrap(history));
+			////				log.info("Variance: " + accuracyVariance);
+			//				if (accuracyVariance > 0.03) { // uggh - hard-coded number :-(
+			//					throw new RuntimeException("Convergence variance too high - early stopping.");
+			//				}
+			//			}
+
+
 			
-			qualityOnVal = modelFunction.evaluateModel(rawData, this.windowExtent, columnSelector, "validation");
-			
-			modelFunction.saveBestParameters(qualityOnVal, "accuracy");
-						
-			float accuracy = qualityOnVal.getAccuracy();
-			
-//			history[historyIdx++] = accuracy;
-//			if (historyIdx>=history.length)
-//				historyIdx=0;
-//			if (iteration>=history.length-1) {
-//				double accuracyVariance = Vectors.variance(DefaultVector.wrap(history));
-////				log.info("Variance: " + accuracyVariance);
-//				if (accuracyVariance > 0.03) { // uggh - hard-coded number :-(
-//					throw new RuntimeException("Convergence variance too high - early stopping.");
-//				}
-//			}
-			
-			
-			qualityOnTrain = modelFunction.evaluateModel(rawData, this.windowExtent, columnSelector, "train");
-			
-			log.info("iteration " + iteration  + "  ValAcc: " + qualityOnVal.getAccuracy() + " TrainAcc: " + qualityOnTrain.getAccuracy()  + " ValSD: " + 
-					qualityOnVal.getSampleDifference() 
-					+ " TrainSD: " + qualityOnTrain.getSampleDifference());
-			
-			float sampleDifference = qualityOnVal.getSampleDifference();
-			float overshootPercentage = qualityOnVal.getOvershootPercentage();
-			
+
+			log.info("iteration " + iteration  + "  Learn Acc: " + qualityOnLearn.getAccuracy() + " Apply Acc: "
+			+ qualityOnApply.getAccuracy()  + " Learn SD: " + 
+					qualityOnLearn.getSampleDifference() 
+					+ " Apply SD: " + qualityOnApply.getSampleDifference());
+
+			float sampleDifference = qualityOnApply.getSampleDifference();
+			float overshootPercentage = qualityOnApply.getOvershootPercentage();
+
 			// Write the evaluation into the Database Table
 			if (this.useDatabase) {
 				try {
 					database.addIteration(iteration, accuracy, sampleDifference, overshootPercentage, new float[] {1.5f},
-								splitNumber, probandNumber, runKey );
-					} catch (DataStoreException e) {
-						log.fatal("Unable to connect to database!");
-						e.printStackTrace();
-					}
-				
-				
+							splitNumber, probandNumber, runKey );
+				} catch (DataStoreException e) {
+					log.fatal("Unable to connect to database!");
+					e.printStackTrace();
 				}
+
+
 			}
-		
-		
-			
-		
-		
+		}
+
+
+
+
+
 	}
 
 
@@ -426,6 +493,16 @@ public class Algorithm implements Runnable{
 
 	public void setUseDatabase(boolean useDatabase) {
 		this.useDatabase = useDatabase;
+	}
+
+
+	public boolean isUseValidation() {
+		return useValidation;
+	}
+
+
+	public void setUseValidation(boolean useValidation) {
+		this.useValidation = useValidation;
 	}
 
 }

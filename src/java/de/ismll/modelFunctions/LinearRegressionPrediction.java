@@ -33,6 +33,7 @@ public class LinearRegressionPrediction extends ModelFunctions {
 	private float[] parameters_copy;
 
 	private float reg0;
+	private float smoothReg;
 
 	private float bias;
 	private float bias_copy;
@@ -57,8 +58,9 @@ public class LinearRegressionPrediction extends ModelFunctions {
 	}
 
 
-	public void initialize(int nrAttributes, float stDev, float reg0) {
+	public void initialize(int nrAttributes, float stDev, float reg0, float smoothReg) {
 		Random random = new Random();
+		random.setSeed(100);
 		bias = (float) (random.nextGaussian()*stDev);
 		this.parameters = new float[nrAttributes];
 		for (int i = 0; i < parameters.length ; i++) {
@@ -66,6 +68,7 @@ public class LinearRegressionPrediction extends ModelFunctions {
 		}
 
 		this.reg0 = reg0;
+		this.smoothReg = smoothReg;
 	}
 
 	@Override
@@ -74,8 +77,9 @@ public class LinearRegressionPrediction extends ModelFunctions {
 		int nrAttributes = algcon.getNrAttributes();
 		float stDev = algcon.getStDev();
 		float reg0 = algcon.getReg0();
+		float smoothReg = algcon.getSmoothReg();
 
-		initialize(nrAttributes, stDev, reg0);
+		initialize(nrAttributes, stDev, reg0, smoothReg);
 	}
 
 
@@ -136,6 +140,75 @@ public class LinearRegressionPrediction extends ModelFunctions {
 			float updated = this.parameters[dim] - learnRate*grad[dim] - this.reg0*this.parameters[dim];	
 			this.parameters[dim] = updated;
 		}
+		
+	}
+	
+	@Override
+	public void LAPGD(Matrix data, float[] multipliersFit, float[][] multipliersSmooth, float learnRate,
+			int[] randomIndices, float[] instanceMultipliersSmooth, float[][] sigmoidDifferences) {
+		
+		float multiplierFitSum=0;
+		for (int i = 0; i < multipliersFit.length ; i++) {
+			multiplierFitSum += multipliersFit[i];
+		}
+		// Update of Bias...
+		float updatedBias = this.bias - learnRate*multiplierFitSum;
+		this.bias = updatedBias;
+		
+		float[] gradFit;
+		gradFit = new float[this.parameters.length];
+		for (int dim = 0; dim < parameters.length ; dim++) {
+			for (int instance = 0; instance < multipliersFit.length ; instance++) {
+				int index = randomIndices[instance];
+				gradFit[dim] += multipliersFit[instance]*data.get(index,dim);
+			}
+		}
+		
+		
+		float[] gradSmooth;
+		gradSmooth = new float[this.parameters.length];
+		
+		for (int dim = 0; dim < parameters.length ; dim++) {
+			for (int instance = 0; instance < multipliersFit.length ; instance++) {
+						
+				int instanceIdx = randomIndices[instance];
+				int smoothWindow = multipliersSmooth[0].length/2;
+				
+				if( instanceIdx < smoothWindow || instanceIdx >= (data.getNumRows() - smoothWindow)) {
+//					log.info("laplacian cant be computed!");
+					break;
+				}
+				
+				for (int surroundInstance = 0; surroundInstance < multipliersSmooth[0].length ; surroundInstance++) {
+					int surroundIndex;
+					if (surroundInstance < smoothWindow) {
+						surroundIndex = instanceIdx-smoothWindow+surroundInstance;
+					}
+					else {
+						surroundIndex = instanceIdx-smoothWindow+surroundInstance+1;
+					}
+					gradSmooth[dim] += ( instanceMultipliersSmooth[instance]*sigmoidDifferences[instance][surroundInstance]
+							*data.get(instanceIdx, dim) - multipliersSmooth[instance][surroundInstance]*sigmoidDifferences[instance][surroundInstance]
+									*data.get(surroundIndex, dim) );
+								
+				}
+			}
+		}
+		
+		
+		
+		for (int dim = 0; dim < parameters.length ; dim++) {
+			float updated = parameters[dim] - learnRate*( (1-this.smoothReg)*gradFit[dim] + this.smoothReg*gradSmooth[dim] ) 
+					- this.reg0*this.parameters[dim];
+			if (Float.isNaN(updated)) {
+//				System.out.println("update is NAN!!!!");
+			}
+			this.parameters[dim] = updated;
+		}
+		
+//		this.GD(data, multipliersFit, learnRate);
+
+		
 		
 	}
 
@@ -209,6 +282,16 @@ public class LinearRegressionPrediction extends ModelFunctions {
 
 	public void setBias_copy(float bias_copy) {
 		this.bias_copy = bias_copy;
+	}
+
+
+	public float getSmoothReg() {
+		return smoothReg;
+	}
+
+
+	public void setSmoothReg(float smoothReg) {
+		this.smoothReg = smoothReg;
 	}
 
 

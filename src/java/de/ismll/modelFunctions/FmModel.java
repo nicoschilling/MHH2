@@ -43,6 +43,8 @@ public class FmModel extends ModelFunctions {
 	private float regW;
 	private float regV;
 
+	private float smoothReg;
+
 	private boolean useW0;
 	private boolean useW;
 	private boolean useV;
@@ -96,11 +98,11 @@ public class FmModel extends ModelFunctions {
 		}
 		return ret;
 	}
-	
-	
 
 
-	public void initialize(int nrAttributes, float stDev, int nrFactors, float reg0, float regV, float regW ) {
+
+
+	public void initialize(int nrAttributes, float stDev, int nrFactors, float reg0, float regV, float regW, float smoothReg ) {
 
 		// Initialize Parameters
 
@@ -128,7 +130,9 @@ public class FmModel extends ModelFunctions {
 		this.reg0 = reg0;
 		this.regV = regV;
 		this.regW = regW;
-		
+
+		this.smoothReg = smoothReg;
+
 		this.useV=true;
 		this.useW=true;
 		this.useW0=true;
@@ -145,8 +149,9 @@ public class FmModel extends ModelFunctions {
 		float reg0 = algcon.getReg0();
 		float regV = algcon.getFm_regV();
 		float regW = algcon.getFm_regW();
+		float smoothReg = algcon.getSmoothReg();
 
-		initialize(nrAttributes, stDev, nrFactors, reg0, regV, regW);
+		initialize(nrAttributes, stDev, nrFactors, reg0, regV, regW, smoothReg);
 	}
 
 	public void printLatentFeatures() {
@@ -160,7 +165,7 @@ public class FmModel extends ModelFunctions {
 		}
 	}
 
-		public static float computeScalarProduct(Vector x, Vector y) {
+	public static float computeScalarProduct(Vector x, Vector y) {
 		float ret = 0;
 		if (x.size() != y.size()) { 
 			System.out.println("Vectors have different size, scalar product cannot be computed!");
@@ -276,11 +281,7 @@ public class FmModel extends ModelFunctions {
 	}
 
 
-	public float computeSigmoid(float x) {
-		float exp = (float) Math.exp(-x);
-		float ret = (float) (1/(1+exp));
-		return ret;
-	}
+
 
 
 	// 10.06.2014 new functions... to ensure more generality! Hopefully!
@@ -324,7 +325,7 @@ public class FmModel extends ModelFunctions {
 			}
 		}	
 	}
-	
+
 	@Override
 	public void GD(Matrix data, float[] multipliers, float learnRate) {
 		float multiplierSum=0;
@@ -353,16 +354,158 @@ public class FmModel extends ModelFunctions {
 					float gradient = 0;
 					for (int instance = 0; instance < sums.length ; instance++) {
 						gradient += multipliers[instance]*( data.get(instance, dim)*sums[instance] 
-								 - this.v.get(dim, f)*data.get(instance, dim)*data.get(instance, dim) );
+								- this.v.get(dim, f)*data.get(instance, dim)*data.get(instance, dim) );
 					}
 					float updated = this.v.get(dim, f) - learnRate*gradient - this.getRegV()*this.v.get(dim, f);
 					this.v.set(dim, f, updated);
 				}
 			}
 		}
-//		System.out.println("max of V is: " + Matrices.max(this.v));
-//		System.out.println("min of V is: " + Matrices.min(this.v));
 	}
+
+	@Override
+	public void LAPGD(Matrix data, float[] multipliersFit, float[][] multipliersSmooth, float learnRate,
+			int[] randomIndices, float[] instanceMultipliersSmooth, float[][] sigmoidDifferences) {
+
+		if (this.useW0) {
+			float multiplierFitSum=0;
+			for (int i = 0; i < multipliersFit.length ; i++) {
+				multiplierFitSum += multipliersFit[i];
+			}
+			// Update of Bias...
+			float updatedBias = this.bias - learnRate*multiplierFitSum;
+			this.bias = updatedBias;
+		}
+
+		if (this.isUseW()) {
+			float[] gradFitW;
+			gradFitW = new float[this.w.size()];
+			for (int dim = 0; dim < this.w.size() ; dim++) {
+				for (int instance = 0; instance < multipliersFit.length ; instance++) {
+					int index = randomIndices[instance];
+					gradFitW[dim] += multipliersFit[instance]*data.get(index,dim);
+				}
+			}
+
+			float[] gradSmoothW;
+			gradSmoothW = new float[this.w.size()];
+
+			for (int dim = 0; dim < this.w.size() ; dim++) {
+				for (int instance = 0; instance < multipliersFit.length ; instance++) {
+
+					int instanceIdx = randomIndices[instance];
+					int smoothWindow = multipliersSmooth[0].length/2;
+
+					if( instanceIdx < smoothWindow || instanceIdx >= (data.getNumRows() - smoothWindow)) {
+						//						log.info("laplacian cant be computed!");
+						break;
+					}
+
+					for (int surroundInstance = 0; surroundInstance < multipliersSmooth[0].length ; surroundInstance++) {
+						int surroundIndex;
+						if (surroundInstance < smoothWindow) {
+							surroundIndex = instanceIdx-smoothWindow+surroundInstance;
+						}
+						else {
+							surroundIndex = instanceIdx-smoothWindow+surroundInstance+1;
+						}
+						gradSmoothW[dim] += ( instanceMultipliersSmooth[instance]*sigmoidDifferences[instance][surroundInstance]
+								*data.get(instanceIdx, dim) - multipliersSmooth[instance][surroundInstance]*sigmoidDifferences[instance][surroundInstance]
+										*data.get(surroundIndex, dim) );
+
+					}
+				}
+			}
+			for (int dim = 0; dim < this.w.size() ; dim++) {
+				float updated = this.w.get(dim) - learnRate*( (1-this.smoothReg)*gradFitW[dim] + this.smoothReg*gradSmoothW[dim]) -
+						this.getRegW()*this.w.get(dim);
+				this.w.set(dim, updated);
+			}
+
+
+		}
+
+		if (this.isUseV()) {
+			for (int f = 0; f < this.getNumFactor() ; f++) {
+				// get some kind of fit gradient and some kind of smooth gradient
+
+				float[] sums = new float[randomIndices.length];
+
+				for (int i = 0; i < sums.length; i++) {
+					int instance = randomIndices[i];
+					Vector currentInstance = Vectors.row(data, instance);
+					sums[i] = preComputeSum(currentInstance, f);
+				}
+
+				float[] gradientFitV;
+				float[] gradientSmoothV;
+
+				gradientFitV = new float[this.getNumAttributes()];
+				gradientSmoothV = new float[this.getNumAttributes()];
+
+
+				for (int dim=0; dim < this.getNumAttributes() ; dim++) {
+					for (int instance = 0; instance < sums.length ; instance++) {
+						int randomInstance = randomIndices[instance];
+						gradientFitV[dim] += multipliersFit[instance]*( data.get(randomInstance, dim)*sums[instance] 
+								- this.v.get(dim, f)*data.get(randomInstance, dim)*data.get(randomInstance, dim) );
+					}
+				}
+
+				for (int instance = 0; instance < multipliersFit.length ; instance++) {
+
+					for (int dim = 0; dim < this.getNumAttributes(); dim++) {
+						int instanceIdx = randomIndices[instance];
+						int smoothWindow = multipliersSmooth[0].length/2;
+
+						if( instanceIdx < smoothWindow || instanceIdx >= (data.getNumRows() - smoothWindow)) {
+							//							log.info("laplacian cant be computed!");
+							break;
+						}
+
+						Vector middleInstance = Vectors.row(data, instanceIdx);
+						float middleInstanceSum = preComputeSum(middleInstance, f);
+
+						float middleInstanceDerivative = middleInstance.get(dim)*middleInstanceSum -
+								this.v.get(dim, f)*middleInstance.get(dim)*middleInstance.get(dim);
+
+						for (int surroundInstance = 0; surroundInstance < multipliersSmooth[0].length ; surroundInstance++) {
+							int surroundIndex;
+							if (surroundInstance < smoothWindow) {
+								surroundIndex = instanceIdx-smoothWindow+surroundInstance;
+							}
+							else {
+								surroundIndex = instanceIdx-smoothWindow+surroundInstance+1;
+							}
+
+							Vector surroundInstanceVector = Vectors.row(data, surroundIndex);
+							float surroundInstanceSum = preComputeSum(surroundInstanceVector, f);
+							float surroundInstanceDerivative = surroundInstanceVector.get(dim)*surroundInstanceSum
+									- this.v.get(dim, f)*middleInstance.get(dim)*middleInstance.get(dim);
+
+
+							gradientSmoothV[dim] += ( instanceMultipliersSmooth[instance]*sigmoidDifferences[instance][surroundInstance]
+									*middleInstanceDerivative - multipliersSmooth[instance][surroundInstance]*sigmoidDifferences[instance][surroundInstance]
+											*surroundInstanceDerivative );
+
+						}
+
+					}
+
+				}
+
+				for (int dim = 0; dim < this.getNumAttributes() ; dim++) {
+					float updated = this.v.get(dim, f) - learnRate*( (1-smoothReg)*gradientFitV[dim] + smoothReg*gradientSmoothV[dim]) -
+							this.getRegV()*this.v.get(dim, f);
+					this.v.set(dim, f, updated);
+				}
+
+
+			}
+		}
+
+	}
+
 
 	@Override
 	public void SGD(Vector x, float multiplier, float learnRate) {
@@ -416,10 +559,10 @@ public class FmModel extends ModelFunctions {
 		}
 		return sum;
 	}
-	
+
 	public float[] preComputeSums(Matrix data, int f) {
 		float[] sums = new float[data.getNumRows()];
-		
+
 		for (int i = 0; i < sums.length	; i++) {
 			sums[i] = preComputeSum(Vectors.row(data, i), f);
 		}
@@ -624,6 +767,20 @@ public class FmModel extends ModelFunctions {
 
 	public void setUseV(boolean useV) {
 		this.useV = useV;
+	}
+
+
+
+
+	public float getSmoothReg() {
+		return smoothReg;
+	}
+
+
+
+
+	public void setSmoothReg(float smoothReg) {
+		this.smoothReg = smoothReg;
 	}
 
 

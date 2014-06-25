@@ -57,38 +57,11 @@ public abstract class ModelFunctions {
 	}
 	
 		
-	public Quality evaluateModel(MhhRawData rawData, int windowExtent, IntRange columnSelector, String forWhat) {
+	public Quality evaluateModel(Matrix[] applyData, Matrix[] applyLabels, int[] applyAnnotations
+			, int windowExtent, IntRange columnSelector) {
 		
 		Quality ret = new Quality();
 		
-		Matrix[] applyData = null;
-		Matrix[] applyLabels = null;
-		int[] applyAnnotations = null;
-		
-		switch ( forWhat) {
-		
-		case "validation":
-			applyData = rawData.getValidationData();
-			applyLabels = rawData.getValidationDataLabels();
-			applyAnnotations = rawData.getValidationDataRelativeAnnotations();
-			break;
-			
-		case "train":
-			applyData = rawData.getTrainData();
-			applyLabels = rawData.getTrainDataLabels();
-			applyAnnotations = rawData.getTrainDataRelativeAnnotations();
-			break;
-			
-		case "test":
-			applyData = rawData.getTestData();
-			applyLabels = rawData.getTestDataLabels();
-			applyAnnotations = rawData.getTestDataRelativeAnnotations();
-			break;
-			
-		default: 
-			log.error("The string " + forWhat + " is not a valid choice of where to evaluate!");
-			break;
-		}
 		
 		double[] accuracies = new double[applyData.length];
 		double[] sampleDifferences = new double[applyData.length];
@@ -243,6 +216,12 @@ public abstract class ModelFunctions {
 	public void GD(Matrix data, float[] multipliers, float learnRate) {
 		log.fatal("The chosen model function does not implement GD()");
 	}
+	
+	
+	public void LAPGD(Matrix data, float[] multipliersFit, float[][] multipliersSmooth,
+			float learnRate, int[] randomIndices, float[] instanceMultipliersSmooth, float[][] sigmoidDifferences) {
+		log.fatal("The chosen model does not implement LAPGD() ");
+	}
 
 
 
@@ -273,6 +252,21 @@ public abstract class ModelFunctions {
 			else {
 				ret[i] = -1;
 			}
+		}
+		return ret;
+	}
+	
+	public float computeSigmoid(float x) {
+		float exp = (float) Math.exp(-x);
+		float ret = 1/(1+exp);
+		return ret;
+	}
+	
+	
+	public float[] computeSigmoids(float[] x) {
+		float[] ret = new float[x.length];
+		for (int i = 0; i < ret.length ; i++) {
+			ret[i] = computeSigmoid(x[i]);
 		}
 		return ret;
 	}

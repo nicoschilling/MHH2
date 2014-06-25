@@ -7,9 +7,13 @@ import org.apache.log4j.Logger;
 
 import de.ismll.modelFunctions.ModelFunctions;
 import de.ismll.secondversion.Calculations;
+import de.ismll.table.IntVector;
 import de.ismll.table.Matrices;
 import de.ismll.table.Matrix;
 import de.ismll.table.Vector;
+import de.ismll.table.Vectors;
+import de.ismll.table.impl.DefaultVector;
+import de.ismll.table.projections.RowSubsetMatrixView;
 
 
 public class LogisticLoss extends LossFunction{
@@ -45,6 +49,89 @@ public class LogisticLoss extends LossFunction{
 		
 	}
 	
+	
+	
+	public void iterateLap(ModelFunctions function, Matrix data, int[] randomIndices, float[] labels, int smoothWindow) {
+		
+		float[] multipliersFit = new float[labels.length];
+		
+		float[] predicted = new float[labels.length];
+		
+		for (int i = 0; i < labels.length ; i++) {
+			predicted[i] = function.evaluate(Vectors.row(data, randomIndices[i]));
+		}
+		
+		for (int i = 0; i < labels.length ; i++) {
+			float exp = (float) Math.exp(-labels[i]*predicted[i]);
+			multipliersFit[i] = -labels[i]*exp/(1+exp);
+		}
+		
+		
+		
+		
+		float[][] surroundingMultipliersSmooth = new float[randomIndices.length][smoothWindow*2];
+		float[][] sigmoidDifferences = new float[randomIndices.length][smoothWindow*2];
+		
+		float[] instanceMultipliersSmooth = new float[randomIndices.length];
+		
+		for (int instance = 0; instance < randomIndices.length ; instance++) {
+			int randomInstance = randomIndices[instance];
+			
+			if( randomInstance < smoothWindow || randomInstance >= (data.getNumRows() - smoothWindow)) {
+//				log.info("laplacian cant be computed!");
+				break;
+			}
+			
+			// get the surrounding part of instance from the data
+			int[] pointers = new int[2*smoothWindow];
+			for (int i = 0; i <pointers.length; i++) {
+				if (i < smoothWindow) {
+					pointers[i] = randomInstance-smoothWindow+i;
+				}
+				else {
+					pointers[i] = randomInstance-smoothWindow+i+1;
+				}
+				
+			}
+			
+			float[] predictSurroundings = new float[pointers.length];
+			
+			for (int surroundingInstance = 0; surroundingInstance < pointers.length ; surroundingInstance++) {
+				predictSurroundings[surroundingInstance] = function.evaluate(Vectors.row(data, pointers[surroundingInstance] ));
+			}
+			
+			float predictInstance = function.evaluate(Vectors.row(data, randomInstance));
+			
+			
+			float[] sigmoidSurroundings = function.computeSigmoids(predictSurroundings);
+			
+			float sigmoidInstance = function.computeSigmoid(predictInstance);
+			
+			for (int i = 0; i < sigmoidDifferences[0].length ; i++) {
+				sigmoidDifferences[instance][i] = sigmoidSurroundings[i] - sigmoidInstance;
+			}
+			
+			for (int i = 0; i < sigmoidSurroundings.length ; i++) {
+				float exp = (float) Math.exp(-predictSurroundings[i]);
+				float denominator = (1+exp)*(1+exp);
+				surroundingMultipliersSmooth[instance][i] = exp/denominator;	
+			}
+			
+			
+			float exp = (float) Math.exp(-predictInstance);
+			float denominator = (1+exp)*(1+exp);
+			
+			instanceMultipliersSmooth[instance] = exp/denominator;
+		}
+		
+		function.LAPGD(data, multipliersFit, surroundingMultipliersSmooth, this.learnRate, randomIndices,
+				instanceMultipliersSmooth, sigmoidDifferences);
+		
+		
+	}
+	
+	
+
 	@Override
 	public void iterate(ModelFunctions function, TIntFloatHashMap instance, float label) {
 
@@ -68,9 +155,6 @@ public class LogisticLoss extends LossFunction{
 		}
 		
 	}
-	
-	
-
 
 
 

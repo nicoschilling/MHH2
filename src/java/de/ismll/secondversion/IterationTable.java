@@ -27,6 +27,7 @@ public class IterationTable extends Table {
 		probandNumber = addColumn("proband", Datatypes.Integer);
 		fkRunId = addColumn("run_id", Datatypes.Integer);  // Ist Id dann ein String?
 		
+		
 	}
 
 }

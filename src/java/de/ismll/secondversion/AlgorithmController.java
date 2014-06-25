@@ -225,8 +225,7 @@ public class AlgorithmController  implements Runnable{
 			try {
 				// Initialize Database
 				database = new Database();
-				if (laplacian) { database.setRunLapTable(runLapTable);}
-				else { database.setRunTable(runTable); }
+				database.setRunTable(runTable); 
 				database.setIterationTable(iterTable);
 				database.init();
 			} catch (IOException | DataStoreException e1) {
@@ -388,26 +387,16 @@ public class AlgorithmController  implements Runnable{
 
 		if(this.useDatabase) {
 			// Save current Run in Database
-			if (laplacian) {
-				try {
-					runKey = database.addRunLaplacian(reg0, stepSize, windowExtent,
-							batchSize, readSplit.getSplitFolder().getAbsolutePath(), smoothReg, smoothWindow);
-				} catch (DataStoreException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-			}
-			else {
-				try {
-					runKey = database.addRun(reg0, stepSize, windowExtent,
-							batchSize, readSplit.getSplitFolder().getAbsolutePath());
-				} catch (DataStoreException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+			try {
+				runKey = database.addRun(stepSize, reg0, fm_regW, fm_regV, fm_numFactors,
+						windowExtent, batchSize, readSplit.getSplitFolder().getAbsolutePath(), smoothReg, smoothWindow	);
+			} catch (DataStoreException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
 			}
 		}
-		
+
+
 
 
 
@@ -441,8 +430,14 @@ public class AlgorithmController  implements Runnable{
 		algorithm.setBatchSize(batchSize);
 		algorithm.setWindowExtent(windowExtent);
 		algorithm.setColumnSelector(columnSelector);
-		
+
 		algorithm.setUseDatabase(this.useDatabase);
+		
+		algorithm.setUseValidation(this.useValidation);
+
+		algorithm.setLaplacian(this.laplacian);
+		algorithm.setSmoothWindow(this.smoothWindow);
+		algorithm.setSmoothReg(this.smoothReg);
 
 		algorithm.setAnnotationBaseDir(annotationBaseDir);
 		algorithm.setAnnotator(annotator);
@@ -986,22 +981,22 @@ public class AlgorithmController  implements Runnable{
 		//				log.info("Sphincter Features start at 162! ");
 
 		Matrix dataBeforeTimeExtraction;
-		
+
 		dataBeforeTimeExtraction = new ColumnUnionMatrixView(new Matrix[] {
 				normalizedDruck
 				, normalizedMaximumPressure
 				, normalizedFFT
 				, normalizedSphincterFeatures
 		});
-		
-		
+
+
 		TimeFeatureExtractor timeFeatureExtractor = new TimeFeatureExtractor();
-		
+
 		Matrix timeFeatures = timeFeatureExtractor.extractFeatures(dataBeforeTimeExtraction);
-		
+
 		log.info("Using " + timeFeatures.getNumColumns() + " additional temporal features!");
-		
-		
+
+
 		//		VectorAsMatrixView;
 		DefaultMatrix meta = new DefaultMatrix(numRows, 1);
 		DefaultMatrix annotationSampleMatrix = new DefaultMatrix(numRows, 1);
