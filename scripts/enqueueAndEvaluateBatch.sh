@@ -8,7 +8,7 @@ fi
 
 # define default; they will maybe get overridden in the custom config.
 enqueuejobs=y
-bestmodel=y
+bestmodel=n
 
 echo "Sourcing specific configuration from $1 ..."
 
@@ -36,24 +36,35 @@ u_includeRD=${includeRD?Error: no includeRD found!}
 u_laplacian=${laplacian?Error: no laplacian found!}
 u_columnselector=${columnselector?Error: non columnselector found!}
 
+#echo ${u_splitsdir}
+
 if [ 'x'${enqueuejobs} = 'xy' ]; then 
 # requests -Xmx5000M per job 
+
+for patient in ${patients[@]}; do
+for split in ${splits[@]}; do
 for stepSize in  ${stepsizes[@]} ;do
-for lambda in  ${lambdas[@]}   ; do
+for reg0 in  ${reg0s[@]}   ; do
+for fm_regW in ${fm_regWs[@]};do
+for fm_regV in ${fm_regVs[@]}; do
+for fm_numFactor in ${fm_numFactors[@]};do
 for window in   ${windowextents[@]}  ; do
 for smoothReg in  ${smoothregularizations[@]}  ; do
 for smoothWindow in  ${smoothinwindows[@]}; do
+
+# if model = lm  dont write all the fm stuff, if yes, do write it!
+
 memm=$(get_mem_max /acogpr/meta/ 50 ${queues})
 #echo $memm
 qsub -l mem=${memm}00M ${qsubargs} \
 -q ${queues} \
--N ${u_experimentidentifier}-step-${stepSize}-lambda-${lambda}-windowExtent-${window}-smoothReg-${smoothReg}-smoothWindow-${smoothWindow} \
+-N ${u_experimentidentifier}-step-${stepSize}-reg0-${reg0}-windowExtent-${window}-smoothReg-${smoothReg}-smoothWindow-${smoothWindow} \
 run.sh ${u_bootstrapclass} \
-splitFolder=${u_splitsdir}  \
+splitFolder=${u_splitsdir}/Proband${patient}/split${split}  \
 annotator=${u_annotator} \
 maxIterations=${u_maxiterations} \
 stepSize=${stepSize} \
-lambda=${lambda} \
+reg0=${reg0} \
 windowExtent=${window} \
 columnSelector="${u_columnselector}" \
 laplacian=${u_laplacian} \
@@ -62,11 +73,23 @@ descentDirection=${u_descentDirection} \
 modelFunction=${u_modelFunction} \
 annotationBaseDir=${annotationsbasedir}/NormalAnnotations/ \
 includeRD=${u_includeRD} \
-runLapTable=run_${u_experimentidentifier} \
+runTable=run_${u_experimentidentifier} \
 iterTable=iter_${u_experimentidentifier} \
+fm_regV=${fm_regV} \
+fm_regW=${fm_regW} \
+fm_numFactors=${fm_numFactor} \
 smoothReg=${smoothReg} \
+useDatabase=true \
+stDev=0.01 \
 smoothWindow=${smoothWindow} >>submission.$(basename $0).log && echo -n "."
+
+
 done
+done
+done
+done
+done
+done 
 done
 done
 done
@@ -75,18 +98,28 @@ done
 echo "jobs submitted"
 fi
 
-if [ 'x'${bestmodel} = 'xy' ]; then
+# now execute something that finds the best model over a batch...
+
+
+# relearn with best hyperparameters
+
+
+# extract the test Quality
+
+
+#if [ 'x'${bestmodel} = 'xy' ]; then
 # submit script to determine best model for normal on normal. 
 # wait for all jobs from above to complete before execute this.
-qsub  -l mem=1G -q ${queues} ${qsubargs} -N bestModel${experimentidentifier} -hold_jid ${experimentidentifier}\*  ./bestModelBatch.sh $1
-fi
+#qsub  -l mem=1G -q ${queues} ${qsubargs} -N bestModel${experimentidentifier} -hold_jid ${experimentidentifier}\*  ./bestModelBatch.sh $1
+#fi
+
 
 # predict on all normal test swallows
 # we need 7000M for running this.
-qsub -l mem=$(get_mem_max /acogpr/meta 70 ${queues})00M -q ${queues} -N predict${experimentidentifier} -hold_jid bestModel${experimentidentifier}  ./predictBatch.sh $1
+#qsub -l mem=$(get_mem_max /acogpr/meta 70 ${queues})00M -q ${queues} -N predict${experimentidentifier} -hold_jid bestModel${experimentidentifier}  ./predictBatch.sh $1
 
 # create an excel table.
 # the configuration in the script results in an output to file logs/evaluateNormalOnNormal.txt
-qsub -l mem=1G -q ${queues} -N createExcelTable${experimentidentifier} -hold_jid predict${experimentidentifier} ./evaluateBatch.sh $1
+#qsub -l mem=1G -q ${queues} -N createExcelTable${experimentidentifier} -hold_jid predict${experimentidentifier} ./evaluateBatch.sh $1
 
 

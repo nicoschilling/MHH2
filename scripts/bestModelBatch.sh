@@ -6,7 +6,7 @@
 #$ -e logs/output.$JOB_NAME.$TASK_ID.err
 #$ -p -100
 #$ -m a
-#$ -M busche@ismll.de
+#$ -M schilling@ismll.de
 #$ -R y
 
 # source the properties in
@@ -14,8 +14,8 @@
 
 u_experimentidentifier=${experimentidentifier?Error: no experimentidentifier defined!}
 
-database=buschemhh
-dbuser=busche
+database=schilling
+dbuser=schilling
 
 baseDir=${usemodelsdir}
 modelfileSampleDiff=${baseDir}/"bestSampleDiff/" # or any absolute path...
