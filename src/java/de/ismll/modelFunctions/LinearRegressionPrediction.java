@@ -60,7 +60,7 @@ public class LinearRegressionPrediction extends ModelFunctions {
 
 	public void initialize(int nrAttributes, float stDev, float reg0, float smoothReg) {
 		Random random = new Random();
-		random.setSeed(100);
+//		random.setSeed(100);
 		bias = (float) (random.nextGaussian()*stDev);
 		this.parameters = new float[nrAttributes];
 		for (int i = 0; i < parameters.length ; i++) {

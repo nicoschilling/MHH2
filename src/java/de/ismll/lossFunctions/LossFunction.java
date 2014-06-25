@@ -81,7 +81,7 @@ public abstract class LossFunction {
 	
 	public int[] computeRandomBatch(int nrInstances, int batchSize) {
 		Random random = new Random();
-		random.setSeed(100);
+//		random.setSeed(100);
 		int[] ret = new int[batchSize];
 		for (int i = 0; i < ret.length ; i++) {
 			ret[i] = (int) (random.nextFloat()*nrInstances);
