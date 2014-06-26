@@ -7,8 +7,10 @@ if [ 'x'$1 = 'x' ]; then
 fi 
 
 # define default; they will maybe get overridden in the custom config.
-enqueuejobs=y
+enqueuejobs=n
 bestmodel=n
+relearn=y
+extract=n
 
 echo "Sourcing specific configuration from $1 ..."
 
@@ -52,15 +54,18 @@ for window in   ${windowextents[@]}  ; do
 for smoothReg in  ${smoothregularizations[@]}  ; do
 for smoothWindow in  ${smoothinwindows[@]}; do
 
+
+splitDirFull=${u_splitsdir}/Proband${patient}/split${split}
+splitDirName=Proband${patient}split${split}
 # if model = lm  dont write all the fm stuff, if yes, do write it!
 
 memm=$(get_mem_max /acogpr/meta/ 50 ${queues})
 #echo $memm
 qsub -l mem=${memm}00M ${qsubargs} \
 -q ${queues} \
--N ${u_experimentidentifier}-step-${stepSize}-reg0-${reg0}-windowExtent-${window}-smoothReg-${smoothReg}-smoothWindow-${smoothWindow} \
+-N ${u_experimentidentifier}-${splitDirName}-step-${stepSize}-reg0-${reg0}-windowExtent-${window}-smoothReg-${smoothReg}-smoothWindow-${smoothWindow} \
 run.sh ${u_bootstrapclass} \
-splitFolder=${u_splitsdir}/Proband${patient}/split${split}  \
+splitFolder=${splitDirFull} \
 annotator=${u_annotator} \
 maxIterations=${u_maxiterations} \
 stepSize=${stepSize} \
@@ -100,11 +105,27 @@ fi
 
 # now execute something that finds the best model over a batch...
 
+if [ 'x'${bestmodel} = 'xy' ]; then
+qsub -l mem=1G -q ${queues} -N bestModels${experimentidentifier} -hold_jid ${experimentidentifier}\* ./bestModelBatch.sh $1
+echo "bestModelBatch submitted"
+fi
+
 
 # relearn with best hyperparameters
 
+if [ 'x'${relearn} = 'xy' ]; then
+
+qsub -l mem=3G -q ${queues} -N relearnBatch${experimentidentifier} -hold_jid bestModels${experimentidentifier}\*  ./relearnBatch.sh $1
+
+fi
 
 # extract the test Quality
+
+if [ 'x'${extract} = 'xy' ]; then
+
+qsub -l mem=1G -q ${queues} -N extractTest${experimentidentifier} -hold_jid relearn-\* ./extractBatch.sh $1
+
+fi
 
 
 #if [ 'x'${bestmodel} = 'xy' ]; then

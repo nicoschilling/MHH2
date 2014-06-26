@@ -2,10 +2,29 @@
 
 . $1
 
+. java_memlib.sh
 
 for patient in ${patients[@]}; do
 for split in ${splits[@]}; do
 for what in bestAcc bestSampleDiff; do
+
+
+u_experimentkind=${experimentkind?Error: no experimentkind found!}
+u_experimentidentifier=${experimentidentifier?Error: no experimentidentifier found!}
+
+u_bootstrapclass=${bootstrapclass?Error: no boopstrapclass found. Check properties-file!}
+u_splitsdir=${usesplitsdir?Error: no experimentsplitsdir found}
+
+u_descentDirection=${descentDirection?Error: no descentirection found!}
+u_modelFunction=${modelFunction?Error: no modelFunction found!}
+u_useValidation=${useValidation?Error: no useValidation found!}
+u_annotator=${annotator?Error: no annotator found!}
+u_maxiterations=${maxiterations?Error: no maxiterations found!}
+u_includeRD=${includeRD?Error: no includeRD found!}
+u_laplacian=${laplacian?Error: no laplacian found!}
+u_columnselector=${columnselector?Error: non columnselector found!}
+
+
 
 modelDir=${datadir}/models/${experimentidentifier}/Proband${patient}/split${split}/${what}
 
@@ -19,16 +38,19 @@ re_smoothreg=`cat ${modelDir}/parameters | awk ' BEGIN {FS="|"} ; {print $7}  ' 
 re_smoothwindow=`cat ${modelDir}/parameters | awk ' BEGIN {FS="|"} ; {print $8}  ' `
 
 
-splitDirFull=${u_splitsdir}/Proband${patient}/split${split}
+splitDirFull=${usesplitsdir}/Proband${patient}/split${split}
 splitDirName=Proband${patient}split${split}
 
+#echo ${splitDirFull}
+
+#exit 0
+
 memm=$(get_mem_max /acogpr/meta/ 50 ${queues})
-#echo $memm                                                                                                                                                                       \
                                                                                                                                                                             
 qsub -l mem=${memm}00M ${qsubargs} \
 -q ${queues} \
--N relearn-${splitDirName} \
--hold_jid bestModels${experimentidentifier}
+-N relearn-${splitDirName}-${what} \
+-hold_jid bestModels${experimentidentifier} \
 run.sh ${u_bootstrapclass} \
 splitFolder=${splitDirFull} \
 annotator=${u_annotator} \
