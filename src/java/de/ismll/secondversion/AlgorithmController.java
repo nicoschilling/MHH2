@@ -20,6 +20,7 @@ import de.ismll.database.dao.DataStoreException;
 import de.ismll.evaluation.Accuracy;
 import de.ismll.exceptions.ModelApplicationException;
 import de.ismll.lossFunctions.LossFunction;
+import de.ismll.mhh.featureExtractors.AcidFeatureExtractor;
 import de.ismll.mhh.featureExtractors.AllExtractor;
 import de.ismll.mhh.featureExtractors.LowerExtractor;
 import de.ismll.mhh.featureExtractors.LowerMiddleExtractor;
@@ -178,6 +179,12 @@ public class AlgorithmController  implements Runnable{
 
 	@Parameter(cmdline="fm_numFactors", description="Hyperparameter: Specifies the size of the W Matrix of a Factorization Machine, i.e. the number of latent features")
 	private int fm_numFactors;
+	
+	@Parameter(cmdline="extractAcidFeatures")
+	private boolean extractAcidFeatures;
+	
+	@Parameter(cmdline="extractPatientFeatures")
+	private boolean extractPatientFeatures;
 
 
 
@@ -233,6 +240,8 @@ public class AlgorithmController  implements Runnable{
 				throw new BootstrapException("Could not connect to database", e1);						
 			}
 		}
+		
+
 
 
 		File[] trainList = readSplit.trainList;
@@ -995,6 +1004,13 @@ public class AlgorithmController  implements Runnable{
 		Matrix timeFeatures = timeFeatureExtractor.extractFeatures(dataBeforeTimeExtraction);
 
 		log.info("Using " + timeFeatures.getNumColumns() + " additional temporal features!");
+		
+		
+		AcidFeatureExtractor acidFeatureExtractor = new AcidFeatureExtractor();
+		
+		Matrix acidFeatures = acidFeatureExtractor.extractFeatures(folder);
+		
+		log.info("Using " + acidFeatures.getNumColumns() + " additional categorical features for acid");
 
 
 		//		VectorAsMatrixView;
@@ -1033,6 +1049,7 @@ public class AlgorithmController  implements Runnable{
 				, normalizedFFT
 				, normalizedSphincterFeatures
 				, timeFeatures
+				, acidFeatures
 		}); 
 
 		Matrix ret = new DefaultMatrix(ret1);
@@ -1751,6 +1768,38 @@ public class AlgorithmController  implements Runnable{
 
 	public void setUseDatabase(boolean useDatabase) {
 		this.useDatabase = useDatabase;
+	}
+
+
+
+
+
+	public boolean isExtractAcidFeatures() {
+		return extractAcidFeatures;
+	}
+
+
+
+
+
+	public void setExtractAcidFeatures(boolean extractAcidFeatures) {
+		this.extractAcidFeatures = extractAcidFeatures;
+	}
+
+
+
+
+
+	public boolean isExtractPatientFeatures() {
+		return extractPatientFeatures;
+	}
+
+
+
+
+
+	public void setExtractPatientFeatures(boolean extractPatientFeatures) {
+		this.extractPatientFeatures = extractPatientFeatures;
 	}
 
 

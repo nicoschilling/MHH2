@@ -18,7 +18,7 @@ public class RunTable extends Table{
 	public final Column smoothReg;
 	public final Column smoothWindow;
 	
-	public RunTable(String tablename) {
+	public RunTable(String tablename) {	
 		super(tablename);
 		
 		stepSize = addColumn("step_size", Datatypes.Double);

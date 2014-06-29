@@ -175,7 +175,9 @@ public class Database {
 
 	public long addRun(float stepSize, float reg0, float regW, float regV, int nrLatentFeatures,
 			 int windowExtent, int batchSize, String splitPath, float smoothReg, float smoothWindow) throws DataStoreException {
+		
 		Entity runInstance = run.createInstance();
+		
 		runInstance.set(run.stepSize, stepSize);
 		runInstance.set(run.reg0, reg0);
 		runInstance.set(run.regW, regW);
@@ -184,8 +186,9 @@ public class Database {
 		runInstance.set(run.windowExtent, windowExtent);
 		runInstance.set(run.batchSize, batchSize);
 		runInstance.set(run.splitPath, splitPath);
-		runInstance.set(run.smoothReg, smoothReg);
 		runInstance.set(run.smoothWindow, smoothWindow);
+		runInstance.set(run.smoothReg, smoothReg);
+		
 
 		return pgStore.insertOrUpdate(runInstance);
 

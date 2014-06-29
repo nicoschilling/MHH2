@@ -28,6 +28,8 @@ public class DataInterpretation extends SwallowData implements Runnable{
 	static final String FILENAME_FFT_CSV = "fft.csv";
 
 	static final String FILENAME_PMAX_MANUAL = "pmax_manuell";
+	
+	static final String FILENAME_ACID_LEVEL = "acid_level";
 
 	public static final int PMAX_MANUAL_DEFAULT = -1;
 
@@ -41,6 +43,8 @@ public class DataInterpretation extends SwallowData implements Runnable{
 	String rdend;
 	String rdstart;
 	int rdStartSample;
+	
+	private String acid_level;
 
 	private int pmaxManuell = PMAX_MANUAL_DEFAULT;
 	
@@ -57,6 +61,23 @@ public class DataInterpretation extends SwallowData implements Runnable{
 		}
 		
 		super.run();
+		
+		
+		File acidFile = new File(dataInterpretation, FILENAME_ACID_LEVEL);
+		if (acidFile.exists()) {
+			try {
+				acid_level = Parser.readFileCompletely(
+						new File(dataInterpretation, FILENAME_ACID_LEVEL))
+						.trim();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		else {
+			acid_level="unknown";
+		}
+		
 		
 		try {
 			fft = Parser.readCSVFile(new File(dataInterpretation,
@@ -179,12 +200,12 @@ public class DataInterpretation extends SwallowData implements Runnable{
 		return rdstart;
 	}
 
-	public static void main(String[] args) {
-		DataInterpretation rf = new DataInterpretation();
-		rf.setSchluckverzeichnis(new File(args[0]));
-		rf.run();
-		rf.toMathematicaOutput(System.out);
-	}
+//	public static void main(String[] args) {
+//		DataInterpretation rf = new DataInterpretation();
+//		rf.setSchluckverzeichnis(new File(args[0]));
+//		rf.run();
+//		rf.toMathematicaOutput(System.out);
+//	}
 
 	public int getRdStartSample() {
 		return rdStartSample;
@@ -243,6 +264,14 @@ public class DataInterpretation extends SwallowData implements Runnable{
 
 	public void setPmaxManuell(int pmaxManuell) {
 		this.pmaxManuell = pmaxManuell;
+	}
+
+	public String getAcid_level() {
+		return acid_level;
+	}
+
+	public void setAcid_level(String acid_level) {
+		this.acid_level = acid_level;
 	}
 	
 }
