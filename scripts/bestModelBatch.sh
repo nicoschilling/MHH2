@@ -18,24 +18,39 @@ database=schilling
 dbuser=schilling
 
 baseDir=${usemodelsdir}
-modelfileSampleDiff=${baseDir}/"bestSampleDiff/" # or any absolute path...
-modelfileAccuracy=${baseDir}/"bestAcc/" # or any absolute path...
+
+
+
+for patient in ${patients[@]}; do
+for split in ${splits[@]}; do
+
+splitIdentifier=Proband${patient}/split${split}
+
+modelfileSampleDiff=${baseDir}/${splitIdentifier}/"bestSampleDiff" # or any absolute path...                                                                                     
+modelfileAccuracy=${baseDir}/${splitIdentifier}/"bestAcc" # or any absolute path...                                                                                              
+u_splitfolder=${usesplitsdir}/${splitIdentifier}
+                    
 mkdir -p ${modelfileAccuracy}
 mkdir -p ${modelfileSampleDiff}
-u_splitfolder=${usesplitsdir}
+
 
 tablename=${u_experimentidentifier}
 
 echo "determining best model (table identifier: ${tablename}) ..."
 echo "    ... in folder ${u_splitfolder} ..."
-echo "    ... writing files (based on best accuracy)    to ${modelfileAccuracy}"
-echo "    ... writing files (based on best sample diff) to ${modelfileSampleDiff}"
+echo "    ... writing hyperparameters (based on best accuracy)    to ${modelfileAccuracy}"
+echo "    ... writing hyperparameters (based on best sample diff) to ${modelfileSampleDiff}"
 
-for c in model_parameters window_extent; do
+
 queryAccuracy="select
-/*r.split, 
-i.accuracy,*/
-${c}
+r.step_size,
+r.reg0,
+r.regw,
+r.regv,
+r.nrlatentfeatures,
+r.window_extent,
+r.smoothreg,
+r.smoothwindow 
 from
 run_${tablename} r
 join
@@ -47,9 +62,14 @@ accuracy desc
 limit 1"
 
 querySampleDiff="select
-/*r.split,
-i.accuracy,*/
-${c}
+r.step_size,
+r.reg0,
+r.regw,
+r.regv,
+r.nrlatentfeatures,
+r.window_extent,
+r.smoothreg,
+r.smoothwindow
 from
 run_${tablename} r
 join
@@ -60,13 +80,18 @@ order by
 sample_difference asc
 limit 1"
 
+#echo "${queryAccuracy2}"
+#queryAccuracy= `echo "${queryAccuracy2}" `
+#echo "$querySampleDiff"
 
-#echo $queryAccuracy
 # uggh! we do not have psql on the nodes nor the head node.
-ssh acogpr -C 'psql -A -t -d '${database}' -U '${dbuser}' -c "'${queryAccuracy}'" -o "'${modelfileAccuracy}/${c}'"'
-ssh acogpr -C 'psql -A -t -d '${database}' -U '${dbuser}' -c "'${querySampleDiff}'" -o "'${modelfileSampleDiff}/${c}'"'
-
-done # of c column
+ssh acogpr -C 'psql -A -t -d '${database}' -U '${dbuser}' -c "'${queryAccuracy}'" -o "'${modelfileAccuracy}/parameters'"'
+ssh acogpr -C 'psql -A -t -d '${database}' -U '${dbuser}' -c "'${querySampleDiff}'" -o "'${modelfileSampleDiff}/parameters'"'
 
 
+
+#done # of c column
+
+done
+done
 
