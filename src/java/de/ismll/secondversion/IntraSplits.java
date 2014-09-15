@@ -128,9 +128,9 @@ public class IntraSplits implements Runnable {
 				}
 
 				try {
-					IO.writeStringVector(trainSwallows, new File(splitDirectory.getAbsolutePath()+File.separator+"train"));
-					IO.writeStringVector(testSwallows, new File(splitDirectory.getAbsolutePath()+File.separator+"test"));
-					IO.writeStringVector(valSwallows, new File(splitDirectory.getAbsolutePath()+File.separator+"val"));
+					IO.writeStringVector(trainSwallows, new File(splitDirectory.getAbsolutePath()+File.separator+"train1"));
+					IO.writeStringVector(testSwallows, new File(splitDirectory.getAbsolutePath()+File.separator+"test1"));
+					IO.writeStringVector(valSwallows, new File(splitDirectory.getAbsolutePath()+File.separator+"val1"));
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
