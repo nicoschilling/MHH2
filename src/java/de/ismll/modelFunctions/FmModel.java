@@ -89,7 +89,7 @@ public class FmModel extends ModelFunctions {
 				float sum = 0;
 				float sum_sqr = 0;
 				for (int ind = 0; ind < instance.size() ; ind++) {
-					float d = (float) (this.v.get(ind, f)*instance.get(ind));
+					float d = this.v.get(ind, f)*instance.get(ind);
 					sum += d;
 					sum_sqr += d*d;
 				}
@@ -352,7 +352,7 @@ public class FmModel extends ModelFunctions {
 				float[] sums = preComputeSums(data, f);
 				for (int dim=0; dim < this.getNumAttributes() ; dim++) {
 					float gradient = 0;
-					for (int instance = 0; instance < sums.length ; instance++) {
+					for (int instance = 0; instance < multipliers.length ; instance++) {
 						gradient += multipliers[instance]*( data.get(instance, dim)*sums[instance] 
 								- this.v.get(dim, f)*data.get(instance, dim)*data.get(instance, dim) );
 					}
@@ -361,6 +361,9 @@ public class FmModel extends ModelFunctions {
 				}
 			}
 		}
+		
+//		System.out.println("maximum of V:" + Matrices.max(this.v));
+//		System.out.println("minimum of V:" + Matrices.min(this.v));
 	}
 
 	@Override

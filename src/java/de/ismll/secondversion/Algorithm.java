@@ -173,11 +173,11 @@ public class Algorithm implements Runnable{
 				qualityOnLearn.getSampleDifference() 
 				+ " Apply SD: " + qualityOnApply.getSampleDifference());
 
-
+		float bestAcc = 0;
 
 		for (int iteration = 0; iteration < maxIterations ; iteration++) {
 
-			int[] randomBatch = lossFunction.computeRandomBatch(trainData.getNumRows(), 10);
+			int[] randomBatch = lossFunction.computeRandomBatch(trainData.getNumRows(), 100);
 
 			Vector pointers1 =  new DefaultVector(randomBatch.length);
 
@@ -217,6 +217,10 @@ public class Algorithm implements Runnable{
 			modelFunction.saveBestParameters(qualityOnApply, "accuracy");
 
 			float accuracy = qualityOnLearn.getAccuracy();
+			
+			if (accuracy > bestAcc) {
+				bestAcc = accuracy;
+			}
 
 			//			history[historyIdx++] = accuracy;
 			//			if (historyIdx>=history.length)
@@ -253,6 +257,8 @@ public class Algorithm implements Runnable{
 
 			}
 		}
+		
+		System.out.println("bestAccuracy over full run is: " + bestAcc);
 
 
 

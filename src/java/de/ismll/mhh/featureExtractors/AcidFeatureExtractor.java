@@ -17,16 +17,16 @@ public class AcidFeatureExtractor {
 		
 		Vector categoricalAcidFeatures = new DefaultVector(4);
 		
-		if (acid_level.equals("pH7")) {
+		if (acid_level.equals("7")) {
 			categoricalAcidFeatures.set(0, 1);
 		}
-		else if(acid_level.equals("pH5")) {
+		else if(acid_level.equals("5")) {
 			categoricalAcidFeatures.set(1, 1);
 		}
-		else if(acid_level.equals("pH3")) {
+		else if(acid_level.equals("3")) {
 			categoricalAcidFeatures.set(2, 1);
 		}
-		else if(acid_level.equals("pH1,7")) {
+		else if(acid_level.equals("1.8")) {
 			categoricalAcidFeatures.set(3, 1);
 		}
 		else {
