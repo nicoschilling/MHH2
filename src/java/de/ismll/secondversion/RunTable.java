@@ -17,6 +17,7 @@ public class RunTable extends Table{
 	public final Column splitPath;
 	public final Column smoothReg;
 	public final Column smoothWindow;
+	public final Column timeOrder;
 	
 	public RunTable(String tablename) {	
 		super(tablename);
@@ -31,6 +32,7 @@ public class RunTable extends Table{
 		splitPath = addColumn("split", Datatypes.VString);
 		smoothReg = addColumn("smoothReg", Datatypes.Double);
 		smoothWindow = addColumn("smoothWindow", Datatypes.Integer);
+		timeOrder = addColumn("timeOrder", Datatypes.Integer);
 	}
 
 }

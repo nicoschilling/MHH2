@@ -397,7 +397,7 @@ public class AlgorithmController  implements Runnable{
 			// Save current Run in Database
 			try {
 				runKey = database.addRun(stepSize, reg0, fm_regW, fm_regV, fm_numFactors,
-						windowExtent, batchSize, readSplit.getSplitFolder().getAbsolutePath(), smoothReg, smoothWindow	);
+						windowExtent, batchSize, readSplit.getSplitFolder().getAbsolutePath(), smoothReg, smoothWindow, timeOrder	);
 			} catch (DataStoreException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();

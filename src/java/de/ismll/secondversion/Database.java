@@ -80,7 +80,7 @@ public class Database {
 		pgStore.ensureTableExists(run);
 
 		setRunlap(new RunLaplacian(getRunLapTable()));
-		pgStore.ensureTableExists(getRunlap());
+		pgStore.ensureTableExists(runlap);
 
 		experiment = new ExperimentTable(getExperimentTable());
 		pgStore.ensureTableExists(experiment);
@@ -174,7 +174,7 @@ public class Database {
 	}
 
 	public long addRun(float stepSize, float reg0, float regW, float regV, int nrLatentFeatures,
-			 int windowExtent, int batchSize, String splitPath, float smoothReg, float smoothWindow) throws DataStoreException {
+			 int windowExtent, int batchSize, String splitPath, float smoothReg, float smoothWindow, int timeOrder) throws DataStoreException {
 		
 		Entity runInstance = run.createInstance();
 		
@@ -188,6 +188,7 @@ public class Database {
 		runInstance.set(run.splitPath, splitPath);
 		runInstance.set(run.smoothWindow, smoothWindow);
 		runInstance.set(run.smoothReg, smoothReg);
+		runInstance.set(run.timeOrder, timeOrder);
 		
 
 		return pgStore.insertOrUpdate(runInstance);
