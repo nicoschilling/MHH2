@@ -102,7 +102,7 @@ public class AlgorithmController  implements Runnable{
 	public int maxIterations = 1000;
 
 	@Parameter(cmdline="timeOrder")
-	private int timeOrder;
+	private int timeOrder = 3;
 
 
 	@Parameter(cmdline="batchSize", description="Hyperparameter: number of instances used to compute a gradient, i.e. 1 -> stochastic  trainInstances -> full")
@@ -996,11 +996,11 @@ public class AlgorithmController  implements Runnable{
 
 		
 
-		TimeFeatureExtractor timeFeatureExtractor = new TimeFeatureExtractor(timeOrder);
+		TimeFeatureExtractor timeFeatureExtractor = new TimeFeatureExtractor();
 
-		Matrix timeFeatures = timeFeatureExtractor.extractFeatures(dataBeforeTimeExtraction);
+		Matrix timeFeatures = timeFeatureExtractor.extractFeatures(dataBeforeTimeExtraction, getTimeOrder());
 
-		log.info("Using approximates of the first derivatives of order: "+ timeFeatureExtractor.getOrder());
+		log.info("Using approximates of the first derivatives of order: "+ getTimeOrder());
 		log.info("Using " + timeFeatures.getNumColumns() + " additional temporal features!");
 		
 		
