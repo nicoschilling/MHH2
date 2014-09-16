@@ -141,6 +141,8 @@ public class FmModel extends ModelFunctions {
 
 	@Override
 	public void initialize(AlgorithmController algcon) {
+		
+		System.out.println("initializing from algorithm controller...");
 
 		int nrAttributes = algcon.getNrAttributes();
 
