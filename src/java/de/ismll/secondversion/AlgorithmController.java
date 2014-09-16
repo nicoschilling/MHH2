@@ -221,6 +221,8 @@ public class AlgorithmController  implements Runnable{
 
 	@Override
 	public void run() {
+		
+		System.out.println("Model Function is: " + modelFunction.getClass());
 
 		log.info("Working on " + readSplit.getSplitFolder());
 		readSplit.run();
