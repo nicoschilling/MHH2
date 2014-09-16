@@ -1782,7 +1782,7 @@ public class AlgorithmController  implements Runnable{
 
 
 	public boolean isExtractAcidFeatures() {
-		return useAcidFeatures;
+		return isUseAcidFeatures();
 	}
 
 
@@ -1790,7 +1790,7 @@ public class AlgorithmController  implements Runnable{
 
 
 	public void setExtractAcidFeatures(boolean extractAcidFeatures) {
-		this.useAcidFeatures = extractAcidFeatures;
+		this.setUseAcidFeatures(extractAcidFeatures);
 	}
 
 
@@ -1798,7 +1798,7 @@ public class AlgorithmController  implements Runnable{
 
 
 	public boolean isExtractPatientFeatures() {
-		return usePatientFeatures;
+		return isUsePatientFeatures();
 	}
 
 
@@ -1806,7 +1806,7 @@ public class AlgorithmController  implements Runnable{
 
 
 	public void setExtractPatientFeatures(boolean extractPatientFeatures) {
-		this.usePatientFeatures = extractPatientFeatures;
+		this.setUsePatientFeatures(extractPatientFeatures);
 	}
 
 
@@ -1823,6 +1823,54 @@ public class AlgorithmController  implements Runnable{
 
 	public void setTimeOrder(int timeOrder) {
 		this.timeOrder = timeOrder;
+	}
+
+
+
+
+
+	public boolean isUsePatientFeatures() {
+		return usePatientFeatures;
+	}
+
+
+
+
+
+	public void setUsePatientFeatures(boolean usePatientFeatures) {
+		this.usePatientFeatures = usePatientFeatures;
+	}
+
+
+
+
+
+	public boolean isUseAcidFeatures() {
+		return useAcidFeatures;
+	}
+
+
+
+
+
+	public void setUseAcidFeatures(boolean useAcidFeatures) {
+		this.useAcidFeatures = useAcidFeatures;
+	}
+
+
+
+
+
+	public String getExperimentTable() {
+		return experimentTable;
+	}
+
+
+
+
+
+	public void setExperimentTable(String experimentTable) {
+		this.experimentTable = experimentTable;
 	}
 
 
