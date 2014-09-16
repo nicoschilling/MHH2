@@ -7,8 +7,14 @@ import de.ismll.table.impl.DefaultMatrix;
 import de.ismll.table.projections.ColumnSubsetMatrixView;
 
 public class TimeFeatureExtractor {
+	
+	private int order;
+	
+	public TimeFeatureExtractor(int order) {
+		this.setOrder(order);
+	}
 
-	public Matrix extractFeatures(Matrix data, int order) {
+	public Matrix extractFeatures(Matrix data) {
 		
 		// order = 1 -> gehe 1 nach links und rechts, order 2, dann gehe 2 nach links und rechts, usw...
 		
@@ -20,23 +26,23 @@ public class TimeFeatureExtractor {
 		for (int feature = 0; feature < nrCols ; feature++) {
 			for (int instance = 0; instance < nrRows ; instance++) {
 				float value = 0;
-				if ( (instance-order+1) <= 0 || (instance+order-1) >= (nrRows-1) ) {
+				if ( (instance-getOrder()+1) <= 0 || (instance+getOrder()-1) >= (nrRows-1) ) {
 					value = data.get(instance, feature);
 				}
 				else {
-					if (order == 1) {
+					if (getOrder() == 1) {
 						value = ( data.get(instance+1, feature) - data.get(instance-1, feature) )/2;
 					}
-					else if (order ==2)  {
+					else if (getOrder() == 2)  {
 						value = ( 1/12*data.get(instance-2, feature) -2/3*data.get(instance-1, feature) + 
 								2/3*data.get(instance+1, feature) + 1/12*data.get(instance+2, feature));
 					}
-					else if (order == 3) {
+					else if (getOrder() == 3) {
 						value = ( -1/60*data.get(instance-3, feature) + 3/20*data.get(instance-2, feature) +  -3/4*data.get(instance-1, feature) 
 								+ 3/4*data.get(instance+1, feature)
 								- 3/20*data.get(instance+2, feature) + 1/60*data.get(instance+3, feature));
 					}
-					else if (order ==4) {
+					else if (getOrder() == 4) {
 						value = (1/280*data.get(instance-4, feature) -4/105*data.get(instance-3, feature)
 								+ 1/5*data.get(instance-2, feature) +  -4/5*data.get(instance-1, feature) 
 								+ 4/5*data.get(instance+1, feature)
@@ -49,6 +55,14 @@ public class TimeFeatureExtractor {
 		}
 		
 		return ret;
+	}
+
+	public int getOrder() {
+		return order;
+	}
+
+	public void setOrder(int order) {
+		this.order = order;
 	}
 
 }

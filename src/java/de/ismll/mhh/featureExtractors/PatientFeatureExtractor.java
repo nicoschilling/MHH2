@@ -20,13 +20,11 @@ public class PatientFeatureExtractor {
 
 		categoricalPatientFeatures.set(proband-1, 1);
 
-		ret = new DefaultMatrix(folder.getDruck().getNumRows(),4);
+		ret = new DefaultMatrix(folder.getDruck().getNumRows(),10);
 
 		for (int row = 0; row < ret.getNumRows(); row++) {
 			Vectors.set(Matrices.row(ret,row),categoricalPatientFeatures);
 		}
-
-
 
 		return ret;
 	}

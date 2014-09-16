@@ -69,6 +69,8 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 	private Matrix[] validationData;
 	private Matrix[] validationLabels;
 	private float[] validationAnnotations;
+	
+	public AlgorithmController algcon;
 
 
 
@@ -617,7 +619,7 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 		// Concatenate the data given in the ReadFolder to a SwallowDS
 
 		SwallowDS ret = new SwallowDS();
-		Matrix data = AlgorithmController.concatenate(log, folder, annotation, true, pmaxSample);
+		Matrix data = algcon.concatenate(log, folder, annotation, true, pmaxSample);
 
 		System.out.println(folder.getDataInterpretation());
 
@@ -716,7 +718,7 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 		int idxMaxSample2;
 
 		SwallowDS ret = new SwallowDS();
-		Matrix data = AlgorithmController.concatenate(log, folder, -1, true, pmaxSample);
+		Matrix data = algcon.concatenate(log, folder, -1, true, pmaxSample);
 		int numRows = data.getNumRows();
 
 
@@ -867,7 +869,7 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 
 		//		annotation = getAnnotation(folder);
 
-		Matrix data = AlgorithmController.concatenate(log, folder, annotation, true);
+		Matrix data = algcon.concatenate(log, folder, annotation, true);
 		int numRows = data.getNumRows();
 
 

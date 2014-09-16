@@ -25,6 +25,7 @@ import de.ismll.mhh.featureExtractors.AllExtractor;
 import de.ismll.mhh.featureExtractors.LowerExtractor;
 import de.ismll.mhh.featureExtractors.LowerMiddleExtractor;
 import de.ismll.mhh.featureExtractors.MiddleExtractor;
+import de.ismll.mhh.featureExtractors.PatientFeatureExtractor;
 import de.ismll.mhh.featureExtractors.TimeFeatureExtractor;
 import de.ismll.mhh.featureExtractors.UpperExtractor;
 import de.ismll.mhh.featureExtractors.UpperMiddleExtractor;
@@ -100,6 +101,8 @@ public class AlgorithmController  implements Runnable{
 	@Parameter(cmdline="maxIterations", description="number of maximum iterations for train() Method")
 	public int maxIterations = 1000;
 
+	@Parameter(cmdline="timeOrder")
+	private int timeOrder;
 
 
 	@Parameter(cmdline="batchSize", description="Hyperparameter: number of instances used to compute a gradient, i.e. 1 -> stochastic  trainInstances -> full")
@@ -180,17 +183,11 @@ public class AlgorithmController  implements Runnable{
 	@Parameter(cmdline="fm_numFactors", description="Hyperparameter: Specifies the size of the W Matrix of a Factorization Machine, i.e. the number of latent features")
 	private int fm_numFactors;
 	
-	@Parameter(cmdline="extractAcidFeatures")
-	private boolean extractAcidFeatures;
+	@Parameter(cmdline="useAcidFeatures")
+	private boolean useAcidFeatures=true;
 	
-	@Parameter(cmdline="extractPatientFeatures")
-	private boolean extractPatientFeatures;
-
-
-
-
-
-
+	@Parameter(cmdline="usePatientFeatures")
+	private boolean usePatientFeatures=true;
 
 
 
@@ -871,7 +868,7 @@ public class AlgorithmController  implements Runnable{
 	 * @return Matrix of normalized pressure, fft and meta
 	 * @throws ModelApplicationException 
 	 */
-	public static Matrix concatenate(Logger log, DataInterpretation folder, int restitutionszeitSample, boolean normalize)
+	public  Matrix concatenate(Logger log, DataInterpretation folder, int restitutionszeitSample, boolean normalize)
 			throws ModelApplicationException {
 
 		return concatenate(log, folder, restitutionszeitSample, normalize, -1);
@@ -887,7 +884,7 @@ public class AlgorithmController  implements Runnable{
 	 * @return Matrix of normalized pressure, fft and meta
 	 * @throws ModelApplicationException 
 	 */
-	public static Matrix concatenate(Logger log, DataInterpretation folder, int restitutionszeitSample,
+	public  Matrix concatenate(Logger log, DataInterpretation folder, int restitutionszeitSample,
 			boolean normalize, int pmaxSample) throws ModelApplicationException {
 
 		int idxMaxSampleC;
@@ -984,9 +981,9 @@ public class AlgorithmController  implements Runnable{
 		//				log.info("For choosing the right feature subsets:");
 		//				log.info("");
 		//				log.info("Pressure features start at 5!");
-		//				log.info("Pmax is at feature 33!");
-		//				log.info("FFT starts at 34!");
-		//				log.info("Sphincter Features start at 162! ");
+		//				log.info("Pmax is at feature 32!");
+		//				log.info("FFT starts at 33!");
+		//				log.info("Sphincter Features start at 161! ");
 
 		Matrix dataBeforeTimeExtraction;
 
@@ -997,11 +994,13 @@ public class AlgorithmController  implements Runnable{
 				, normalizedSphincterFeatures
 		});
 
+		
 
-		TimeFeatureExtractor timeFeatureExtractor = new TimeFeatureExtractor();
+		TimeFeatureExtractor timeFeatureExtractor = new TimeFeatureExtractor(timeOrder);
 
 		Matrix timeFeatures = timeFeatureExtractor.extractFeatures(dataBeforeTimeExtraction);
 
+		log.info("Using approximates of the first derivatives of order: "+ timeFeatureExtractor.getOrder());
 		log.info("Using " + timeFeatures.getNumColumns() + " additional temporal features!");
 		
 		
@@ -1010,6 +1009,12 @@ public class AlgorithmController  implements Runnable{
 		Matrix acidFeatures = acidFeatureExtractor.extractFeatures(folder);
 		
 		log.info("Using " + acidFeatures.getNumColumns() + " additional categorical features for acid");
+		
+		PatientFeatureExtractor patientFeatureExtractor = new PatientFeatureExtractor();
+		
+		Matrix patientFeatures = patientFeatureExtractor.extractFeatures(folder);
+		
+		log.info("Using " + patientFeatures.getNumColumns() + " additional categorical patient features");
 
 
 		//		VectorAsMatrixView;
@@ -1049,6 +1054,7 @@ public class AlgorithmController  implements Runnable{
 				, normalizedSphincterFeatures
 				, timeFeatures
 				, acidFeatures
+				, patientFeatures
 		}); 
 
 		Matrix ret = new DefaultMatrix(ret1);
@@ -1774,7 +1780,7 @@ public class AlgorithmController  implements Runnable{
 
 
 	public boolean isExtractAcidFeatures() {
-		return extractAcidFeatures;
+		return useAcidFeatures;
 	}
 
 
@@ -1782,7 +1788,7 @@ public class AlgorithmController  implements Runnable{
 
 
 	public void setExtractAcidFeatures(boolean extractAcidFeatures) {
-		this.extractAcidFeatures = extractAcidFeatures;
+		this.useAcidFeatures = extractAcidFeatures;
 	}
 
 
@@ -1790,7 +1796,7 @@ public class AlgorithmController  implements Runnable{
 
 
 	public boolean isExtractPatientFeatures() {
-		return extractPatientFeatures;
+		return usePatientFeatures;
 	}
 
 
@@ -1798,7 +1804,23 @@ public class AlgorithmController  implements Runnable{
 
 
 	public void setExtractPatientFeatures(boolean extractPatientFeatures) {
-		this.extractPatientFeatures = extractPatientFeatures;
+		this.usePatientFeatures = extractPatientFeatures;
+	}
+
+
+
+
+
+	public int getTimeOrder() {
+		return timeOrder;
+	}
+
+
+
+
+
+	public void setTimeOrder(int timeOrder) {
+		this.timeOrder = timeOrder;
 	}
 
 
