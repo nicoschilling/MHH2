@@ -411,6 +411,7 @@ public class AlgorithmController  implements Runnable{
 
 
 		// Initialize ModelFunction
+		System.out.println(modelFunction.getClass());
 		System.out.println("initializing model function from " + this.getIterTable());
 		modelFunction.initialize(this);
 
