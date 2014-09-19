@@ -170,11 +170,12 @@ public class FmModel extends ModelFunctions {
 
 	public static float computeScalarProduct(Vector x, Vector y) {
 		float ret = 0;
-		if (x.size() != y.size()) { 
+		int x_size = x.size();
+		if (x_size != y.size()) { 
 			System.out.println("Vectors have different size, scalar product cannot be computed!");
 			throw new RuntimeException();
 		}
-		for (int i = 0; i < x.size() ; i++) {
+		for (int i = 0; i < x_size ; i++) {
 			ret += x.get(i)*y.get(i);
 		}
 		return ret;
@@ -399,16 +400,17 @@ public class FmModel extends ModelFunctions {
 			float[] gradSmoothW;
 			gradSmoothW = new float[w_size];
 
-			for (int dim = 0; dim < w_size ; dim++) {
-				for (int instance = 0; instance < multipliersFit.length ; instance++) {
+			int smoothWindow = multipliersSmooth[0].length/2;
+			
+			for (int instance = 0; instance < multipliersFit.length ; instance++) {
 
-					int instanceIdx = randomIndices[instance];
-					int smoothWindow = multipliersSmooth[0].length/2;
+				int instanceIdx = randomIndices[instance];
+				if( instanceIdx < smoothWindow || instanceIdx >= (data.getNumRows() - smoothWindow)) {
+					//						log.info("laplacian cant be computed!");
+					break;
+				}
 
-					if( instanceIdx < smoothWindow || instanceIdx >= (data.getNumRows() - smoothWindow)) {
-						//						log.info("laplacian cant be computed!");
-						break;
-					}
+				for (int dim = 0; dim < w_size ; dim++) {
 
 					float data_instanceIdx_dim = data.get(instanceIdx, dim);
 
@@ -420,9 +422,8 @@ public class FmModel extends ModelFunctions {
 						else {
 							surroundIndex = instanceIdx-smoothWindow+surroundInstance+1;
 						}
-						gradSmoothW[dim] += ( instanceMultipliersSmooth[instance]*sigmoidDifferences[instance][surroundInstance]
-								*data_instanceIdx_dim - multipliersSmooth[instance][surroundInstance]*sigmoidDifferences[instance][surroundInstance]
-										*data.get(surroundIndex, dim) );
+						gradSmoothW[dim] += ( instanceMultipliersSmooth[instance]*sigmoidDifferences[instance][surroundInstance] *data_instanceIdx_dim 
+						          - multipliersSmooth[instance][surroundInstance]*sigmoidDifferences[instance][surroundInstance] *data.get(surroundIndex, dim) );
 
 					}
 				}
@@ -462,14 +463,15 @@ public class FmModel extends ModelFunctions {
 					for (int instance = 0; instance < sums.length ; instance++) {
 						int randomInstance = randomIndices[instance];
 						float data_rndInstance_dim = data.get(randomInstance, dim);
-						gradientFitV[dim] += multipliersFit[instance]*( data_rndInstance_dim*sums[instance] 
-								- v_dim_f*data_rndInstance_dim*data_rndInstance_dim );
+						
+						gradientFitV[dim] += multipliersFit[instance]*( data_rndInstance_dim*(sums[instance] 
+								- v_dim_f*data_rndInstance_dim ));
 					}
 				}
 
 				for (int instance = 0; instance < multipliersFit.length ; instance++) {
 
-					for (int dim = 0; dim < this.getNumAttributes(); dim++) {
+					for (int dim = 0; dim < numAttributes; dim++) {
 						int instanceIdx = randomIndices[instance];
 						int smoothWindow = multipliersSmooth[0].length/2;
 						float v_dim_f = this.v.get(dim, f);
@@ -483,8 +485,8 @@ public class FmModel extends ModelFunctions {
 						float middleInstanceSum = preComputeSum(middleInstance, f);
 
 						float middleInstance_dim = middleInstance.get(dim);
-						float middleInstanceDerivative = middleInstance_dim*middleInstanceSum -
-								v_dim_f*middleInstance_dim*middleInstance_dim;
+						float middleInstanceDerivative = middleInstance_dim*
+								(middleInstanceSum - v_dim_f*middleInstance_dim);
 
 						for (int surroundInstance = 0; surroundInstance < multipliersSmooth[0].length ; surroundInstance++) {
 							int surroundIndex;
@@ -497,13 +499,13 @@ public class FmModel extends ModelFunctions {
 
 							Vector surroundInstanceVector = Vectors.row(data, surroundIndex);
 							float surroundInstanceSum = preComputeSum(surroundInstanceVector, f);
+
 							float surroundInstanceDerivative = surroundInstanceVector.get(dim)*surroundInstanceSum
 									- v_dim_f*middleInstance_dim*middleInstance_dim;
 
-
-							gradientSmoothV[dim] += ( instanceMultipliersSmooth[instance]*sigmoidDifferences[instance][surroundInstance]
-									*middleInstanceDerivative - multipliersSmooth[instance][surroundInstance]*sigmoidDifferences[instance][surroundInstance]
-											*surroundInstanceDerivative );
+							gradientSmoothV[dim] += sigmoidDifferences[instance][surroundInstance]*( 
+									instanceMultipliersSmooth[instance]*middleInstanceDerivative 
+									- multipliersSmooth[instance][surroundInstance]*surroundInstanceDerivative );
 
 						}
 
@@ -546,12 +548,12 @@ public class FmModel extends ModelFunctions {
 			}
 		}
 
-		for (int f = 0; f < this.getNumFactor() ; f++) {
+		for (int f = 0; f < numFactor ; f++) {
 			float sum = preComputeSum(x, f);
 			for (int ind = 0; ind < x_size ; ind++) {
 				float x_ind = x.get(ind);
 				float v_ind_f = this.v.get(ind, f);
-				float grad = x_ind*sum - v_ind_f*x_ind*x_ind;
+				float grad = x_ind*(sum - v_ind_f*x_ind);
 				float updated = (v_ind_f - learnRate*multiplier*grad + regV*v_ind_f );
 				if (Float.isNaN(updated) || Float.isInfinite(updated)) {
 					System.out.println("Update of a latent Feature is about to be NaN...");
