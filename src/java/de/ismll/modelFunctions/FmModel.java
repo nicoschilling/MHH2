@@ -8,7 +8,8 @@ import gnu.trove.map.hash.TIntFloatHashMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import de.ismll.myfm.core.FmDataset;
-import de.ismll.myfm.util.Printers;
+//import de.ismll.myfm.core.FmDataset;
+//import de.ismll.myfm.util.Printers;
 import de.ismll.secondversion.AlgorithmController;
 import de.ismll.secondversion.IntRange;
 import de.ismll.secondversion.MhhRawData;
@@ -253,11 +254,11 @@ public class FmModel extends ModelFunctions {
 
 		int newAttributes = foldData.getNumColumns() - trainData.getNumColumns();
 
-		this.setNewAttributeIds(new TIntIntHashMap());
+		newAttributeIds=new TIntIntHashMap();
 
 		for (int i = 0; i < newAttributes ; i++) {
 			//			int ha = v.getNumRows() + i;
-			getNewAttributeIds().put(i, v.getNumRows() + i);
+			newAttributeIds.put(i, v.getNumRows() + i);
 			//			System.out.println("Will put new attribute: " + ha );
 		}
 
@@ -290,19 +291,22 @@ public class FmModel extends ModelFunctions {
 
 	@Override
 	public void SGD(TIntFloatHashMap x, float multiplier, float learnRate) {
+		float lr_times_multi = learnRate *multiplier;
+		int[] keys = x.keys();	
+
 		if (this.isUseW0()) {
-			float updated = this.bias - learnRate *multiplier;
+			float updated = this.bias - lr_times_multi;
 			if (Float.isNaN(updated) || Float.isInfinite(updated)) {
 				System.out.println("Update of Bias is about to be NaN...");
 				System.exit(1);
 			}
 			this.setBias(updated);
 		}
-		if (this.isUseW()) {	
-			int[] keys = x.keys();	
+		if (this.useW) {	
 			for (int ind = 0; ind < keys.length ; ind++) {
 				int i = keys[ind];	
-				float updated = (this.w.get(i) - learnRate*multiplier*x.get(i) + this.getRegW()*this.w.get(i) );
+				float w_i = w.get(i);
+				float updated = (w_i - lr_times_multi * x.get(i) + regW*w_i );
 				if (Float.isNaN(updated) || Float.isInfinite(updated)) {
 					System.out.println("Update of a Regression Term is about to be NaN...");
 					System.exit(1);
@@ -311,13 +315,12 @@ public class FmModel extends ModelFunctions {
 			}
 		}
 		if (this.useV) {
-			int[] keys = x.keys();
 			for (int f = 0; f < this.getNumFactor() ; f++) {
 				float sum = preComputeSum(x, f);
 				for (int ind = 0; ind < keys.length ; ind++) {
 					int i = keys[ind];
 					float grad = x.get(i)*sum - this.v.get(i, f)*x.get(i)*x.get(i);
-					float updated = (this.v.get(i, f) - learnRate*multiplier*grad + this.getRegV()*this.v.get(i, f) );
+					float updated = (this.v.get(i, f) - lr_times_multi * grad + regV*this.v.get(i, f) );
 					if (Float.isNaN(updated) || Float.isInfinite(updated)) {
 						System.out.println("Update of a latent Feature is about to be NaN...");
 						System.exit(1);
@@ -345,20 +348,21 @@ public class FmModel extends ModelFunctions {
 				for (int instance = 0; instance < multipliers.length ; instance++) {
 					grad[dim] += multipliers[instance]*data.get(instance, dim);
 				}
-				float updated = (this.w.get(dim) - learnRate*grad[dim] - this.getRegW()*this.w.get(dim));
+				float updated = (this.w.get(dim) - learnRate*grad[dim] - regW*this.w.get(dim));
 				this.w.set(dim, updated);
 			}
 		}
 		if (this.useV) {
-			for (int f = 0; f < this.getNumFactor() ; f++) {
+			for (int f = 0; f < numFactor ; f++) {
 				float[] sums = preComputeSums(data, f);
-				for (int dim=0; dim < this.getNumAttributes() ; dim++) {
+				for (int dim=0; dim < numAttributes ; dim++) {
 					float gradient = 0;
 					for (int instance = 0; instance < multipliers.length ; instance++) {
-						gradient += multipliers[instance]*( data.get(instance, dim)*sums[instance] 
-								- this.v.get(dim, f)*data.get(instance, dim)*data.get(instance, dim) );
+						float data_i_d = data.get(instance, dim);
+						gradient += multipliers[instance]*( data_i_d*sums[instance] 
+								- this.v.get(dim, f)*data_i_d*data_i_d );
 					}
-					float updated = this.v.get(dim, f) - learnRate*gradient - this.getRegV()*this.v.get(dim, f);
+					float updated = this.v.get(dim, f) - learnRate*gradient - regV*this.v.get(dim, f);
 					this.v.set(dim, f, updated);
 				}
 			}
@@ -382,10 +386,10 @@ public class FmModel extends ModelFunctions {
 			this.bias = updatedBias;
 		}
 
-		if (this.isUseW()) {
-			float[] gradFitW;
-			gradFitW = new float[this.w.size()];
-			for (int dim = 0; dim < this.w.size() ; dim++) {
+		if (useW) {
+			int w_size = this.w.size();
+			float[] gradFitW = new float[w_size];
+			for (int dim = 0; dim < w_size ; dim++) {
 				for (int instance = 0; instance < multipliersFit.length ; instance++) {
 					int index = randomIndices[instance];
 					gradFitW[dim] += multipliersFit[instance]*data.get(index,dim);
@@ -393,9 +397,9 @@ public class FmModel extends ModelFunctions {
 			}
 
 			float[] gradSmoothW;
-			gradSmoothW = new float[this.w.size()];
+			gradSmoothW = new float[w_size];
 
-			for (int dim = 0; dim < this.w.size() ; dim++) {
+			for (int dim = 0; dim < w_size ; dim++) {
 				for (int instance = 0; instance < multipliersFit.length ; instance++) {
 
 					int instanceIdx = randomIndices[instance];
@@ -406,6 +410,8 @@ public class FmModel extends ModelFunctions {
 						break;
 					}
 
+					float data_instanceIdx_dim = data.get(instanceIdx, dim);
+
 					for (int surroundInstance = 0; surroundInstance < multipliersSmooth[0].length ; surroundInstance++) {
 						int surroundIndex;
 						if (surroundInstance < smoothWindow) {
@@ -415,23 +421,24 @@ public class FmModel extends ModelFunctions {
 							surroundIndex = instanceIdx-smoothWindow+surroundInstance+1;
 						}
 						gradSmoothW[dim] += ( instanceMultipliersSmooth[instance]*sigmoidDifferences[instance][surroundInstance]
-								*data.get(instanceIdx, dim) - multipliersSmooth[instance][surroundInstance]*sigmoidDifferences[instance][surroundInstance]
+								*data_instanceIdx_dim - multipliersSmooth[instance][surroundInstance]*sigmoidDifferences[instance][surroundInstance]
 										*data.get(surroundIndex, dim) );
 
 					}
 				}
 			}
-			for (int dim = 0; dim < this.w.size() ; dim++) {
-				float updated = this.w.get(dim) - learnRate*( (1-this.smoothReg)*gradFitW[dim] + this.smoothReg*gradSmoothW[dim]) -
-						this.getRegW()*this.w.get(dim);
+			for (int dim = 0; dim < w_size ; dim++) {
+				float w_dim = this.w.get(dim);
+				float updated = w_dim - learnRate*( (1-this.smoothReg)*gradFitW[dim] + this.smoothReg*gradSmoothW[dim]) -
+						regW*w_dim;
 				this.w.set(dim, updated);
 			}
 
 
 		}
 
-		if (this.isUseV()) {
-			for (int f = 0; f < this.getNumFactor() ; f++) {
+		if (useV) {
+			for (int f = 0; f < numFactor ; f++) {
 				// get some kind of fit gradient and some kind of smooth gradient
 
 				float[] sums = new float[randomIndices.length];
@@ -445,15 +452,18 @@ public class FmModel extends ModelFunctions {
 				float[] gradientFitV;
 				float[] gradientSmoothV;
 
-				gradientFitV = new float[this.getNumAttributes()];
-				gradientSmoothV = new float[this.getNumAttributes()];
+				gradientFitV = new float[numAttributes];
+				gradientSmoothV = new float[numAttributes];
 
 
-				for (int dim=0; dim < this.getNumAttributes() ; dim++) {
+				for (int dim=0; dim < numAttributes ; dim++) {
+					float v_dim_f = this.v.get(dim, f);
+
 					for (int instance = 0; instance < sums.length ; instance++) {
 						int randomInstance = randomIndices[instance];
-						gradientFitV[dim] += multipliersFit[instance]*( data.get(randomInstance, dim)*sums[instance] 
-								- this.v.get(dim, f)*data.get(randomInstance, dim)*data.get(randomInstance, dim) );
+						float data_rndInstance_dim = data.get(randomInstance, dim);
+						gradientFitV[dim] += multipliersFit[instance]*( data_rndInstance_dim*sums[instance] 
+								- v_dim_f*data_rndInstance_dim*data_rndInstance_dim );
 					}
 				}
 
@@ -462,6 +472,7 @@ public class FmModel extends ModelFunctions {
 					for (int dim = 0; dim < this.getNumAttributes(); dim++) {
 						int instanceIdx = randomIndices[instance];
 						int smoothWindow = multipliersSmooth[0].length/2;
+						float v_dim_f = this.v.get(dim, f);
 
 						if( instanceIdx < smoothWindow || instanceIdx >= (data.getNumRows() - smoothWindow)) {
 							//							log.info("laplacian cant be computed!");
@@ -471,8 +482,9 @@ public class FmModel extends ModelFunctions {
 						Vector middleInstance = Vectors.row(data, instanceIdx);
 						float middleInstanceSum = preComputeSum(middleInstance, f);
 
-						float middleInstanceDerivative = middleInstance.get(dim)*middleInstanceSum -
-								this.v.get(dim, f)*middleInstance.get(dim)*middleInstance.get(dim);
+						float middleInstance_dim = middleInstance.get(dim);
+						float middleInstanceDerivative = middleInstance_dim*middleInstanceSum -
+								v_dim_f*middleInstance_dim*middleInstance_dim;
 
 						for (int surroundInstance = 0; surroundInstance < multipliersSmooth[0].length ; surroundInstance++) {
 							int surroundIndex;
@@ -486,7 +498,7 @@ public class FmModel extends ModelFunctions {
 							Vector surroundInstanceVector = Vectors.row(data, surroundIndex);
 							float surroundInstanceSum = preComputeSum(surroundInstanceVector, f);
 							float surroundInstanceDerivative = surroundInstanceVector.get(dim)*surroundInstanceSum
-									- this.v.get(dim, f)*middleInstance.get(dim)*middleInstance.get(dim);
+									- v_dim_f*middleInstance_dim*middleInstance_dim;
 
 
 							gradientSmoothV[dim] += ( instanceMultipliersSmooth[instance]*sigmoidDifferences[instance][surroundInstance]
@@ -499,7 +511,7 @@ public class FmModel extends ModelFunctions {
 
 				}
 
-				for (int dim = 0; dim < this.getNumAttributes() ; dim++) {
+				for (int dim = 0; dim < numAttributes ; dim++) {
 					float updated = this.v.get(dim, f) - learnRate*( (1-smoothReg)*gradientFitV[dim] + smoothReg*gradientSmoothV[dim]) -
 							this.getRegV()*this.v.get(dim, f);
 					this.v.set(dim, f, updated);
@@ -514,7 +526,7 @@ public class FmModel extends ModelFunctions {
 
 	@Override
 	public void SGD(Vector x, float multiplier, float learnRate) {
-		if (this.isUseW0()) {
+		if (useW0) {
 			float updated = this.bias - learnRate * multiplier;
 			if (Float.isNaN(updated) || Float.isInfinite(updated)) {
 				System.out.println("Update of Bias is about to be NaN...");
@@ -522,8 +534,9 @@ public class FmModel extends ModelFunctions {
 			}
 			this.setBias(updated);
 		}
-		if (this.isUseW()) {	
-			for (int ind = 0; ind < x.size(); ind++) {	
+		int x_size = x.size();
+		if (useW) {	
+			for (int ind = 0; ind < x_size; ind++) {	
 				float updated = (this.w.get(ind) - learnRate*multiplier*x.get(ind) + this.getRegW()*this.w.get(ind) );
 				if (Float.isNaN(updated) || Float.isInfinite(updated)) {
 					System.out.println("Update of a Regression Term is about to be NaN...");
@@ -535,9 +548,11 @@ public class FmModel extends ModelFunctions {
 
 		for (int f = 0; f < this.getNumFactor() ; f++) {
 			float sum = preComputeSum(x, f);
-			for (int ind = 0; ind < x.size() ; ind++) {
-				float grad = x.get(ind)*sum - this.v.get(ind, f)*x.get(ind)*x.get(ind);
-				float updated = (this.v.get(ind, f) - learnRate*multiplier*grad + this.getRegV()*this.v.get(ind, f) );
+			for (int ind = 0; ind < x_size ; ind++) {
+				float x_ind = x.get(ind);
+				float v_ind_f = this.v.get(ind, f);
+				float grad = x_ind*sum - v_ind_f*x_ind*x_ind;
+				float updated = (v_ind_f - learnRate*multiplier*grad + regV*v_ind_f );
 				if (Float.isNaN(updated) || Float.isInfinite(updated)) {
 					System.out.println("Update of a latent Feature is about to be NaN...");
 					System.exit(1);
@@ -559,7 +574,8 @@ public class FmModel extends ModelFunctions {
 
 	public float preComputeSum(Vector x, int f) {
 		float sum = 0;
-		for (int dim = 0; dim < x.size() ; dim++) {
+		int x_size = x.size();
+		for (int dim = 0; dim < x_size ; dim++) {
 			sum += this.v.get(dim, f)*x.get(dim);		
 		}
 		return sum;
