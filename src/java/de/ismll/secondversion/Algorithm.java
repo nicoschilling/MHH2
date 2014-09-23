@@ -24,6 +24,7 @@ import de.ismll.table.Vector;
 import de.ismll.table.Vectors;
 import de.ismll.table.impl.DefaultMatrix;
 import de.ismll.table.impl.DefaultVector;
+import de.ismll.table.impl.RowMajorMatrix;
 import de.ismll.table.projections.ColumnSubsetMatrixView;
 import de.ismll.table.projections.IntVectorView;
 import de.ismll.table.projections.RowSubsetMatrixView;
@@ -143,7 +144,7 @@ public class Algorithm implements Runnable{
 		
 		Matrix learnData = new RowUnionMatrixView(rawLearnData);
 
-		this.trainData = new DefaultMatrix( AlgorithmController.preprocess(learnData, columnSelector));
+		this.trainData = new RowMajorMatrix( AlgorithmController.preprocess(learnData, columnSelector));
 		
 		Matrix trainLabels = new RowUnionMatrixView(rawLearnLabels);
 
@@ -174,7 +175,7 @@ public class Algorithm implements Runnable{
 				+ " Apply SD: " + qualityOnApply.getSampleDifference());
 
 		float bestAcc = 0;
-
+		maxIterations=100;
 		for (int iteration = 0; iteration < maxIterations ; iteration++) {
 
 			int[] randomBatch = lossFunction.computeRandomBatch(trainData.getNumRows(), 100);
@@ -187,7 +188,7 @@ public class Algorithm implements Runnable{
 
 			IntVector pointers = new IntVectorView(pointers1);
 
-			Matrix currentTrainData = new DefaultMatrix( new RowSubsetMatrixView(trainData, pointers) );
+			Matrix currentTrainData = new RowMajorMatrix( new RowSubsetMatrixView(trainData, pointers) );
 
 
 			Matrix labelMatrix = new RowSubsetMatrixView(trainLabels, pointers);

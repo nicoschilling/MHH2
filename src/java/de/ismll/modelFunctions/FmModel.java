@@ -75,29 +75,33 @@ public class FmModel extends ModelFunctions {
 
 
 	@Override
-	public float evaluate(Vector instance) {
-		float ret = 0;
+	final public float evaluate(final Vector instance) {
+		double ret = 0;
 		if (this.useW0) {
 			ret = this.bias;
 		}
+		int i_size = instance.size();
+		
 		if (this.useW) {
-			for (int ind = 0; ind < instance.size() ; ind++) {
+			for (int ind = 0; ind < i_size ; ind++) {
 				ret += this.w.get(ind)*instance.get(ind);
 			}
 		}
 		if (this.useV) {
-			for (int f = 0; f < this.getNumFactor() ; f++) {
-				float sum = 0;
-				float sum_sqr = 0;
-				for (int ind = 0; ind < instance.size() ; ind++) {
-					float d = this.v.get(ind, f)*instance.get(ind);
+//			for (int f = 0; f < numFactor ; f++) {
+			for (int f = numFactor-1; f >=0  ; f--) {
+				double sum = 0;
+				double sum_sqr = 0;
+				for (int ind = i_size-1 ; ind >= 0; ind--) {
+//					for (int ind = 0; ind < i_size ; ind++) {
+						double d = this.v.get(ind, f)*instance.get(ind);
 					sum += d;
 					sum_sqr += d*d;
 				}
 				ret += 0.5 * (sum*sum - sum_sqr);
 			}
 		}
-		return ret;
+		return (float) ret;
 	}
 
 
@@ -154,6 +158,14 @@ public class FmModel extends ModelFunctions {
 		float regW = algcon.getFm_regW();
 		float smoothReg = algcon.getSmoothReg();
 
+		System.out.println("sleeping...");
+		try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			
+		}
+		
 		initialize(nrAttributes, stDev, nrFactors, reg0, regV, regW, smoothReg);
 	}
 

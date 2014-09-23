@@ -19,6 +19,8 @@ import de.ismll.table.Vector;
 import de.ismll.table.Vectors;
 import de.ismll.table.impl.DefaultMatrix;
 import de.ismll.table.impl.DefaultVector;
+import de.ismll.table.impl.RowMajorMatrix;
+import de.ismll.table.projections.ColumnSubsetMatrixView;
 
 public abstract class ModelFunctions {
 	
@@ -57,34 +59,35 @@ public abstract class ModelFunctions {
 	}
 	
 		
-	public Quality evaluateModel(Matrix[] applyData, Matrix[] applyLabels, int[] applyAnnotations
-			, int windowExtent, IntRange columnSelector) {
+	public Quality evaluateModel(final Matrix[] applyData, final Matrix[] applyLabels, final int[] applyAnnotations
+			,final int windowExtent, final IntRange columnSelector) {
 		
-		Quality ret = new Quality();
+		final Quality ret = new Quality();
 		
-		
-		double[] accuracies = new double[applyData.length];
-		double[] sampleDifferences = new double[applyData.length];
-		double[] overshootPercentages = new double[applyData.length]; 
+		final double[] accuracies = new double[applyData.length];
+		final double[] sampleDifferences = new double[applyData.length];
+		final double[] overshootPercentages = new double[applyData.length]; 
 
 		for (int data = 0; data < applyData.length ; data++) {
 
-			Matrix[] sampleToLabels = AlgorithmController.createSample2Labels(applyData[data]);
+			final Matrix[] sampleToLabels = AlgorithmController.createSample2Labels(applyData[data]);
 
-			Matrix predictedLabels = sampleToLabels[0];
-			Matrix avgLabels = sampleToLabels[1];
+			final Matrix predictedLabels = sampleToLabels[0];
+			final Matrix avgLabels = new RowMajorMatrix( sampleToLabels[1]);
 			
-			Matrix apply2Data = new DefaultMatrix(AlgorithmController.preprocess(applyData[data] , columnSelector));
+			final Matrix preprocess = new ColumnSubsetMatrixView(applyData[data], columnSelector.getUsedIndexes());			
+//			final Matrix apply2Data = new DefaultMatrix(preprocess);
 			
-			float[] predicted = this.evaluate(apply2Data);
+			final float[] predicted = this.evaluate(preprocess);
 			
 			// convert to classification i.e. -1 and 1
 			
-			float[] predictedClassification = this.predictAsClassification(predicted);
+			final float[] predictedClassification = this.predictAsClassification(predicted);
 		
 			// make a vector
 
-			Vector predictVector = Vectors.floatArraytoVector(predictedClassification);
+//			Vector predictVector = Vectors.floatArraytoVector(predictedClassification);
+			final Vector predictVector = DefaultVector.wrap(predictedClassification);
 
 			// copy it to the sample2labels object
 
@@ -92,27 +95,27 @@ public abstract class ModelFunctions {
 
 			AlgorithmController.computeSample2avgLabel( windowExtent, predictedLabels, avgLabels);
 
-			int predictedAnnotation = AlgorithmController.predictAnnotation(avgLabels, log);
+			final int predictedAnnotation = AlgorithmController.predictAnnotation(avgLabels, log);
 
-			int trueAnnotation = applyAnnotations[data];
+			final int trueAnnotation = applyAnnotations[data];
 			
 //			System.out.println("predicted annotation: " + predictedAnnotation);
 //			System.out.println("true annotation: " + trueAnnotation);
 			
-			double currentSampleDiff = Math.abs(predictedAnnotation-trueAnnotation);
+			final double currentSampleDiff = Math.abs(predictedAnnotation-trueAnnotation);
 
-			Accuracy accuracy = new Accuracy();
+			final Accuracy accuracy = new Accuracy();
 			
-			Vector trueLabels = Matrices.col(applyLabels[data] , COL_LABEL_IN_LABELS);
+			final Vector trueLabels = Matrices.col(applyLabels[data] , COL_LABEL_IN_LABELS);
 			
-			double currentAcc = accuracy.evaluate(trueLabels, predictVector);
+			final double currentAcc = accuracy.evaluate(trueLabels, predictVector);
 
 //			double currentAcc = accuracy.evaluate(new DefaultVector(Matrices.col(rawData.getValidationData()[val], COL_LABEL_IN_LABELS)),
 //					new DefaultVector(Matrices.col(predictedLabels, COL_LABEL_IN_SAMPLE2LABEL)));
 
 			
 
-			double overshootPercentage = 0;
+			final double overshootPercentage = 0;
 
 			accuracies[data] = currentAcc;
 			sampleDifferences[data] = currentSampleDiff;

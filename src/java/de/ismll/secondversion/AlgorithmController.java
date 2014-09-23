@@ -49,6 +49,7 @@ import de.ismll.table.impl.DefaultIntMatrix;
 import de.ismll.table.impl.DefaultIntVector;
 import de.ismll.table.impl.DefaultMatrix;
 import de.ismll.table.impl.DefaultVector;
+import de.ismll.table.impl.RowMajorMatrix;
 import de.ismll.table.projections.ColumnSubsetMatrixView;
 import de.ismll.table.projections.ColumnUnionMatrixView;
 import de.ismll.table.projections.RowSubsetIntMatrix;
@@ -1289,7 +1290,7 @@ public class AlgorithmController  implements Runnable{
 
 		// TODO: Andre added
 
-		predictedLabels = new DefaultMatrix(predictedLabels);
+		predictedLabels = new RowMajorMatrix(predictedLabels);
 		int leftSide;
 		int rightSide;
 		int numPredictedLabelsRows = predictedLabels.getNumRows();
@@ -1406,7 +1407,8 @@ public class AlgorithmController  implements Runnable{
 
 		startSearch = start;
 
-		while ( startSearch < sample2labels.getNumRows() && sample2labels.get(startSearch, COL_LABEL_IN_SAMPLE2LABEL) > 0) {
+		int s2l_numRows = sample2labels.getNumRows();
+		while ( startSearch < s2l_numRows && sample2labels.get(startSearch, COL_LABEL_IN_SAMPLE2LABEL) > 0) {
 			startSearch++;
 		}
 		try {
@@ -1414,7 +1416,7 @@ public class AlgorithmController  implements Runnable{
 		}
 		catch(IndexOutOfBoundsException e){
 			log.warn("Annotation Sample could not be computed, will be set to end of swallow!");
-			annotation = (int) sample2labels.get(sample2labels.getNumRows()-1, COL_REL_SAMPLE_IDX);
+			annotation = (int) sample2labels.get(s2l_numRows-1, COL_REL_SAMPLE_IDX);
 		}
 
 		return annotation;
