@@ -175,7 +175,7 @@ public class Algorithm implements Runnable{
 				+ " Apply SD: " + qualityOnApply.getSampleDifference());
 
 		float bestAcc = 0;
-		maxIterations=100;
+//		maxIterations=100;
 		for (int iteration = 0; iteration < maxIterations ; iteration++) {
 
 			int[] randomBatch = lossFunction.computeRandomBatch(trainData.getNumRows(), 100);

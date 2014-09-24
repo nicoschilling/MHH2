@@ -158,13 +158,13 @@ public class FmModel extends ModelFunctions {
 		float regW = algcon.getFm_regW();
 		float smoothReg = algcon.getSmoothReg();
 
-		System.out.println("sleeping...");
-		try {
-			Thread.sleep(10000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-			
-		}
+//		System.out.println("sleeping...");
+//		try {
+//			Thread.sleep(10000);
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//			
+//		}
 		
 		initialize(nrAttributes, stDev, nrFactors, reg0, regV, regW, smoothReg);
 	}

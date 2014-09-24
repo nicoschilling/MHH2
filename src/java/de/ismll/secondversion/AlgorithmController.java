@@ -1294,6 +1294,7 @@ public class AlgorithmController  implements Runnable{
 		int leftSide;
 		int rightSide;
 		int numPredictedLabelsRows = predictedLabels.getNumRows();
+		
 		for (int sample = 0; sample < numPredictedLabelsRows ; sample++)
 		{
 			if (predictedLabels.get(sample, COL_LABEL_IN_SAMPLE2LABEL) == 0) {
@@ -1376,6 +1377,60 @@ public class AlgorithmController  implements Runnable{
 			{
 				System.out.println("Something is wrong!!! Go Home Nico, you are drunk!!"); 
 			}
+		}
+
+
+
+	}
+	
+	/**
+	 * Computes average Labels according to windowExtent. Can then be used for deducing the annotation
+	 * @param windowExtent, predictedLabels, avgLabels
+	 */
+	@SuppressWarnings("cast")
+	public static void newComputeSample2avgLabel( int windowExtent, Matrix predictedLabels, Matrix avgLabels) {
+
+		// TODO: Andre added
+
+		predictedLabels = new RowMajorMatrix(predictedLabels);
+		int numPredictedLabelsRows = predictedLabels.getNumRows();
+		
+		
+		float currentSampleSum = 0;
+		
+		int firstSample = 0;
+		float firstLabel = predictedLabels.get(firstSample, COL_LABEL_IN_SAMPLE2LABEL);
+		float lastLabel = predictedLabels.get(firstSample+windowExtent, COL_LABEL_IN_SAMPLE2LABEL);
+		
+		float divisor = windowExtent+1;
+		
+		for (int i = 0; i <= windowExtent; i++) {
+			currentSampleSum += predictedLabels.get(firstSample+i, COL_LABEL_IN_SAMPLE2LABEL);
+			avgLabels.set(firstSample, COL_LABEL_IN_SAMPLE2LABEL, currentSampleSum/divisor);
+		}
+		
+		for (int sample = 1; sample < numPredictedLabelsRows ; sample++)
+		{
+			if (sample <= windowExtent) { // links zu kurz
+				lastLabel = predictedLabels.get(sample+windowExtent, COL_LABEL_IN_SAMPLE2LABEL);
+				currentSampleSum += lastLabel;
+				divisor++;
+				avgLabels.set(sample, COL_LABEL_IN_SAMPLE2LABEL, currentSampleSum/divisor);
+			}
+			else if (sample > numPredictedLabelsRows-1 -windowExtent) { // rechts zu kurz
+				currentSampleSum -= firstLabel;
+				firstLabel = predictedLabels.get(sample-windowExtent, COL_LABEL_IN_SAMPLE2LABEL);
+				divisor--;
+				avgLabels.set(sample, COL_LABEL_IN_SAMPLE2LABEL, currentSampleSum/divisor);
+			}
+			else {  // alles okay!!
+				currentSampleSum -= firstLabel;
+				lastLabel = predictedLabels.get(sample+windowExtent, COL_LABEL_IN_SAMPLE2LABEL);
+				currentSampleSum += lastLabel;
+				firstLabel = predictedLabels.get(sample-windowExtent, COL_LABEL_IN_SAMPLE2LABEL);
+				avgLabels.set(sample, COL_LABEL_IN_SAMPLE2LABEL, currentSampleSum/divisor);
+			}
+			
 		}
 
 
