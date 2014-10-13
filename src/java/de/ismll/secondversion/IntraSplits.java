@@ -15,7 +15,7 @@ import de.ismll.myfm.util.IO;
 public class IntraSplits implements Runnable {
 
 	private String swallowBaseDir = "/data/mhh/ECDA-Swallows";
-	private String splitBaseDir = "/data/mhh/ECDA2014/Splits/Intra";
+	private String splitBaseDir = "/data/mhh/ECDA2014/Splits/intra";
 	//	private String swallowBaseDir = "/home/schilling/mhh/ECDA-Swallows";
 
 
