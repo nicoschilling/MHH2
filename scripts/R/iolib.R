@@ -58,4 +58,19 @@ data$Proband<-read.csv("proband",header=FALSE)[[1]]
 return (data)
 } # of function readSwallow
 
+# read the annotations from the given annotation file using the given proband id.
+readAnnotation <-function(annotationfile,Proband,samplerate=50) {
+# annotationfile=~/mhh/busche-it.de/data/manual_annotations/ECDA-Annotations/1-sm.tsv
+annotations<-read.csv(annotationfile,header=FALSE,sep='\t')
+colnames(annotations)<-c("Swallow","RD","Pmax","V4","PmaxZeit","tRestiDuration","V7","tRestiAbsolute")
+# store proband as dedicated column
+annotations$Proband<-Proband
+
+# convert times to samples
+annotations$tRestiAbsoluteSample<-sapply(annotations$tRestiAbsolute,FUN=function(x) {tmp<-strsplit(as.character(x)[[1]],"[:,]")[[1]]; return(as.integer(tmp[[1]])*samplerate*60 + as.integer(tmp[[2]])*samplerate+ as.integer(tmp[[3]])/100*samplerate)})
+annotations$PmaxZeitSample<-sapply(annotations$PmaxZeit,FUN=function(x) {tmp<-strsplit(as.character(x)[[1]],"[:,]")[[1]]; return(as.integer(tmp[[1]])*samplerate*60 + as.integer(tmp[[2]])*samplerate+ as.integer(tmp[[3]])/100*samplerate)})
+
+return(annotations)
+} # of function readAnnotation
+
 
