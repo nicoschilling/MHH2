@@ -20,5 +20,19 @@ data<-merge(trainingSwallows, annotations,by=c("Proband","Swallow"))
 # infer labels based on the Sample IDs
 labeled_dataset<-inferLabels(data)
 
-# go ahead and learn!
+# remove unused / not necessary colums
+labeled_dataset$V7.y<-NULL
+labeled_dataset$tRestiDuration<-NULL
+labeled_dataset$Pmax<-NULL
+labeled_dataset$V4.y<-NULL
+labeled_dataset$RD<-NULL
+labeled_dataset$tRestiAbsolute<-NULL
+labeled_dataset$PmaxZeit<-NULL
 
+
+# clean dataset (remove -Inf, etc.)
+labeled_dataset$V50[labeled_dataset$V50=='-Inf']<-median(labeled_dataset$V50[labeled_dataset$V50!='-Inf'])
+labeled_dataset$V82[labeled_dataset$V82=='-Inf']<-median(labeled_dataset$V82[labeled_dataset$V82!='-Inf'])
+
+
+# go ahead and learn!
