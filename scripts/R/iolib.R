@@ -7,13 +7,16 @@ colnames(sensors)<-c("Sample","P1","P2","P3","P4","P5","P6","P7","P8","P9","P10"
 fft<-read.csv("fft.csv",header=FALSE)
 data<-cbind(sensors,fft)
 
-sphinctermax<-read.csv("subset-max.csv",header=FALSE)
-data$sphinctermaxV1<-sphinctermax$V1
-data$sphinctermaxV2<-sphinctermax$V2
+#sphinctermax<-read.csv("subset-max.csv",header=FALSE)
+#data$sphinctermaxV1<-sphinctermax$V1
+#data$sphinctermaxV2<-sphinctermax$V2
 
 # read raw data
 rdstart<-read.csv("rdstart",header=FALSE)
 rdend<-read.csv("rdend",header=FALSE)
+channelstart<-as.integer(read.csv("channelstart",header=FALSE))
+channelend<-as.integer(read.csv("channelend",header=FALSE))
+
 #     V1
 # 1 04:05
 samplerate<-as.integer(read.csv("samplerate",header=FALSE))
@@ -37,6 +40,8 @@ tmp<-strsplit(as.character(rdend[[1]]),":")[[1]]
 
 data$rdendsample<-as.integer(tmp[[1]])*60*as.integer(samplerate)+as.integer(tmp[[2]])*as.integer(samplerate)
 
+# extract maximum for each sample from sphincter region
+data$pmaxSphincer<-apply(data[,grep(paste0("P",channelstart),colnames(data)):grep(paste0("P",channelend),colnames(data))] ,1,max)
 
 # encode in {0,1} whether a sample denotes the "ruhedruck". 0->swallow-something; 1->ruhedruck
 data$isrd<-0
