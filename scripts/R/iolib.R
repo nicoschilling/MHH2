@@ -81,4 +81,16 @@ annotations$PmaxZeitSample<-sapply(annotations$PmaxZeit,FUN=function(x) {tmp<-st
 return(annotations)
 } # of function readAnnotation
 
-
+# infers the labels (column y added) from the merged dataset
+inferLabels<-function(data_and_annotations){
+# infer labels. Unknown labels everywhere:
+data_and_annotations$y<-'?'
+# non-swallow labels in the "ruhedruck" area and beyond the annotation
+data_and_annotations$y[ data_and_annotations$isrd==1 ]<-0
+data_and_annotations$y[ data_and_annotations$Sample>= data_and_annotations$tRestiAbsoluteSample]<-0
+# swallow-labels between the pmax sample and the annotation
+data_and_annotations$y[ data_and_annotations$ispostpmax==1 &  data_and_annotations$Sample< data_and_annotations$tRestiAbsoluteSample]<-1
+# or:
+data_and_annotations$y[ data_and_annotations$Sample>=data_and_annotations$pmax & data_and_annotations$Sample< data_and_annotations$tRestiAbsoluteSample]<-1
+return (data_and_annotations)
+}
