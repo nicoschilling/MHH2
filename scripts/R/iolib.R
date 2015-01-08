@@ -55,6 +55,14 @@ data$ispostpmax[ data$Sample>=data$pmax ]<-1
 data$Swallow<-read.csv("id",header=FALSE)[[1]]
 data$Proband<-read.csv("proband",header=FALSE)[[1]]
 
+# adjust data types
+data$Sample<-as.integer(data$Sample)
+data$Swallow<-as.factor(data$Swallow)
+data$Proband<-as.factor(data$Proband)
+data$pmax<-as.integer(data$pmax)
+data$rdendsample<-as.integer(data$rdendsample)
+data$rdstartsample<-as.integer(data$rdstartsample)
+
 return (data)
 } # of function readSwallow
 
