@@ -3,9 +3,13 @@ readSwallow <- function (path) {
 setwd(path)
 
 sensors<-read.csv("data.csv",header=FALSE)
-colnames(sensors)<-c("Sample","P1","P2","P3","P4","P5","P6","P7","P8","P9","P10","P11","P12","P13","P14","P15","P16","P17","P18","P19","P20","Resp1","Resp2","Resp3","Swallow1","Swallow2","Swallow3","Marker","?")
+colnames(sensors)<-c("Sample","P1","P2","P3","P4","P5","P6","P7","P8","P9","P10","P11","P12","P13","P14","P15","P16","P17","P18","P19","P20","Resp1","Resp2","Resp3","Swallow1","Swallow2","Swallow3","Marker","misc")
 fft<-read.csv("fft.csv",header=FALSE)
 data<-cbind(sensors,fft)
+# was supposed to be the Sample; errorously removed.
+data$V1<-NULL
+data$misc<-NULL
+data$Marker<-NULL
 
 #sphinctermax<-read.csv("subset-max.csv",header=FALSE)
 #data$sphinctermaxV1<-sphinctermax$V1

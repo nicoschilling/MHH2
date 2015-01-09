@@ -33,11 +33,18 @@ labeled_dataset$V4.y<-NULL
 labeled_dataset$RD<-NULL
 labeled_dataset$tRestiAbsolute<-NULL
 labeled_dataset$PmaxZeit<-NULL
+labeled_dataset$V4<-labeled_dataset$V4.x
+labeled_dataset$V7<-labeled_dataset$V7.x
 
 
 # clean dataset (remove -Inf, etc.)
+labeled_dataset$V18[labeled_dataset$V18=='-Inf']<-median(labeled_dataset$V18[labeled_dataset$V18!='-Inf'])
+labeled_dataset$V34[labeled_dataset$V34=='-Inf']<-median(labeled_dataset$V34[labeled_dataset$V34!='-Inf'])
 labeled_dataset$V50[labeled_dataset$V50=='-Inf']<-median(labeled_dataset$V50[labeled_dataset$V50!='-Inf'])
+labeled_dataset$V66[labeled_dataset$V66=='-Inf']<-median(labeled_dataset$V66[labeled_dataset$V66!='-Inf'])
 labeled_dataset$V82[labeled_dataset$V82=='-Inf']<-median(labeled_dataset$V82[labeled_dataset$V82!='-Inf'])
+labeled_dataset$V98[labeled_dataset$V98=='-Inf']<-median(labeled_dataset$V98[labeled_dataset$V98!='-Inf'])
+labeled_dataset$V114[labeled_dataset$V114=='-Inf']<-median(labeled_dataset$V114[labeled_dataset$V114!='-Inf'])
 
 
 # go ahead and learn!
