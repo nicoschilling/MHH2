@@ -109,5 +109,13 @@ samples<-swallowdata[ ,1]
 relativeSamples = samples - min(samples) + 1
 columns<-seq(1,20)
 
-filled.contour(relativeSamples,columns,log(as.matrix(swallowdata[,columnrange])+100),color = terrain.colors)
+# extract max pressure curve
+maxPressures<-sapply(swallowdata$pmaxSphincer,FUN=function(x){(max(x)/500 )*15  +3})
+
+filled.contour(
+	relativeSamples,
+	columns,
+	log(as.matrix(swallowdata[,columnrange])+100),
+	color = terrain.colors,
+	plot.axes = { axis(1); axis(2); points(relativeSamples, maxPressures, col="yellow",cex=0.25)})
 }
