@@ -99,3 +99,15 @@ data_and_annotations$y[ data_and_annotations$ispostpmax==1 &  data_and_annotatio
 data_and_annotations$y[ data_and_annotations$Sample>=data_and_annotations$pmax & data_and_annotations$Sample< data_and_annotations$tRestiAbsoluteSample]<-1
 return (data_and_annotations)
 }
+
+# plots the swallow from the given data.frame
+plotSwallow<-function(swallowdata) {
+# the colums from P1..P20
+columnrange<-min(grep("P1",colnames(swallowdata))):grep("P20",colnames(swallowdata))
+
+samples<-swallowdata[ ,1]
+relativeSamples = samples - min(samples) + 1
+columns<-seq(1,20)
+
+filled.contour(relativeSamples,columns,log(as.matrix(swallowdata[,columnrange])+100),color = terrain.colors)
+}
