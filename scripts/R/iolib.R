@@ -105,17 +105,28 @@ plotSwallow<-function(swallowdata) {
 # the colums from P1..P20
 columnrange<-min(grep("P1",colnames(swallowdata))):grep("P20",colnames(swallowdata))
 
+# extract absolute samples and base them on 1
 samples<-swallowdata[ ,1]
-relativeSamples = samples - min(samples) + 1
+relativeSamples<-samples - min(samples) + 1
 columns<-seq(1,20)
 
 # extract max pressure curve
 maxPressures<-sapply(swallowdata$pmaxSphincer,FUN=function(x){(max(x)/500 )*15  +3})
+
+# additional aspects:
+# visualization whether we are beyond the pmax area
+#		points(relativeSamples, (swallowdata$ispostpmax+2)*2, col="blue",cex=0.25);
+# visualization whether we are in the "ruhedruck"
+#		points(relativeSamples, (swallowdata$isrd+2)*2, col="blue",cex=0.25);
 
 filled.contour(
 	relativeSamples,
 	columns,
 	log(as.matrix(swallowdata[,columnrange])+100),
 	color = terrain.colors,
-	plot.axes = { axis(1); axis(2); points(relativeSamples, maxPressures, col="yellow",cex=0.25)})
+	plot.axes = { axis(1); axis(2); 
+		points(relativeSamples, maxPressures, col="yellow",cex=0.25);
+		abline(v=min(swallowdata$rdendsample)-samples[1],col="green",lwd=3);
+		abline(v=min(swallowdata$rdstartsample)-samples[1],col="green",lwd=3)
+	})
 }
