@@ -48,3 +48,13 @@ labeled_dataset$V114[labeled_dataset$V114=='-Inf']<-median(labeled_dataset$V114[
 
 
 # go ahead and learn!
+# re-assign variable name (less typing)
+ld<-labeled_dataset
+# learn a linear model
+mdl <- lm(y ~ pmaxSphincer + ispostpmax*pmaxSphincer + isrd*pmaxSphincer + V2*V3*V4*V5*V6*V7 ,ld)
+# predict on test instances and assign those to a new column
+test$predictions<-predict(mdl,test)
+# visualize the predictions.
+plotSwallow(test)
+
+

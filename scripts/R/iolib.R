@@ -103,8 +103,11 @@ data_and_annotations$y[ data_and_annotations$ispostpmax==1 &  data_and_annotatio
 data_and_annotations$y[ data_and_annotations$Sample>=data_and_annotations$pmax & data_and_annotations$Sample< data_and_annotations$tRestiAbsoluteSample]<-1
 return (data_and_annotations)
 }
-# plots the swallow from the given data.frame
 
+# plots the swallow from the given data.frame
+# supports the following optional columns:
+#  y <- the actual label, assumed in {0,1}
+#  predictions <- the sample-wise predictions
 plotSwallow<-function(swallowdata) {
 # the colums from P1..P20
 columnrange<-min(grep("P1",colnames(swallowdata))):grep("P20",colnames(swallowdata))
@@ -130,6 +133,13 @@ if (is.null(labels)){
 	labels<-labels*10+5
 }
 
+predictions<-swallowdata$predictions
+if (is.null(predictions)){
+	predictions<-rep(0,length(samples))
+} else {
+	predictions<-predictions*10+5
+}
+
 
 filled.contour(
 	relativeSamples,
@@ -139,6 +149,7 @@ filled.contour(
 	plot.axes = { axis(1); axis(2); 
 		points(relativeSamples, maxPressures, col="yellow",cex=0.25);
 		points(relativeSamples, labels, col="blue",cex=0.25);
+		points(relativeSamples, predictions, col="pink",cex=0.25);
 		abline(v=min(swallowdata$rdendsample)-samples[1],col="green",lwd=3);
 		abline(v=min(swallowdata$rdstartsample)-samples[1],col="green",lwd=3)
 	})
