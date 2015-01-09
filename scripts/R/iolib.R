@@ -106,7 +106,7 @@ plotSwallow<-function(swallowdata) {
 columnrange<-min(grep("P1",colnames(swallowdata))):grep("P20",colnames(swallowdata))
 
 # extract absolute samples and base them on 1
-samples<-swallowdata[ ,1]
+samples<-swallowdata$Sample
 relativeSamples<-samples - min(samples) + 1
 columns<-seq(1,20)
 
