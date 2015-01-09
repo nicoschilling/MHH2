@@ -3,6 +3,7 @@
 # read definitions from this iolibrary
 source("~/MHH2/scripts/R/iolib.R")
 
+# wget -r -l 1 --user=busche --ask-password http://mhh.busche-it.de/data/ECDA2014/Splits/intra/Proband1/Split4/test/Schluck7/
 
 # read 1:10 annotation files (Proband IDs are added to the matrices)
 annotations<- NULL # Initialise
@@ -19,6 +20,10 @@ data<-merge(trainingSwallows, annotations,by=c("Proband","Swallow"))
 
 # infer labels based on the Sample IDs
 labeled_dataset<-inferLabels(data)
+
+# test visualization with:
+# s16<-subset(trainingSwallows,Swallow==6 & Proband==1)
+# plotSwallow(s16)
 
 # remove unused / not necessary colums
 labeled_dataset$V7.y<-NULL

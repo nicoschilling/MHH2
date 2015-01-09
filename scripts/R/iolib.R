@@ -89,7 +89,7 @@ return(annotations)
 # infers the labels (column y added) from the merged dataset
 inferLabels<-function(data_and_annotations){
 # infer labels. Unknown labels everywhere:
-data_and_annotations$y<-'?'
+data_and_annotations$y<- -1
 # non-swallow labels in the "ruhedruck" area and beyond the annotation
 data_and_annotations$y[ data_and_annotations$isrd==1 ]<-0
 data_and_annotations$y[ data_and_annotations$Sample>= data_and_annotations$tRestiAbsoluteSample]<-0
@@ -118,6 +118,14 @@ maxPressures<-sapply(swallowdata$pmaxSphincer,FUN=function(x){(max(x)/500 )*15  
 #		points(relativeSamples, (swallowdata$ispostpmax+2)*2, col="blue",cex=0.25);
 # visualization whether we are in the "ruhedruck"
 #		points(relativeSamples, (swallowdata$isrd+2)*2, col="blue",cex=0.25);
+
+labels<-swallowdata$y
+if (is.null(labels)){
+	labels<-rep(0,length(samples))
+} else {
+	labels<-labels+1
+}
+
 
 filled.contour(
 	relativeSamples,
