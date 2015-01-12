@@ -45,7 +45,7 @@ tmp<-strsplit(as.character(rdend[[1]]),":")[[1]]
 data$rdendsample<-as.integer(tmp[[1]])*60*as.integer(samplerate)+as.integer(tmp[[2]])*as.integer(samplerate)
 
 # extract maximum for each sample from sphincter region
-data$pmaxSphincer<-apply(data[,grep(paste0("P",channelstart),colnames(data)):grep(paste0("P",channelend),colnames(data))] ,1,max)
+data$max_p_in_sphincter_per_sample<-apply(data[,grep(paste0("P",channelstart),colnames(data)):grep(paste0("P",channelend),colnames(data))] ,1,max)
 
 # encode in {0,1} whether a sample denotes the "ruhedruck". 0->swallow-something; 1->ruhedruck
 data$isrd<-0
@@ -53,12 +53,12 @@ data$isrd[ data$Sample>data$rdstartsample & data$Sample<data$rdendsample ]<-1
 
 # extract pmax_manuell
 tmp<-strsplit(as.character(read.table("pmax_manuell",header=FALSE)[[1]]),"[:,]")[[1]]
-data$pmax<-0
-data$pmax<-as.integer(tmp[[1]])*50*60 + as.integer(tmp[[2]])*50+ as.integer(tmp[[3]])/100*50
+data$pmaxsample_manuell<-0
+data$pmaxsample_manuell<-as.integer(tmp[[1]])*50*60 + as.integer(tmp[[2]])*50+ as.integer(tmp[[3]])/100*50
 
 # again, do binary encoding of the pmax area
-data$ispostpmax<-0
-data$ispostpmax[ data$Sample>=data$pmax ]<-1
+data$ispost_pmaxmanuell<-0
+data$ispost_pmaxmanuell[ data$Sample>=data$pmaxsample_manuell ]<-1
 
 # include swallow id and proband id
 data$Swallow<-read.csv("id",header=FALSE)[[1]]
@@ -68,7 +68,7 @@ data$Proband<-read.csv("proband",header=FALSE)[[1]]
 data$Sample<-as.integer(data$Sample)
 #data$Swallow<-as.factor(data$Swallow)
 #data$Proband<-as.factor(data$Proband)
-data$pmax<-as.integer(data$pmax)
+data$pmaxsample_manuell<-as.integer(data$pmaxsample_manuell)
 data$rdendsample<-as.integer(data$rdendsample)
 data$rdstartsample<-as.integer(data$rdstartsample)
 
@@ -85,7 +85,7 @@ annotations$Proband<-Proband
 
 # convert times to samples
 annotations$tRestiAbsoluteSample<-sapply(annotations$tRestiAbsolute,FUN=function(x) {tmp<-strsplit(as.character(x)[[1]],"[:,]")[[1]]; return(as.integer(tmp[[1]])*samplerate*60 + as.integer(tmp[[2]])*samplerate+ as.integer(tmp[[3]])/100*samplerate)})
-annotations$PmaxZeitSample<-sapply(annotations$PmaxZeit,FUN=function(x) {tmp<-strsplit(as.character(x)[[1]],"[:,]")[[1]]; return(as.integer(tmp[[1]])*samplerate*60 + as.integer(tmp[[2]])*samplerate+ as.integer(tmp[[3]])/100*samplerate)})
+annotations$pmaxsample_manuell_from_annotationfile<-sapply(annotations$PmaxZeit,FUN=function(x) {tmp<-strsplit(as.character(x)[[1]],"[:,]")[[1]]; return(as.integer(tmp[[1]])*samplerate*60 + as.integer(tmp[[2]])*samplerate+ as.integer(tmp[[3]])/100*samplerate)})
 
 return(annotations)
 } # of function readAnnotation
@@ -118,11 +118,11 @@ relativeSamples<-samples - min(samples) + 1
 columns<-seq(1,20)
 
 # extract max pressure curve
-maxPressures<-sapply(swallowdata$pmaxSphincer,FUN=function(x){(max(x)/500 )*15  +3})
+maxPressures<-sapply(swallowdata$max_p_in_sphincter_per_sample,FUN=function(x){(max(x)/500 )*15  +3})
 
 # additional aspects:
 # visualization whether we are beyond the pmax area
-#		points(relativeSamples, (swallowdata$ispostpmax+2)*2, col="blue",cex=0.25);
+#		points(relativeSamples, (swallowdata$ispost_pmaxmanuell+2)*2, col="blue",cex=0.25);
 # visualization whether we are in the "ruhedruck"
 #		points(relativeSamples, (swallowdata$isrd+2)*2, col="blue",cex=0.25);
 
