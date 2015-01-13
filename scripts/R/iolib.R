@@ -75,8 +75,8 @@ data$rdstartsample<-as.integer(data$rdstartsample)
 # some sanity checks:
 data$valid<-TRUE
 data$valid<-min(data$Sample)<max(data$Sample)
-data$valid<-min(data$Sample)<max(s11$pmaxsample_manuell)
-data$valid<-max(s11$pmaxsample_manuell)<max(data$Sample)
+data$valid<-min(data$Sample)<max(data$pmaxsample_manuell)
+data$valid<-max(data$pmaxsample_manuell)<max(data$Sample)
 
 
 return (data)
@@ -105,9 +105,9 @@ data_and_annotations$y<- -1
 data_and_annotations$y[ data_and_annotations$isrd==1 ]<-0
 data_and_annotations$y[ data_and_annotations$Sample>= data_and_annotations$tRestiAbsoluteSample]<-0
 # swallow-labels between the pmax sample and the annotation
-data_and_annotations$y[ data_and_annotations$ispostpmax==1 &  data_and_annotations$Sample< data_and_annotations$tRestiAbsoluteSample]<-1
+data_and_annotations$y[ data_and_annotations$ispostpmaxmanuell==1 &  data_and_annotations$Sample< data_and_annotations$tRestiAbsoluteSample]<-1
 # or:
-data_and_annotations$y[ data_and_annotations$Sample>=data_and_annotations$pmax & data_and_annotations$Sample< data_and_annotations$tRestiAbsoluteSample]<-1
+data_and_annotations$y[ data_and_annotations$Sample>=data_and_annotations$pmaxsample_manuell & data_and_annotations$Sample< data_and_annotations$tRestiAbsoluteSample]<-1
 return (data_and_annotations)
 }
 
