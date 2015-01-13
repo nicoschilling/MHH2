@@ -78,6 +78,7 @@ data$valid<-min(data$Sample)<max(data$Sample)
 data$valid<-min(data$Sample)<max(data$pmaxsample_manuell)
 data$valid<-max(data$pmaxsample_manuell)<max(data$Sample)
 
+data$relative_sample_to_pmaxsample_manuell<-apply(data[,c(match("Sample",colnames(data)),match("pmaxsample_manuell",colnames(data)))],1,FUN=function(x){x[1] - x[2]})
 
 return (data)
 } # of function readSwallow

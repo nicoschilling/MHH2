@@ -35,6 +35,7 @@ ld<-subset(ld, y>=0)
 ld$weights<-1
 # weight swallow samples larger
 ld$weights[ld$y==1]<-2
+ld$weights[ld$y==1 & ld$relative_sample_to_pmaxsample_manuell>0]<-1/ld$relative_sample_to_pmaxsample_manuell
 # TODO: make sth. smarter, e.g., a exponential decay beyond pmax. ... e.g. 1/log(test$x) with x being the "number of samples beyong pmax"
 # ... and include those in lm call as weights=ld$weights
 
