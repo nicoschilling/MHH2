@@ -72,6 +72,13 @@ data$pmaxsample_manuell<-as.integer(data$pmaxsample_manuell)
 data$rdendsample<-as.integer(data$rdendsample)
 data$rdstartsample<-as.integer(data$rdstartsample)
 
+# some sanity checks:
+data$valid<-TRUE
+data$valid<-min(data$Sample)<max(data$Sample)
+data$valid<-min(data$Sample)<max(s11$pmaxsample_manuell)
+data$valid<-max(s11$pmaxsample_manuell)<max(data$Sample)
+
+
 return (data)
 } # of function readSwallow
 
