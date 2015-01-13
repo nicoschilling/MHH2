@@ -111,6 +111,33 @@ data_and_annotations$y[ data_and_annotations$Sample>=data_and_annotations$pmaxsa
 return (data_and_annotations)
 }
 
+cleanData<-function(dataset) {
+dataset$V7.y<-NULL
+dataset$tRestiDuration<-NULL
+dataset$Pmax<-NULL
+dataset$V4.y<-NULL
+dataset$RD<-NULL
+dataset$tRestiAbsolute<-NULL
+dataset$PmaxZeit<-NULL
+dataset$V4<-dataset$V4.x
+dataset$V4.x<-NULL
+dataset$V7<-dataset$V7.x
+dataset$V7.x<-NULL
+
+
+# clean dataset (remove -Inf, etc.)
+dataset$V18[dataset$V18=='-Inf']<-median(dataset$V18[dataset$V18!='-Inf'])
+dataset$V34[dataset$V34=='-Inf']<-median(dataset$V34[dataset$V34!='-Inf'])
+dataset$V50[dataset$V50=='-Inf']<-median(dataset$V50[dataset$V50!='-Inf'])
+dataset$V66[dataset$V66=='-Inf']<-median(dataset$V66[dataset$V66!='-Inf'])
+dataset$V82[dataset$V82=='-Inf']<-median(dataset$V82[dataset$V82!='-Inf'])
+dataset$V98[dataset$V98=='-Inf']<-median(dataset$V98[dataset$V98!='-Inf'])
+dataset$V114[dataset$V114=='-Inf']<-median(dataset$V114[dataset$V114!='-Inf'])
+
+return(dataset)
+
+}
+
 # plots the swallow from the given data.frame
 # supports the following optional columns:
 #  y <- the actual label, assumed in {0,1}

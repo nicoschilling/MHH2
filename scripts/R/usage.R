@@ -26,33 +26,10 @@ labeled_dataset<-inferLabels(data)
 # plotSwallow(s16)
 
 # remove unused / not necessary colums
-labeled_dataset$V7.y<-NULL
-labeled_dataset$tRestiDuration<-NULL
-labeled_dataset$Pmax<-NULL
-labeled_dataset$V4.y<-NULL
-labeled_dataset$RD<-NULL
-labeled_dataset$tRestiAbsolute<-NULL
-labeled_dataset$PmaxZeit<-NULL
-labeled_dataset$V4<-labeled_dataset$V4.x
-labeled_dataset$V4.x<-NULL
-labeled_dataset$V7<-labeled_dataset$V7.x
-labeled_dataset$V7.x<-NULL
+ld<-cleanData(labeled_dataset)
 
+ld<-subset(ld, y>=0)
 
-# clean dataset (remove -Inf, etc.)
-labeled_dataset$V18[labeled_dataset$V18=='-Inf']<-median(labeled_dataset$V18[labeled_dataset$V18!='-Inf'])
-labeled_dataset$V34[labeled_dataset$V34=='-Inf']<-median(labeled_dataset$V34[labeled_dataset$V34!='-Inf'])
-labeled_dataset$V50[labeled_dataset$V50=='-Inf']<-median(labeled_dataset$V50[labeled_dataset$V50!='-Inf'])
-labeled_dataset$V66[labeled_dataset$V66=='-Inf']<-median(labeled_dataset$V66[labeled_dataset$V66!='-Inf'])
-labeled_dataset$V82[labeled_dataset$V82=='-Inf']<-median(labeled_dataset$V82[labeled_dataset$V82!='-Inf'])
-labeled_dataset$V98[labeled_dataset$V98=='-Inf']<-median(labeled_dataset$V98[labeled_dataset$V98!='-Inf'])
-labeled_dataset$V114[labeled_dataset$V114=='-Inf']<-median(labeled_dataset$V114[labeled_dataset$V114!='-Inf'])
-
-
-# go ahead and learn!
-# re-assign variable name (less typing)
-ld<-labeled_dataset
-ld<-subset(labeled_dataset, y>=0)
 
 #optional: use weights:
 ld$weights<-1
@@ -63,7 +40,7 @@ ld$weights[ld$y==1]<-2
 
 
 # learn a linear model
-mdl <- lm(y ~ pmaxSphincer + ispostpmax*pmaxSphincer + isrd*pmaxSphincer + V2*V3*V4*V5*V6*V7 ,ld)
+mdl <- lm(y ~ max_p_in_sphincter_per_sample + ispost_pmaxmanuell*max_p_in_sphincter_per_sample + isrd*max_p_in_sphincter_per_sample + V2*V3*V4*V5*V6*V7 ,ld)
 
 mdl <- lm(y ~ V3:V5:V6+V2:V4:V7+V4:V5:V7+V2:V4:V9+V4:V7:V9+V2:V3:V4:V6+V2:V3:V5:V6+V2:V4:V5:V6+V3:V4:V5:V6+V2:V4:V5:V7+V3:V4:V5:V7+V2:V4:V6:V7+V2:V3:V5:V8+max_p_in_sphincter_per_sample:V3:V6:V8+V2:V3:V4:V9+V2:V4:V5:V9+V2:V4:V7:V9+V4:V5:V7:V9+V5:V6:V7:V9+V2:V3:V8:V9+V2:V4:V8:V9+V2:V5:V8:V9+V2:V3:V4:V5:V6+V2:V3:V4:V5:V7+V2:V3:V4:V6:V7+V2:V4:V5:V6:V7+max_p_in_sphincter_per_sample:V3:V4:V5:V8+max_p_in_sphincter_per_sample:V2:V3:V6:V8+max_p_in_sphincter_per_sample:V3:V4:V6:V8+max_p_in_sphincter_per_sample:V3:V5:V6:V8+V2:V3:V5:V6:V8+V2:V3:V4:V7:V8+V2:V4:V5:V7:V8+V3:V4:V5:V7:V8+max_p_in_sphincter_per_sample:V2:V6:V7:V8+V2:V4:V6:V7:V8+max_p_in_sphincter_per_sample:V3:V4:V5:V9+V2:V3:V4:V5:V9+V2:V3:V4:V7:V9+max_p_in_sphincter_per_sample:V3:V5:V7:V9+V2:V4:V5:V7:V9+max_p_in_sphincter_per_sample:V5:V6:V7:V9+V2:V5:V6:V7:V9+V3:V5:V6:V7:V9+V4:V5:V6:V7:V9+max_p_in_sphincter_per_sample:V2:V3:V8:V9+max_p_in_sphincter_per_sample:V3:V4:V8:V9+max_p_in_sphincter_per_sample:V3:V5:V8:V9+V2:V3:V5:V8:V9+V2:V4:V5:V8:V9+max_p_in_sphincter_per_sample:V3:V6:V8:V9+V3:V4:V6:V8:V9+V2:V5:V6:V8:V9+V3:V5:V6:V8:V9+max_p_in_sphincter_per_sample:V4:V7:V8:V9+V2:V4:V7:V8:V9+V2:V3:V4:V5:V6:V7+max_p_in_sphincter_per_sample:V2:V3:V4:V6:V8+max_p_in_sphincter_per_sample:V3:V4:V5:V6:V8+max_p_in_sphincter_per_sample:V2:V3:V5:V7:V8+max_p_in_sphincter_per_sample:V3:V4:V5:V7:V8+max_p_in_sphincter_per_sample:V2:V3:V6:V7:V8+V2:V3:V4:V6:V7:V8+max_p_in_sphincter_per_sample:V3:V5:V6:V7:V8+V3:V4:V5:V6:V7:V8+max_p_in_sphincter_per_sample:V3:V4:V5:V6:V9+max_p_in_sphincter_per_sample:V2:V4:V5:V7:V9+max_p_in_sphincter_per_sample:V3:V4:V5:V7:V9+V2:V3:V5:V6:V7:V9+max_p_in_sphincter_per_sample:V4:V5:V6:V7:V9+V3:V4:V5:V6:V7:V9+max_p_in_sphincter_per_sample:V3:V4:V5:V8:V9+max_p_in_sphincter_per_sample:V2:V3:V6:V8:V9+max_p_in_sphincter_per_sample:V3:V4:V6:V8:V9+V2:V3:V5:V6:V8:V9+V3:V4:V5:V6:V8:V9+max_p_in_sphincter_per_sample:V3:V4:V7:V8:V9+V2:V3:V4:V7:V8:V9+V2:V3:V5:V7:V8:V9+max_p_in_sphincter_per_sample:V4:V5:V7:V8:V9+V2:V4:V5:V7:V8:V9+V3:V4:V5:V7:V8:V9+max_p_in_sphincter_per_sample:V4:V6:V7:V8:V9+V2:V4:V6:V7:V8:V9+V3:V4:V6:V7:V8:V9+V3:V5:V6:V7:V8:V9+V4:V5:V6:V7:V8:V9+max_p_in_sphincter_per_sample:V3:V4:V5:V6:V7:V8+max_p_in_sphincter_per_sample:V3:V4:V5:V6:V7:V9+V2:V3:V4:V5:V6:V7:V9+max_p_in_sphincter_per_sample:V3:V4:V5:V6:V8:V9+max_p_in_sphincter_per_sample:V3:V4:V5:V7:V8:V9+V3:V4:V5:V6:V7:V8:V9+max_p_in_sphincter_per_sample:V2:V3:V4:V5:V7:V8:V9+max_p_in_sphincter_per_sample:V3:V4:V5:V6:V7:V8:V9+V2:V3:V4:V5:V6:V7:V8:V9 ,ld)
 
@@ -71,21 +48,11 @@ mdl <- lm(y ~ V3:V5:V6+V2:V4:V7+V4:V5:V7+V2:V4:V9+V4:V7:V9+V2:V3:V4:V6+V2:V3:V5:
 # predict:
 test<-readSwallow("~/mhh/mhh.busche-it.de/data/ECDA2014/Splits/intra/Proband1/Split4/test/Schluck7/")
 testdata<-merge(test, annotations,by=c("Proband","Swallow"))
-labeled_testdataset<-inferLabels(testdata)
-labeled_testdataset$V7.y<-NULL
-labeled_testdataset$tRestiDuration<-NULL
-labeled_testdataset$Pmax<-NULL
-labeled_testdataset$V4.y<-NULL
-labeled_testdataset$RD<-NULL
-labeled_testdataset$tRestiAbsolute<-NULL
-labeled_testdataset$PmaxZeit<-NULL
-labeled_testdataset$V4<-labeled_testdataset$V4.x
-labeled_testdataset$V4.x<-NULL
-labeled_testdataset$V7<-labeled_testdataset$V7.x
-labeled_testdataset$V7.x<-NULL
 
-ltd<-labeled_testdataset
-ltd<-subset(labeled_testdataset,y>=0)
+labeled_testdataset<-inferLabels(testdata)
+ltd<-cleanData(labeled_testdataset)
+
+ltd<-subset(ltd,y>=0)
 # predict on test instances and assign those to a new column
 ltd$predictions<-predict(mdl,ltd)
 # visualize the predictions.
