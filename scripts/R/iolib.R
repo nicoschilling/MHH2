@@ -1,4 +1,23 @@
-# read a swallow from path and return it as a data.frame
+# read a swallow from path and return it as a data.frame. Rows denote individual data tuples. Named columns corresponding fields
+#
+# @param in path to a directory containing a single swallow. It should contain files like data.csv,  fft.csv, rdstart, etc.
+# @return a data frame of the swallow, containing the following fields:
+# 	Sample the sample ID
+# 	P1 ... P20 pressure sensor raw values
+# 	Resp1 ... Resp3 unknown data fields from the measurement
+# 	Swallow1 ... Swallow3 unknown data fields from the measurement
+# 	V2 ... V129 FFT values
+# 	rdstartsample constant \forall Sample: sample ID when the rd ('Ruhedruck') starts
+# 	rdendsample constant \forall Sample: sample ID when the rd ('Ruhedruck') ends
+# 	max_p_in_sphincter_per_sample the 'pmax' curve. max(P ... P) \forall Sample
+# 	isrd derived: 0/1 encoding whether the 'current' sample is within the rd ('Ruhedruck'),  excluding bounds (0-> not within; 1 -> within)
+# 	pmaxsample_manuell constant \forall Sample: manual encoding of the pmax sample (human annotation)
+# 	ispost_pmaxmanuell derived: 0/1 encoding whether the 'current' sample is after or equal to the pmaxsample_manuell sample (0->before sample,  1 -> after sample)
+# 	Swallow unique swallow ID
+# 	Proband unique proband ID
+# 	valid boolean (TRUE/FALSE) flag whether the data is valid (related sensor IDs make sense)
+# 	relative_sample_to_pmaxsample_manuell derived: (current sample - pmaxsample_manuell)
+#
 readSwallow <- function (path) {
 setwd(path)
 
@@ -83,7 +102,23 @@ data$relative_sample_to_pmaxsample_manuell<-apply(data[,c(match("Sample",colname
 return (data)
 } # of function readSwallow
 
-# read the annotations from the given annotation file using the given proband id.
+# read the annotations from the given annotation file using the given proband id. A row encodes an annotation tuple for a specific swallow; the named columns their attributes
+#
+# @param annotationfile path to an annotation file
+# @param Proband ID of the proband (encoded as an ID in the return data frame)
+# @param samplerate the samplerate which is used to decode time information to samples
+# @return a data frame with the following fields:
+# 	Swallow the Swallow ID of the annotation
+# 	RD optional: the annotated resting pressure ('Ruhedruck') extracted from the computer program
+# 	Pmax optional: sample of pmax,  automatically calculated by the computer program
+# 	V4 optional: unknown
+# 	PmaxZeit 
+# 	tRestiDuration optional: ???
+# 	V7 optional: ???
+# 	tRestiAbsolute: ???
+# 	Proband proband ID (same as input parameter)
+# 	tRestiAbsoluteSample calculated from tRestiAbsolute: the sample id of XXX,  when using input parameter samplerate during the conversion
+# 	pmaxsample_manuell_from_annotationfile calculated from PmaxZeit: Individual annotation in time units when reaching the resting pressure again (aka. the point in time when the restitution is reached) (human override of Pmax)
 readAnnotation <-function(annotationfile,Proband,samplerate=50) {
 # annotationfile=~/mhh/busche-it.de/data/manual_annotations/ECDA-Annotations/1-sm.tsv
 annotations<-read.csv(annotationfile,header=FALSE,sep='\t')
@@ -99,6 +134,8 @@ return(annotations)
 } # of function readAnnotation
 
 # infers the labels (column y added) from the merged dataset
+#
+# Initialize all labels to -1. Then, give a label 0 or 1 to those samples denoting the resting pressure and the swallowing period, resp.
 inferLabels<-function(data_and_annotations){
 # infer labels. Unknown labels everywhere:
 data_and_annotations$y<- -1
@@ -112,6 +149,8 @@ data_and_annotations$y[ data_and_annotations$Sample>=data_and_annotations$pmaxsa
 return (data_and_annotations)
 }
 
+# Removes several unused columns from the given dataset and heals '-Inf' entries from the FFT calculations to be replaced by median values
+#
 cleanData<-function(dataset) {
 dataset$V7.y<-NULL
 dataset$tRestiDuration<-NULL
