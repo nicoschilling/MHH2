@@ -28,6 +28,8 @@ labeled_dataset<-inferLabels(data)
 # remove unused / not necessary colums
 ld<-cleanData(labeled_dataset)
 
+# currently, labels are encoded 0/1,  whereby -1 denotes 'no label'.
+# this filters the data set to only contain those time stamps which denote known labeled time stamps and vectors for those.
 ld<-subset(ld, y>=0)
 
 
@@ -35,10 +37,10 @@ ld<-subset(ld, y>=0)
 ld$weights<-1
 # weight swallow samples larger
 ld$weights[ld$y==1]<-2
-ld$weights[ld$y==1 & ld$relative_sample_to_pmaxsample_manuell>0]<-1/ld$relative_sample_to_pmaxsample_manuell
+#ld$weights[ld$relative_sample_to_pmaxsample_manuell>0]<-1/ld$relative_sample_to_pmaxsample_manuell
 # TODO: make sth. smarter, e.g., a exponential decay beyond pmax. ... e.g. 1/log(test$x) with x being the "number of samples beyong pmax"
 # ... and include those in lm call as weights=ld$weights
-
+ld$weights<-sapply(ld[,match("relative_sample_to_pmaxsample_manuell",colnames(ld))],FUN=function(x){if (x[1]>0){1+1/x}else{1}})
 
 # learn a linear model
 mdl <- lm(y ~ max_p_in_sphincter_per_sample + ispost_pmaxmanuell*max_p_in_sphincter_per_sample + isrd*max_p_in_sphincter_per_sample + V2*V3*V4*V5*V6*V7 ,ld)
@@ -59,4 +61,5 @@ ltd$predictions<-predict(mdl,ltd)
 # visualize the predictions.
 plotSwallow(ltd)
 
-
+# this is really a FAKE ERROR! just to output some value!
+sum ((ltd$predictions-ltd$y)^2)
