@@ -149,7 +149,7 @@ data_and_annotations$y[ data_and_annotations$Sample>=data_and_annotations$pmaxsa
 return (data_and_annotations)
 }
 
-# Removes several unused columns from the given dataset and heals '-Inf' entries from the FFT calculations to be replaced by median values
+# Removes several unused columns from the given dataset and heals '-Inf' entries from the FFT calculations to be replaced by 0.0
 #
 cleanData<-function(dataset) {
 dataset$V7.y<-NULL
@@ -166,13 +166,22 @@ dataset$V7.x<-NULL
 
 
 # clean dataset (remove -Inf, etc.)
-dataset$V18[dataset$V18=='-Inf']<-median(dataset$V18[dataset$V18!='-Inf'])
-dataset$V34[dataset$V34=='-Inf']<-median(dataset$V34[dataset$V34!='-Inf'])
-dataset$V50[dataset$V50=='-Inf']<-median(dataset$V50[dataset$V50!='-Inf'])
-dataset$V66[dataset$V66=='-Inf']<-median(dataset$V66[dataset$V66!='-Inf'])
-dataset$V82[dataset$V82=='-Inf']<-median(dataset$V82[dataset$V82!='-Inf'])
-dataset$V98[dataset$V98=='-Inf']<-median(dataset$V98[dataset$V98!='-Inf'])
-dataset$V114[dataset$V114=='-Inf']<-median(dataset$V114[dataset$V114!='-Inf'])
+#dataset$V18[dataset$V18=='-Inf']<-median(dataset$V18[dataset$V18!='-Inf'])
+#dataset$V34[dataset$V34=='-Inf']<-median(dataset$V34[dataset$V34!='-Inf'])
+#dataset$V50[dataset$V50=='-Inf']<-median(dataset$V50[dataset$V50!='-Inf'])
+#dataset$V66[dataset$V66=='-Inf']<-median(dataset$V66[dataset$V66!='-Inf'])
+#dataset$V82[dataset$V82=='-Inf']<-median(dataset$V82[dataset$V82!='-Inf'])
+#dataset$V98[dataset$V98=='-Inf']<-median(dataset$V98[dataset$V98!='-Inf'])
+#dataset$V114[dataset$V114=='-Inf']<-median(dataset$V114[dataset$V114!='-Inf'])
+
+dataset$V18[dataset$V18=='-Inf']<-0
+dataset$V34[dataset$V34=='-Inf']<-0
+dataset$V50[dataset$V50=='-Inf']<-0
+dataset$V66[dataset$V66=='-Inf']<-0
+dataset$V82[dataset$V82=='-Inf']<-0
+dataset$V98[dataset$V98=='-Inf']<-0
+dataset$V114[dataset$V114=='-Inf']<-0
+
 
 return(dataset)
 
