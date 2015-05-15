@@ -110,12 +110,12 @@ return (data)
 # @return a data frame with the following fields:
 # 	Swallow the Swallow ID of the annotation
 # 	RD optional: the annotated resting pressure ('Ruhedruck') extracted from the computer program
-# 	Pmax optional: sample of pmax,  automatically calculated by the computer program
-# 	V4 optional: unknown
-# 	PmaxZeit 
-# 	tRestiDuration optional: ???
+# 	Pmax optional: maximal pressure of the pmax curve, automatically calculated by the computer program
+# 	V4 optional: pmax sensor, on which the maximal pressure was measured
+# 	PmaxZeit timestamp encoding the time when the maximal pressure was measured
+# 	tRestiDuration optional: duration after pmax denoting the duration of the restitution time (aka. the actual label, given the restitution estimation task)
 # 	V7 optional: ???
-# 	tRestiAbsolute: ???
+# 	tRestiAbsolute: absolute timestamp encoding the end of the restitution time of the current swallow (aka. when labeling, the timestamp when the annotation changes from 'swallowing' to 'non-swallowing')
 # 	Proband proband ID (same as input parameter)
 # 	tRestiAbsoluteSample calculated from tRestiAbsolute: the sample id of XXX,  when using input parameter samplerate during the conversion
 # 	pmaxsample_manuell_from_annotationfile calculated from PmaxZeit: Individual annotation in time units when reaching the resting pressure again (aka. the point in time when the restitution is reached) (human override of Pmax)
@@ -187,7 +187,8 @@ return(dataset)
 
 }
 
-# plots the swallow from the given data.frame
+# plots the swallow to the current graphical device from the given data.frame
+#
 # supports the following optional columns:
 #  y <- the actual label, assumed in {0,1}
 #  predictions <- the sample-wise predictions
