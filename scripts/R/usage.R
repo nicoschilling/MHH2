@@ -1,19 +1,31 @@
 # usage
 
 # read definitions from this iolibrary
-source("~/MHH2/scripts/R/iolib.R")
+source("./iolib.R")
 
+args <- commandArgs(trailingOnly = TRUE)
+
+for (i in 1:length(args)) {
+	spl<-strsplit(args[[i]],   split="=")
+	assign(as.character(spl[[1]][[1]]),   as.character(spl[[1]][[2]]))
+}
+
+ifelse(exists("datadir"), print("FINE: datadir given"), stop("ERROR: need parameter datadir. pass it like datadir=/some/path"))
+
+
+annotationdir="~/mhh/mhh.busche-it.de/data/manual_annotations/ECDA-Annotations"
+datadir="~/mhh/mhh.busche-it.de/data/ECDA2014/Splits/intra/Proband1/Split4"
 # wget -r -l 1 --user=busche --ask-password http://mhh.busche-it.de/data/ECDA2014/Splits/intra/Proband1/Split4/test/Schluck7/
 
 # read 1:10 annotation files (Proband IDs are added to the matrices)
 annotations<- NULL # Initialise
-for (i in 1:10) annotations <- rbind(annotations, readAnnotation(paste0("~/mhh/mhh.busche-it.de/data/manual_annotations/ECDA-Annotations/",i,"-sm.tsv"),Proband=i))
+for (i in 1:10) annotations <- rbind(annotations, readAnnotation(paste0(annotationdir,"/",i,"-sm.tsv"),Proband=i))
 # check the number of annotations:
 table(annotations$Proband)
 
 # read swallows from the training directory and row-bind those to traningSwallows
 trainingSwallows<-NULL
-for (d in dir("~/mhh/mhh.busche-it.de/data/ECDA2014/Splits/intra/Proband1/Split4/train/",full.names=TRUE)) if (file.info(d)$isdir==TRUE) trainingSwallows<-rbind(trainingSwallows,readSwallow(d))
+for (d in dir(paste0(datadir,"/train/"),full.names=TRUE)) if (file.info(d)$isdir==TRUE) trainingSwallows<-rbind(trainingSwallows,readSwallow(d))
 
 # create dataset by merging swallows and annotations by matching Proband and Swallow
 data<-merge(trainingSwallows, annotations,by=c("Proband","Swallow"))
@@ -49,7 +61,7 @@ mdl <- lm(y ~ V3:V5:V6+V2:V4:V7+V4:V5:V7+V2:V4:V9+V4:V7:V9+V2:V3:V4:V6+V2:V3:V5:
 
 
 # predict:
-test<-readSwallow("~/mhh/mhh.busche-it.de/data/ECDA2014/Splits/intra/Proband1/Split4/test/Schluck7/")
+test<-readSwallow(paste0(datadir, "/test/Schluck7/"))
 testdata<-merge(test, annotations,by=c("Proband","Swallow"))
 
 labeled_testdataset<-inferLabels(testdata)
