@@ -11,10 +11,12 @@ for (i in 1:length(args)) {
 }
 
 ifelse(exists("datadir"), print("FINE: datadir given"), stop("ERROR: need parameter datadir. pass it like datadir=/some/path"))
+ifelse(exists("annotationdir"), print("FINE: annotationdir given"), stop("ERROR: need parameter annotationdir. pass it like annotationdir=/some/path"))
 
 
-annotationdir="~/mhh/mhh.busche-it.de/data/manual_annotations/ECDA-Annotations"
-datadir="~/mhh/mhh.busche-it.de/data/ECDA2014/Splits/intra/Proband1/Split4"
+
+#annotationdir="~/mhh/mhh.busche-it.de/data/manual_annotations/ECDA-Annotations"
+#datadir="~/mhh/mhh.busche-it.de/data/ECDA2014/Splits/intra/Proband1/Split4"
 # wget -r -l 1 --user=busche --ask-password http://mhh.busche-it.de/data/ECDA2014/Splits/intra/Proband1/Split4/test/Schluck7/
 
 # read 1:10 annotation files (Proband IDs are added to the matrices)
