@@ -1,3 +1,7 @@
+library(logging)
+basicConfig(level=10)
+loginfo('about to define functions for I/O ...')
+
 # read a swallow from path and return it as a data.frame. Rows denote individual data tuples. Named columns corresponding fields
 #
 # @param in path to a directory containing a single swallow. It should contain files like data.csv,  fft.csv, rdstart, etc.
@@ -19,10 +23,13 @@
 # 	relative_sample_to_pmaxsample_manuell derived: (current sample - pmaxsample_manuell)
 #
 readSwallow <- function (path) {
+loginfo('In Directory %s', path)
 setwd(path)
 
+logdebug('Reading data.csv')
 sensors<-read.csv("data.csv",header=FALSE)
 colnames(sensors)<-c("Sample","P1","P2","P3","P4","P5","P6","P7","P8","P9","P10","P11","P12","P13","P14","P15","P16","P17","P18","P19","P20","Resp1","Resp2","Resp3","Swallow1","Swallow2","Swallow3","Marker","misc")
+logdebug('Reading fft.csv')
 fft<-read.csv("fft.csv",header=FALSE)
 data<-cbind(sensors,fft)
 # was supposed to be the Sample; errorously removed.
@@ -35,13 +42,18 @@ data$Marker<-NULL
 #data$sphinctermaxV2<-sphinctermax$V2
 
 # read raw data
+logdebug('Reading rdstart')
 rdstart<-read.csv("rdstart",header=FALSE)
+logdebug('Reading rdend')
 rdend<-read.csv("rdend",header=FALSE)
+logdebug('Reading channelstart')
 channelstart<-as.integer(read.csv("channelstart",header=FALSE))
+logdebug('Reading channelend')
 channelend<-as.integer(read.csv("channelend",header=FALSE))
 
 #     V1
 # 1 04:05
+logdebug('Reading samplerate')
 samplerate<-as.integer(read.csv("samplerate",header=FALSE))
 
 # split time values
@@ -71,6 +83,7 @@ data$isrd<-0
 data$isrd[ data$Sample>data$rdstartsample & data$Sample<data$rdendsample ]<-1
 
 # extract pmax_manuell
+logdebug('Reading pmax_manuell')
 tmp<-strsplit(as.character(read.table("pmax_manuell",header=FALSE)[[1]]),"[:,]")[[1]]
 data$pmaxsample_manuell<-0
 data$pmaxsample_manuell<-as.integer(tmp[[1]])*50*60 + as.integer(tmp[[2]])*50+ as.integer(tmp[[3]])/100*50
@@ -80,7 +93,9 @@ data$ispost_pmaxmanuell<-0
 data$ispost_pmaxmanuell[ data$Sample>=data$pmaxsample_manuell ]<-1
 
 # include swallow id and proband id
+logdebug('Reading id')
 data$Swallow<-read.csv("id",header=FALSE)[[1]]
+logdebug('Reading proband')
 data$Proband<-read.csv("proband",header=FALSE)[[1]]
 
 # adjust data types
@@ -121,6 +136,7 @@ return (data)
 # 	pmaxsample_manuell_from_annotationfile calculated from PmaxZeit: Individual annotation in time units when reaching the resting pressure again (aka. the point in time when the restitution is reached) (human override of Pmax)
 readAnnotation <-function(annotationfile,Proband,samplerate=50) {
 # annotationfile=~/mhh/busche-it.de/data/manual_annotations/ECDA-Annotations/1-sm.tsv
+loginfo('Reading %s', annotationfile)
 annotations<-read.csv(annotationfile,header=FALSE,sep='\t')
 colnames(annotations)<-c("Swallow","RD","Pmax","V4","PmaxZeit","tRestiDuration","V7","tRestiAbsolute")
 # store proband as dedicated column

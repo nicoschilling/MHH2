@@ -1,5 +1,14 @@
 # usage
 
+# configure used packages
+#
+# logging
+# 
+# see http://logging.r-forge.r-project.org/sample_session.php
+library(logging)
+basicConfig(level=20)
+
+
 # read definitions from this iolibrary
 source("./iolib.R")
 
