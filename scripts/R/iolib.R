@@ -15,8 +15,8 @@ loginfo('about to define functions for I/O ...')
 # 	rdendsample constant \forall Sample: sample ID when the rd ('Ruhedruck') ends
 # 	max_p_in_sphincter_per_sample the 'pmax' curve. max(P ... P) \forall Sample
 # 	isrd derived: 0/1 encoding whether the 'current' sample is within the rd ('Ruhedruck'),  excluding bounds (0-> not within; 1 -> within)
-# 	pmaxsample_manuell constant \forall Sample: manual encoding of the pmax sample (human annotation)
-# 	ispost_pmaxmanuell derived: 0/1 encoding whether the 'current' sample is after or equal to the pmaxsample_manuell sample (0->before sample,  1 -> after sample)
+# 	pmaxsample_manuell optional: constant \forall Sample: manual encoding of the pmax sample (human annotation)
+# 	ispost_pmaxmanuell optional derived: 0/1 encoding whether the 'current' sample is after or equal to the pmaxsample_manuell sample (0->before sample,  1 -> after sample)
 # 	Swallow unique swallow ID
 # 	Proband unique proband ID
 # 	valid boolean (TRUE/FALSE) flag whether the data is valid (related sensor IDs make sense)
@@ -83,10 +83,15 @@ data$isrd<-0
 data$isrd[ data$Sample>data$rdstartsample & data$Sample<data$rdendsample ]<-1
 
 # extract pmax_manuell
-logdebug('Reading pmax_manuell')
-tmp<-strsplit(as.character(read.table("pmax_manuell",header=FALSE)[[1]]),"[:,]")[[1]]
-data$pmaxsample_manuell<-0
-data$pmaxsample_manuell<-as.integer(tmp[[1]])*50*60 + as.integer(tmp[[2]])*50+ as.integer(tmp[[3]])/100*50
+if (TRUE == file.exists("pmax_manuell")) {
+	logdebug('Reading pmax_manuell')
+	tmp<-strsplit(as.character(read.table("pmax_manuell",header=FALSE)[[1]]),"[:,]")[[1]]
+	data$pmaxsample_manuell<-0
+	data$pmaxsample_manuell<-as.integer(tmp[[1]])*50*60 + as.integer(tmp[[2]])*50+ as.integer(tmp[[3]])/100*50
+} else {
+	data$pmaxsample_manuell<-which.max(data$max_p_in_sphincter_per_sample)+data$Sample[[1]]
+	logwarn('File pmax_manuell does not exist. Computed pmaxsample_manuell value (%i)', which.max(data$max_p_in_sphincter_per_sample)+data$Sample[[1]])
+}
 
 # again, do binary encoding of the pmax area
 data$ispost_pmaxmanuell<-0
