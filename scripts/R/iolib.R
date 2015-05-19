@@ -195,7 +195,7 @@ dataset$V7.x<-NULL
 #dataset$V98[dataset$V98=='-Inf']<-median(dataset$V98[dataset$V98!='-Inf'])
 #dataset$V114[dataset$V114=='-Inf']<-median(dataset$V114[dataset$V114!='-Inf'])
 
-dataset$V1[dataset$V1=='-Inf']<-0
+#dataset$V1[dataset$V1=='-Inf']<-0
 dataset$V2[dataset$V2=='-Inf']<-0
 dataset$V3[dataset$V3=='-Inf']<-0
 dataset$V4[dataset$V4=='-Inf']<-0
