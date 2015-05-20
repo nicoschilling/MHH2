@@ -1,1 +1,21 @@
 
+
+== Baseline release ==
+
+=== Dataset ===
+* ECDA 2013 (first paper)
+** used to validate and calibrate implementation
+
+=== Model ===
+* regression
+
+=== Evaluation ===
+* Accuracy percentage after label derivation for all time stamps
+* RMSE on actual time stamp labels
+* absolute error on Restitution time
+
+== Extensions ==
+* Derived Sphincter features
+* acid swallows
+
+
