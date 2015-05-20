@@ -82,7 +82,7 @@ ltd<-subset(ltd,y>=0)
 # predict on test instances and assign those to a new column
 ltd$predictions<-predict(mdl,ltd)
 # visualize the predictions.
-plotSwallow(ltd)
+#plotSwallow(ltd)
 
 # this is really a FAKE ERROR! just to output some value!
 sum ((ltd$predictions-ltd$y)^2)
