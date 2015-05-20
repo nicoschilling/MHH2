@@ -36,7 +36,11 @@ table(annotations$Proband)
 
 # read swallows from the training directory and row-bind those to traningSwallows
 trainingSwallows<-NULL
+testSwallows<-NULL
+validationSwallows<-NULL
 for (d in dir(paste0(datadir,"/train/"),full.names=TRUE)) if (file.info(d)$isdir==TRUE) trainingSwallows<-rbind(trainingSwallows,readSwallow(d))
+for (d in dir(paste0(datadir,"/test/"),full.names=TRUE)) if (file.info(d)$isdir==TRUE) testSwallows<-rbind(testSwallows,readSwallow(d))
+for (d in dir(paste0(datadir,"/validation/"),full.names=TRUE)) if (file.info(d)$isdir==TRUE) validationSwallows<-rbind(validationSwallows,readSwallow(d))
 
 # create dataset by merging swallows and annotations by matching Proband and Swallow
 data<-merge(trainingSwallows, annotations,by=c("Proband","Swallow"))
@@ -72,8 +76,7 @@ mdl <- lm(y ~ V3:V5:V6+V2:V4:V7+V4:V5:V7+V2:V4:V9+V4:V7:V9+V2:V3:V4:V6+V2:V3:V5:
 
 
 # predict:
-test<-readSwallow(paste0(datadir, "/test/Schluck7/"))
-testdata<-merge(test, annotations,by=c("Proband","Swallow"))
+testdata<-merge(testSwallows, annotations,by=c("Proband","Swallow"))
 
 labeled_testdataset<-inferLabels(testdata)
 ltd<-cleanData(labeled_testdataset)
@@ -85,4 +88,4 @@ ltd$predictions<-predict(mdl,ltd)
 #plotSwallow(ltd)
 
 # this is really a FAKE ERROR! just to output some value!
-sum ((ltd$predictions-ltd$y)^2)
+sqrt(sum ((ltd$predictions-ltd$y)^2))
