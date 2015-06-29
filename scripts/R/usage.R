@@ -89,3 +89,5 @@ ltd$predictions<-predict(mdl,ltd)
 
 # this is really a FAKE ERROR! just to output some value!
 sqrt(sum ((ltd$predictions-ltd$y)^2))
+
+computeSampleError(ltd)
