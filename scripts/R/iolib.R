@@ -379,3 +379,41 @@ filled.contour(
 		abline(v=min(swallowdata$rdstartsample)-samples[1],col="green",lwd=3)
 	})
 }
+
+
+# computes the sample error for the labeled test data set ltd
+#
+# ltd <- the labeled test data set including columns y (the actual label) and predictions (the predicted value per time sample)
+# 
+# returns the error sum
+computeSampleError<-function(ltd) {
+
+# initialize return value to 0 (no error)
+errorSum<-0
+
+# iterate through the unique values of the labeled test dataset ltd
+for (SwallowId in unique(ltd$Swallow)) {
+
+	# obtain the subset of the labeled test data set for Swallow ID 28 and store it in hh
+	hh<-subset(ltd,Swallow==SwallowId)
+
+	# as an information: this is the annotated pmax swallow
+	#hh$pmaxsample_manuell[1]
+
+	# as an information: These are the labels:
+	#subset(hh, Sample>=hh$pmaxsample_manuell[1])$y
+
+	# the first element below 0:
+	relative_length<-which(subset(hh, Sample>=hh$pmaxsample_manuell[1])$predictions<0)[1]
+
+	# absolute end sample (the absolute time Sample)
+	absolute_predicted_end_of_restitution_time<-hh$pmaxsample_manuell[1]+relative_length
+
+	# error:
+	errorSum<-errorSum+abs(hh$tRestiAbsoluteSample[1]-absolute_predicted_end_of_restitution_time)
+
+}
+
+# return the computed errorsum:
+return(errorSum)
+}

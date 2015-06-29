@@ -15,7 +15,6 @@
 === Evaluation ===
 * Accuracy percentage after label derivation for all time stamps
 * RMSE on actual time stamp labels
-* absolute error on Restitution time
 
 == Extensions ==
 * Derived Sphincter features
