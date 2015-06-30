@@ -391,7 +391,8 @@ computeSampleError<-function(ltd) {
 # initialize return value to 0 (no error)
 errorSum<-0
 
-logdebug('Predicting labels for %i swallows.', length(unique(ltd$Swallow)))
+numSwallows=length(unique(ltd$Swallow))
+logdebug('Predicting labels for %i swallows.', numSwallows)
 
 # iterate through the unique values of the labeled test dataset ltd
 for (SwallowId in unique(ltd$Swallow)) {
@@ -405,24 +406,27 @@ for (SwallowId in unique(ltd$Swallow)) {
 	# as an information: These are the labels:
 	#subset(hh, Sample>=hh$pmaxsample_manuell[1])$y
 
+	remainder=subset(hh, Sample>=hh$pmaxsample_manuell[1])
+
 	# the first element below 0:
-	relative_length<-which(subset(hh, Sample>=hh$pmaxsample_manuell[1])$predictions<0.5)[1]
+	relative_length<-which(remainder$predictions<0.5)[1]
 
 	# if the value could not be computed (e.g., no end transition found), set it to the last sample
 	if (is.na(relative_length)) {
-		relative_length=hh$Sample[length(hh$Sample)]
+		relative_length=remainder$Sample[length(hh$Sample)]
 		logwarn('No state transition from swallowing to non-swallowing was found for Swallow id %i. Using last sample (relative length=%i)', SwallowId, relative_length)
 	}
 
 	logdebug('Predicted restitution time for swallow %i is %i samples.', SwallowId, relative_length)
 
 	# absolute end sample (the absolute time Sample)
-	absolute_predicted_end_of_restitution_time<-hh$pmaxsample_manuell[1]+relative_length
+	absolute_predicted_end_of_restitution_time<-remainder$pmaxsample_manuell[1]+relative_length
 
+	logdebug('Predicted restitution time for swallow %i is %i samples (actual: %i).', SwallowId, relative_length, as.integer(remainder$tRestiAbsoluteSample[1]-remainder$pmaxsample_manuell[1]))
 	# error:
 	errorSum<-errorSum+abs(hh$tRestiAbsoluteSample[1]-absolute_predicted_end_of_restitution_time)
 }
 
 # return the computed errorsum:
-return(errorSum)
+return(errorSum/numSwallows)
 }
