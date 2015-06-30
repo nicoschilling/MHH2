@@ -8,6 +8,7 @@
 #
 #
 
+DATA=/data/mhh/
 t:
-	Rscript usage.R datadir=~/mhh/mhh.busche-it.de/data/ECDA2014/Splits/intra/Proband1/Split4 annotationdir=~/mhh/mhh.busche-it.de/data/manual_annotations/ECDA-Annotations
+	Rscript usage.R datadir=$(DATA)/ECDA2014/Splits/intra/Proband1/Split4 annotationdir=$(DATA)/manual_annotations/ECDA-Annotations
 
