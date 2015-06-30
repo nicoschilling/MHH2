@@ -406,6 +406,9 @@ for (SwallowId in unique(ltd$Swallow)) {
 	# the first element below 0:
 	relative_length<-which(subset(hh, Sample>=hh$pmaxsample_manuell[1])$predictions<0)[1]
 
+	# if the value could not be computed (e.g., no end transition found), set it to the last sample
+	if (is.na(relative_length)) relative_length=hh$Sample[length(hh$Sample)]
+
 	# absolute end sample (the absolute time Sample)
 	absolute_predicted_end_of_restitution_time<-hh$pmaxsample_manuell[1]+relative_length
 
