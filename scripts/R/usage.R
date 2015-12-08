@@ -59,6 +59,7 @@ ld<-cleanData(labeled_dataset)
 # this filters the data set to only contain those time stamps which denote known labeled time stamps and vectors for those.
 ld<-subset(ld, y>=0)
 
+write.csv(ld, file="/tmp/data",row.names=TRUE)
 
 #optional: use weights:
 ld$weights<-1
