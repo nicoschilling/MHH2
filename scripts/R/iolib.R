@@ -24,13 +24,12 @@ loginfo('about to define functions for I/O ...')
 #
 readSwallow <- function (path) {
 loginfo('In Directory %s', path)
-setwd(path)
 
 logdebug('Reading data.csv')
-sensors<-read.csv("data.csv",header=FALSE)
+sensors<-read.csv(paste0(path,"data.csv"),header=FALSE)
 colnames(sensors)<-c("Sample","P1","P2","P3","P4","P5","P6","P7","P8","P9","P10","P11","P12","P13","P14","P15","P16","P17","P18","P19","P20","Resp1","Resp2","Resp3","Swallow1","Swallow2","Swallow3","Marker","misc")
 logdebug('Reading fft.csv')
-fft<-read.csv("fft.csv",header=FALSE)
+fft<-read.csv(paste0(path,"fft.csv"),header=FALSE)
 data<-cbind(sensors,fft)
 # was supposed to be the Sample; errorously removed.
 data$V1<-NULL
@@ -43,18 +42,18 @@ data$Marker<-NULL
 
 # read raw data
 logdebug('Reading rdstart')
-rdstart<-read.csv("rdstart",header=FALSE)
+rdstart<-read.csv(paste0(path,"rdstart"),header=FALSE)
 logdebug('Reading rdend')
-rdend<-read.csv("rdend",header=FALSE)
+rdend<-read.csv(paste0(path,"rdend"),header=FALSE)
 logdebug('Reading channelstart')
-channelstart<-as.integer(read.csv("channelstart",header=FALSE))
+channelstart<-as.integer(read.csv(paste0(path,"channelstart"),header=FALSE))
 logdebug('Reading channelend')
-channelend<-as.integer(read.csv("channelend",header=FALSE))
+channelend<-as.integer(read.csv(paste0(path,"channelend"),header=FALSE))
 
 #     V1
 # 1 04:05
 logdebug('Reading samplerate')
-samplerate<-as.integer(read.csv("samplerate",header=FALSE))
+samplerate<-as.integer(read.csv(paste0(path,"samplerate"),header=FALSE))
 
 # split time values
 tmp<-strsplit(as.character(rdstart[[1]]),":")[[1]]
@@ -85,9 +84,9 @@ data$isrd<-0
 data$isrd[ data$Sample>data$rdstartsample & data$Sample<data$rdendsample ]<-1
 
 # extract pmax_manuell
-if (TRUE == file.exists("pmax_manuell")) {
+if (TRUE == file.exists(paste0(path,"pmax_manuell"))) {
 	logdebug('Reading pmax_manuell')
-	tmp<-strsplit(as.character(read.table("pmax_manuell",header=FALSE)[[1]]),"[:,]")[[1]]
+	tmp<-strsplit(as.character(read.table(paste0(path,"pmax_manuell"),header=FALSE)[[1]]),"[:,]")[[1]]
 	data$pmaxsample_manuell<-0
 	data$pmaxsample_manuell<-as.integer(tmp[[1]])*50*60 + as.integer(tmp[[2]])*50+ as.integer(tmp[[3]])/100*50
 } else {
@@ -101,9 +100,9 @@ data$ispost_pmaxmanuell[ data$Sample>=data$pmaxsample_manuell ]<-1
 
 # include swallow id and proband id
 logdebug('Reading id')
-data$Swallow<-read.csv("id",header=FALSE)[[1]]
+data$Swallow<-read.csv(paste0(path,"id"),header=FALSE)[[1]]
 logdebug('Reading proband')
-data$Proband<-read.csv("proband",header=FALSE)[[1]]
+data$Proband<-read.csv(paste0(path,"proband"),header=FALSE)[[1]]
 
 # adjust data types
 data$Sample<-as.integer(data$Sample)
