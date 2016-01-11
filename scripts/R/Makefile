@@ -18,3 +18,11 @@ createSwallowDataset:
 	  annotationdir=$(DATA)/manual_annotations/ECDA-Annotations \
 	  outputfile=/tmp/blub \
 	  annotatorsuffix=sm
+
+serializeDataset:
+	mkdir /tmp/blub 
+	Rscript createDataset.R \
+	  datadir=$(DATA)/ECDA2014/Splits/intra/Proband1/Split1/ \
+	  annotationdir=$(DATA)/manual_annotations/ECDA-Annotations \
+	  outputdir=/tmp/blub \
+	  annotatorsuffix=sm
