@@ -1,8 +1,5 @@
 package de.ismll.secondversion;
 
-import java.util.Arrays;
-import java.util.Random;
-
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -24,7 +21,6 @@ import de.ismll.table.Vector;
 import de.ismll.table.Vectors;
 import de.ismll.table.impl.DefaultMatrix;
 import de.ismll.table.impl.DefaultVector;
-import de.ismll.table.impl.RowMajorMatrix;
 import de.ismll.table.projections.ColumnSubsetMatrixView;
 import de.ismll.table.projections.IntVectorView;
 import de.ismll.table.projections.RowSubsetMatrixView;
@@ -144,7 +140,7 @@ public class Algorithm implements Runnable{
 		
 		Matrix learnData = new RowUnionMatrixView(rawLearnData);
 
-		this.trainData = new RowMajorMatrix( AlgorithmController.preprocess(learnData, columnSelector));
+		this.trainData = new DefaultMatrix( AlgorithmController.preprocess(learnData, columnSelector));
 		
 		Matrix trainLabels = new RowUnionMatrixView(rawLearnLabels);
 
@@ -188,7 +184,7 @@ public class Algorithm implements Runnable{
 
 			IntVector pointers = new IntVectorView(pointers1);
 
-			Matrix currentTrainData = new RowMajorMatrix( new RowSubsetMatrixView(trainData, pointers) );
+			Matrix currentTrainData = new DefaultMatrix( new RowSubsetMatrixView(trainData, pointers) );
 
 
 			Matrix labelMatrix = new RowSubsetMatrixView(trainLabels, pointers);
@@ -268,13 +264,13 @@ public class Algorithm implements Runnable{
 	}
 
 
-	public float computeSigmoid(float value) {
+	public static float computeSigmoid(float value) {
 		float result;
 		result = (float) (1/(1 + Math.exp(-value)));
 		return result;
 	}
 
-	public float computeSquaredSigmoid(float value) {
+	public static float computeSquaredSigmoid(float value) {
 		float result;
 		result = (float) ((Math.exp(-value))/((1 + Math.exp(-value))*(1 + Math.exp(-value))));
 		return result;

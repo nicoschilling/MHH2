@@ -8,6 +8,7 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import de.ismll.evaluation.Accuracy;
+import de.ismll.secondversion.Algorithm;
 import de.ismll.secondversion.AlgorithmController;
 import de.ismll.secondversion.IntRange;
 import de.ismll.secondversion.MhhDataset;
@@ -19,7 +20,6 @@ import de.ismll.table.Vector;
 import de.ismll.table.Vectors;
 import de.ismll.table.impl.DefaultMatrix;
 import de.ismll.table.impl.DefaultVector;
-import de.ismll.table.impl.RowMajorMatrix;
 import de.ismll.table.projections.ColumnSubsetMatrixView;
 
 public abstract class ModelFunctions {
@@ -27,15 +27,13 @@ public abstract class ModelFunctions {
 	private float bestAccuracy;
 	private float bestSampleDiff;
 
-	public void initialize(AlgorithmController algcon) {
-		log.fatal("The given model function cannot initialize itself!");
-	}
+	public abstract void initialize(AlgorithmController algcon);
 
 	public void saveBestParameters(Quality quality,  String forWhat) {
 		log.fatal("The given model function cannot save the best parameters found so far!");
 		}
 	
-	public float computeMajorityClassAccuracy(Vector labels) {
+	public static float computeMajorityClassAccuracy(Vector labels) {
 		int countPositive = 0;
 		int countNegative = 0;
 		for (int i = 0; i < labels.size() ; i++) {
@@ -59,7 +57,7 @@ public abstract class ModelFunctions {
 	}
 	
 		
-	public Quality evaluateModel(final Matrix[] applyData, final Matrix[] applyLabels, final int[] applyAnnotations
+	public Quality evaluateModel(final Matrix[] applyData, final Matrix[] trueSamplewiseLabels, final int[] timebasedAnnotation
 			,final int windowExtent, final IntRange columnSelector) {
 		
 		final Quality ret = new Quality();
@@ -73,10 +71,9 @@ public abstract class ModelFunctions {
 			final Matrix[] sampleToLabels = AlgorithmController.createSample2Labels(applyData[data]);
 
 			final Matrix predictedLabels = sampleToLabels[0];
-			final Matrix avgLabels = new RowMajorMatrix( sampleToLabels[1]);
+			final Matrix avgLabels = new DefaultMatrix( sampleToLabels[1]);
 			
 			final Matrix preprocess = new ColumnSubsetMatrixView(applyData[data], columnSelector.getUsedIndexes());			
-//			final Matrix apply2Data = new DefaultMatrix(preprocess);
 			
 			final float[] predicted = this.evaluate(preprocess);
 			
@@ -86,29 +83,27 @@ public abstract class ModelFunctions {
 		
 			// make a vector
 
-//			Vector predictVector = Vectors.floatArraytoVector(predictedClassification);
-			final Vector predictVector = DefaultVector.wrap(predictedClassification);
+			final Vector _predictedSamplewiseLabels = DefaultVector.wrap(predictedClassification);
 
 			// copy it to the sample2labels object
-
-			Vectors.copy(predictVector, Matrices.col(predictedLabels,COL_LABEL_IN_SAMPLE2LABEL ));
+			Vectors.copy(_predictedSamplewiseLabels, Matrices.col(predictedLabels,COL_LABEL_IN_SAMPLE2LABEL ));
 
 			AlgorithmController.computeSample2avgLabel( windowExtent, predictedLabels, avgLabels);
 
-			final int predictedAnnotation = AlgorithmController.predictAnnotation(avgLabels, log);
+			final int predictedIdxAnnotation = AlgorithmController.predictAnnotation(avgLabels, log);
 
-			final int trueAnnotation = applyAnnotations[data];
+			final int trueTimebasedIdxAnnotation = timebasedAnnotation[data];
 			
 //			System.out.println("predicted annotation: " + predictedAnnotation);
 //			System.out.println("true annotation: " + trueAnnotation);
 			
-			final double currentSampleDiff = Math.abs(predictedAnnotation-trueAnnotation);
+			final double currentSampleIdxDiff = Math.abs(predictedIdxAnnotation-trueTimebasedIdxAnnotation);
 
 			final Accuracy accuracy = new Accuracy();
 			
-			final Vector trueLabels = Matrices.col(applyLabels[data] , COL_LABEL_IN_LABELS);
+			final Vector _trueSamplewiseLabels = Matrices.col(trueSamplewiseLabels[data] , COL_LABEL_IN_LABELS);
 			
-			final double currentAcc = accuracy.evaluate(trueLabels, predictVector);
+			final double currentAcc = accuracy.evaluate(_trueSamplewiseLabels, _predictedSamplewiseLabels);
 
 //			double currentAcc = accuracy.evaluate(new DefaultVector(Matrices.col(rawData.getValidationData()[val], COL_LABEL_IN_LABELS)),
 //					new DefaultVector(Matrices.col(predictedLabels, COL_LABEL_IN_SAMPLE2LABEL)));
@@ -118,7 +113,7 @@ public abstract class ModelFunctions {
 			final double overshootPercentage = 0;
 
 			accuracies[data] = currentAcc;
-			sampleDifferences[data] = currentSampleDiff;
+			sampleDifferences[data] = currentSampleIdxDiff;
 			overshootPercentages[data] = overshootPercentage;
 		}
 
@@ -133,7 +128,7 @@ public abstract class ModelFunctions {
 			overshootPercentagesSum += overshootPercentages[i];
 		}
 
-		float avgAccuracy = (float) (accuracySum/accuracies.length);
+		float avgAccuracy = (float) (accuracySum/(float)accuracies.length);
 		float avgSampleDiff = (float) (sampleDifferenceSum/accuracies.length);
 		float avgOvershootPercentage = (float) (overshootPercentagesSum/accuracies.length);
 
@@ -260,9 +255,10 @@ public abstract class ModelFunctions {
 	}
 	
 	public float computeSigmoid(float x) {
-		float exp = (float) Math.exp(-x);
-		float ret = 1/(1+exp);
-		return ret;
+		return Algorithm.computeSigmoid(x);
+//		float exp = (float) Math.exp(-x);
+//		float ret = 1/(1+exp);
+//		return ret;
 	}
 	
 	

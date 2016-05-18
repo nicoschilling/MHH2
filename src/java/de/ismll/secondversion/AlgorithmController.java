@@ -8,8 +8,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import javax.sound.midi.SysexMessage;
-
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -49,7 +47,6 @@ import de.ismll.table.impl.DefaultIntMatrix;
 import de.ismll.table.impl.DefaultIntVector;
 import de.ismll.table.impl.DefaultMatrix;
 import de.ismll.table.impl.DefaultVector;
-import de.ismll.table.impl.RowMajorMatrix;
 import de.ismll.table.projections.ColumnSubsetMatrixView;
 import de.ismll.table.projections.ColumnUnionMatrixView;
 import de.ismll.table.projections.RowSubsetIntMatrix;
@@ -1233,7 +1230,16 @@ public class AlgorithmController  implements Runnable{
 
 
 	/**
-	 * Creates sample2Labels with metaData, and null for unpredicted values
+	 * Creates two container Matrices by doing the following:
+	 * 
+	 * . Extract the following columns from the input (in order) :
+	 * COL_SWALLOW_IDX, COL_ABS_SAMPLE_IDX, COL_REL_SAMPLE_IDX, COL_ANNOTATION_SAMPLE_IDX, COL_PMAX_SAMPLE_IDX
+	 * . Create a return Matrix of size 2:
+	 * .. create a new matrix (view) at return position 0 with all columns above PLUS a new column containing the predicted Labels
+	 * .. create a new matrix (view) at return position 1 with all columns above PLUS a new column containing the averaged Labels
+	 * . return the matrix array  
+
+	 * Old doc: Creates sample2Labels with metaData, and null for unpredicted values
 	 */
 	public static Matrix[] createSample2Labels(Matrix input) {
 
@@ -1290,7 +1296,7 @@ public class AlgorithmController  implements Runnable{
 
 		// TODO: Andre added
 
-		predictedLabels = new RowMajorMatrix(predictedLabels);
+		predictedLabels = new DefaultMatrix(predictedLabels);
 		int leftSide;
 		int rightSide;
 		int numPredictedLabelsRows = predictedLabels.getNumRows();
@@ -1392,7 +1398,7 @@ public class AlgorithmController  implements Runnable{
 
 		// TODO: Andre added
 
-		predictedLabels = new RowMajorMatrix(predictedLabels);
+		predictedLabels = new DefaultMatrix(predictedLabels);
 		int numPredictedLabelsRows = predictedLabels.getNumRows();
 		
 		
@@ -1450,6 +1456,7 @@ public class AlgorithmController  implements Runnable{
 		int pMax = (int) (sample2labels.get(0, COL_PMAX_SAMPLE_IDX) + 1);
 		int startSearch;
 
+		// seek to the relative index in the data where the pMax sample is stored in. (discards all data before the pMax sample) 
 		int start = 0;
 		try{
 			while ( (int) (sample2labels.get(start, COL_ABS_SAMPLE_IDX ))!=pMax) {
@@ -1463,6 +1470,7 @@ public class AlgorithmController  implements Runnable{
 		startSearch = start;
 
 		int s2l_numRows = sample2labels.getNumRows();
+		/* sample2labels.get(startSearch, COL_LABEL_IN_SAMPLE2LABEL) > 0 means: is swallow; seek for transition to negative (non-swallow)*/
 		while ( startSearch < s2l_numRows && sample2labels.get(startSearch, COL_LABEL_IN_SAMPLE2LABEL) > 0) {
 			startSearch++;
 		}
@@ -1471,7 +1479,8 @@ public class AlgorithmController  implements Runnable{
 		}
 		catch(IndexOutOfBoundsException e){
 			log.warn("Annotation Sample could not be computed, will be set to end of swallow!");
-			annotation = (int) sample2labels.get(s2l_numRows-1, COL_REL_SAMPLE_IDX);
+			// FIXME: Potential bug found: shall the idx be one more ("after" the swallow, rather than 'on' the last index?
+			annotation = (int) sample2labels.get(s2l_numRows-1, COL_REL_SAMPLE_IDX) + 1;
 		}
 
 		return annotation;
