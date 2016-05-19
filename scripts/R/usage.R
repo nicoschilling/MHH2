@@ -38,9 +38,9 @@ table(annotations$Proband)
 trainingSwallows<-NULL
 testSwallows<-NULL
 validationSwallows<-NULL
-for (d in dir(paste0(datadir,"/train/"),full.names=TRUE)) if (file.info(d)$isdir==TRUE) trainingSwallows<-rbind(trainingSwallows,readSwallow(d))
-for (d in dir(paste0(datadir,"/test/"),full.names=TRUE)) if (file.info(d)$isdir==TRUE) testSwallows<-rbind(testSwallows,readSwallow(d))
-for (d in dir(paste0(datadir,"/validation/"),full.names=TRUE)) if (file.info(d)$isdir==TRUE) validationSwallows<-rbind(validationSwallows,readSwallow(d))
+for (d in dir(paste0(datadir,"/train/"),full.names=TRUE)) if (file.info(d)$isdir==TRUE) trainingSwallows<-rbind(trainingSwallows,readSwallow(paste0(d, "/")))
+for (d in dir(paste0(datadir,"/test/"),full.names=TRUE)) if (file.info(d)$isdir==TRUE) testSwallows<-rbind(testSwallows,readSwallow(paste0(d, "/")))
+for (d in dir(paste0(datadir,"/validation/"),full.names=TRUE)) if (file.info(d)$isdir==TRUE) validationSwallows<-rbind(validationSwallows,readSwallow(paste0(d, "/")))
 
 # create dataset by merging swallows and annotations by matching Proband and Swallow
 data<-merge(trainingSwallows, annotations,by=c("Proband","Swallow"))
