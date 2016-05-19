@@ -18,7 +18,8 @@ public class PatientFeatureExtractor {
 
 		Vector categoricalPatientFeatures = new DefaultVector(10);
 
-		categoricalPatientFeatures.set(proband-1, 1);
+		if (proband > 0 && proband <= 10)
+			categoricalPatientFeatures.set(proband-1, 1);
 
 		ret = new DefaultMatrix(folder.getDruck().getNumRows(),10);
 

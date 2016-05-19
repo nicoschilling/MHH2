@@ -486,7 +486,8 @@ public class AlgorithmController  implements Runnable{
 			pmax = (int) annotations.get(swallowId-1, Parser.ANNOTATION_COL_PMAX_SAMPLE);
 			log.info("Pmax is given, will continue...");
 		} catch (IOException e) {
-			log.info("Pmax has not been provided for:  " + folder.getDataInterpretation().toString());
+			File dataInterpretation = folder.getDataInterpretation();
+			log.info("Pmax has not been provided for:  " + (null==dataInterpretation?"null":dataInterpretation.toString()));
 			log.info("The annotation path is: " + annotationPath);
 			pmax = -1;
 		} catch (ArrayIndexOutOfBoundsException t){
@@ -825,7 +826,8 @@ public class AlgorithmController  implements Runnable{
 
 		float maxValue = -9999;
 		int maxIndex = 0;
-
+		
+		// FIXME: why beginning at idx 1 ???
 		for (int i = 1; i < numColumns ; i++) {
 			if (maxValues[i] > maxValue) {
 				maxValue = maxValues[i];
@@ -849,6 +851,7 @@ public class AlgorithmController  implements Runnable{
 
 		for (int row = 0; row < numRows ; row++) {
 			maxValues2[row] = 0;
+			// FIXME: Why does this loop start with 1 ???
 			for (int col = 1 ; col < numColumns ; col++) {
 				float value = in.get(row, col);
 				if (value > maxValues2[row]) {
@@ -884,10 +887,11 @@ public class AlgorithmController  implements Runnable{
 	 * @return Matrix of normalized pressure, fft and meta
 	 * @throws ModelApplicationException 
 	 */
-	public  Matrix concatenate(Logger log, DataInterpretation folder, int restitutionszeitSample,
+	public  Matrix concatenate(Logger log, DataInterpretation folder, 
+			int restitutionszeitSample,
 			boolean normalize, int pmaxSample) throws ModelApplicationException {
 
-		int idxMaxSampleC;
+		int sampleIdxOfpMaxSample;
 
 		Matrix druck = folder.getDruck();
 		Matrix fft = folder.getFft();
@@ -910,10 +914,10 @@ public class AlgorithmController  implements Runnable{
 		Vector maximumPressureVector = Vectors.floatArraytoVector(maximumPressure);
 
 		if (pmaxSample < 1) {
-			idxMaxSampleC = (int) druck.get(getMax(sleeveDruck), 0);
+			sampleIdxOfpMaxSample = (int) druck.get(getMax(sleeveDruck), 0);
 		}
 		else {
-			idxMaxSampleC = pmaxSample;
+			sampleIdxOfpMaxSample = pmaxSample;
 		}
 
 
@@ -921,7 +925,7 @@ public class AlgorithmController  implements Runnable{
 		int firstSample = folder.getFirstSample();
 		int lastSample = folder.getLastSample();
 
-		if (idxMaxSampleC < firstSample || idxMaxSampleC > lastSample) {
+		if (sampleIdxOfpMaxSample < firstSample || sampleIdxOfpMaxSample > lastSample) {
 			throw new ModelApplicationException("Der angegebene pmax liegt nicht im Schluck. Angegeben: " 
 					+ pmaxSample + "\n Erstes Sample im schluck: " + firstSample + " , Letztes Sample im Schluck: " + lastSample 
 					+ ", aufgetreten bei dem Schluck " + folder.getSchluckverzeichnis()
@@ -976,7 +980,6 @@ public class AlgorithmController  implements Runnable{
 		log.info("Using " + normalizedDruck.getNumColumns() + " pressure features, " + normalizedMaximumPressure.getNumColumns()
 				+ " maximum Pressure feature, \n "
 				+ normalizedFFT.getNumColumns() + " fft features and " + normalizedSphincterFeatures.getNumColumns() + " sphincter features");
-
 
 		//				log.info("For choosing the right feature subsets:");
 		//				log.info("");
@@ -1039,7 +1042,7 @@ public class AlgorithmController  implements Runnable{
 			Vectors.set(Matrices.col(annotationSampleMatrix, 0), restitutionszeitSample);
 		}
 		// the static calculated pMax Sample
-		Vectors.set(Matrices.col(pMaxSampleMatrix, 0), idxMaxSampleC);
+		Vectors.set(Matrices.col(pMaxSampleMatrix, 0), sampleIdxOfpMaxSample);
 
 		//Concatenate Matrices without sample indexes for fft and druck
 		ColumnUnionMatrixView ret1 = new ColumnUnionMatrixView(new Matrix[] {
