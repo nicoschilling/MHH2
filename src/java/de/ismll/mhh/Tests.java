@@ -21,7 +21,7 @@ public class Tests {
 		DataInterpretation rf = new DataInterpretation();
 		rf.setDataInterpretation(Probanden.Proband1.expand(dataDir, 5));
 		rf.run();
-		System.out.println("Training Start f�r Proband 1, Schluck 5: " + rf.getRdstart());
-		System.out.println("Training Start f�r Proband 1, Schluck 5: " + Parser.time2Sample(rf.getRdstart(), Integer.parseInt(rf.getSamplerate())));
+		System.out.println("Training Start fuer Proband 1, Schluck 5: " + rf.getRdstart());
+		System.out.println("Training Start fuer Proband 1, Schluck 5: " + Parser.time2Sample(rf.getRdstart(), Integer.parseInt(rf.getSamplerate())));
 	}
 }

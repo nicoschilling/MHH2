@@ -54,16 +54,6 @@ public class ModelFunctionsTest {
 	}
 
 	@Test
-	public void testInitialize() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testSaveBestParameters() {
-		fail("Not yet implemented");
-	}
-
-	@Test
 	public void testComputeMajorityClassAccuracyHigh() {
 		assertEquals(
 				0.75,  

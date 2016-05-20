@@ -214,7 +214,27 @@ public class AlgorithmController  implements Runnable{
 
 	private long runKey;
 
+	private AllExtractor extractor;
 
+	private LowerExtractor lowerFeatureExtractor;
+
+	private MiddleExtractor middleFeatureExtractor;
+
+	private UpperExtractor upperFeatureExtractor;
+
+	private LowerMiddleExtractor lowerMiddleFeatureExtractor;
+
+	private UpperMiddleExtractor upperMiddleFeatureExtractor;
+
+	public AlgorithmController() {
+		extractor = new AllExtractor();
+		lowerFeatureExtractor = new LowerExtractor();
+		middleFeatureExtractor = new MiddleExtractor();
+		upperFeatureExtractor = new UpperExtractor();
+		lowerMiddleFeatureExtractor = new LowerMiddleExtractor();
+		upperMiddleFeatureExtractor = new UpperMiddleExtractor();
+	
+	}
 
 
 	@Override
@@ -355,7 +375,7 @@ public class AlgorithmController  implements Runnable{
 
 		}
 
-		// Hinzufügen des RuheDrucks zur Trainings Daten Matrix!
+		// Hinzufuegen des RuheDrucks zur Trainings Daten Matrix!
 
 		for (int i = 0; i < rawData.trainRuhedruck.length ; i++) {
 			if (i < readSplit.trainFolders.length) {
@@ -427,10 +447,10 @@ public class AlgorithmController  implements Runnable{
 		algorithm.setData(data);
 		algorithm.setRawData(rawData);
 
-		// Parameter an den Algorithmus übergeben	
+		// Parameter an den Algorithmus uebergeben	
 
 
-		// Unabhängige Parameter
+		// Unabhaengige Parameter
 		algorithm.setMaxIterations(maxIterations);
 		algorithm.setBatchSize(batchSize);
 		algorithm.setWindowExtent(windowExtent);
@@ -530,18 +550,6 @@ public class AlgorithmController  implements Runnable{
 		return restitutionszeitSample;
 
 	}
-
-	/**
-	 * Performs a ColumnSubsetMatrixView according to the int[] Array of the given IntRange
-	 * @param data
-	 * @param columnSelector
-	 * @return
-	 */
-	public static Matrix preprocess(Matrix data, IntRange columnSelector) {
-		Matrix ret = new ColumnSubsetMatrixView(data, columnSelector.getUsedIndexes());
-		return ret;
-	}
-
 
 	/**
 	 * Reads a (training) swallow; preprocessing the data, s.t.:
@@ -920,8 +928,6 @@ public class AlgorithmController  implements Runnable{
 			sampleIdxOfpMaxSample = pmaxSample;
 		}
 
-
-
 		int firstSample = folder.getFirstSample();
 		int lastSample = folder.getLastSample();
 
@@ -933,19 +939,11 @@ public class AlgorithmController  implements Runnable{
 		}
 
 		//Extract additional Features, Matrix sphincterFeatures is then attached to the final data Matrix
-
-		AllExtractor extractor = new AllExtractor();
-		LowerExtractor lower = new LowerExtractor();
-		MiddleExtractor middle = new MiddleExtractor();
-		UpperExtractor upper = new UpperExtractor();
-		LowerMiddleExtractor lowerMiddle = new LowerMiddleExtractor();
-		UpperMiddleExtractor upperMiddle = new UpperMiddleExtractor();
-
-		Vector lowerFeatures = lower.extractFeatures(druck, start, end);
-		Vector middleFeatures = middle.extractFeatures(druck, start, end);
-		Vector upperFeatures = upper.extractFeatures(druck, start, end);
-		Vector lowerMiddleFeatures = lowerMiddle.extractFeatures(druck, start, end);
-		Vector upperMiddleFeatures = upperMiddle.extractFeatures(druck, start, end);
+		Vector lowerFeatures = lowerFeatureExtractor.extractFeatures(druck, start, end);
+		Vector middleFeatures = middleFeatureExtractor.extractFeatures(druck, start, end);
+		Vector upperFeatures = upperFeatureExtractor.extractFeatures(druck, start, end);
+		Vector lowerMiddleFeatures = lowerMiddleFeatureExtractor.extractFeatures(druck, start, end);
+		Vector upperMiddleFeatures = upperMiddleFeatureExtractor.extractFeatures(druck, start, end);
 		Vector allFeatures = extractor.extractFeatures(druck, start, end);
 
 		Matrix sphincterFeatures = new DefaultMatrix(new ColumnUnionMatrixView(new Vector[] {
@@ -956,7 +954,6 @@ public class AlgorithmController  implements Runnable{
 				upperMiddleFeatures,
 				allFeatures }));
 
-
 		Matrix normalizedDruck = null;
 		Matrix normalizedFFT = null;
 		Matrix normalizedSphincterFeatures = null;
@@ -964,18 +961,14 @@ public class AlgorithmController  implements Runnable{
 		Vector sampleIdx = Matrices.col(druck, 0);
 
 		if (normalize) {
-			normalizedDruck = normalize(ColumnSubsetMatrixView.create(folder.getDruck(), new DefaultIntVector(new int[] {0})));
-			normalizedFFT = normalize(ColumnSubsetMatrixView.create(folder.getFft(), new DefaultIntVector(new int[] {0})));
+			normalizedDruck = normalize(ColumnSubsetMatrixView.create(druck, new DefaultIntVector(new int[] {0})));
+			normalizedFFT = normalize(ColumnSubsetMatrixView.create(fft, new DefaultIntVector(new int[] {0})));
 			normalizedMaximumPressure = normalize(new VectorAsMatrixView(maximumPressureVector));
 			normalizedSphincterFeatures = normalize(sphincterFeatures);
 			log.info("The swallow: " + folder.getSwallowId() + " by Proband " + folder.getProband() + " is normalized");
 		}
 
 		int numRows = druck.getNumRows();
-
-		//				int idxMaxSample = (int) annotations.get(folder.getIdAsInt()-1, Parser.ANNOTATION_COL_PMAX_SAMPLE);
-		//
-		//				System.out.println("Gelesenes Pmax Sample: " + idxMaxSample + "  Berechnetes: " + idxMaxSampleC);
 
 		log.info("Using " + normalizedDruck.getNumColumns() + " pressure features, " + normalizedMaximumPressure.getNumColumns()
 				+ " maximum Pressure feature, \n "
@@ -1019,14 +1012,12 @@ public class AlgorithmController  implements Runnable{
 		
 		log.info("Using " + patientFeatures.getNumColumns() + " additional categorical patient features");
 
-
-		//		VectorAsMatrixView;
-		DefaultMatrix meta = new DefaultMatrix(numRows, 1);
+		DefaultMatrix swallowId = new DefaultMatrix(numRows, 1);
 		DefaultMatrix annotationSampleMatrix = new DefaultMatrix(numRows, 1);
 		DefaultMatrix pMaxSampleMatrix = new DefaultMatrix(numRows, 1);
 
 		// set swallow as meta 0 column idx
-		Vectors.set(Matrices.col(meta, COL_SWALLOW_IDX), folder.getSwallowId());
+		Vectors.set(Matrices.col(swallowId, COL_SWALLOW_IDX), folder.getSwallowId());
 
 		// the absolute sample id:
 		Vector absSampleId = sampleIdx;
@@ -1036,9 +1027,9 @@ public class AlgorithmController  implements Runnable{
 		Vectors.add(relativeSampleId, -1*absSampleId.get(0));
 
 		// the static annotation sample
-		if (restitutionszeitSample < 0)
+		if (restitutionszeitSample < 0) {
 			Vectors.set(Matrices.col(annotationSampleMatrix, 0), 0); // defaults to 0
-		else {
+		} else {
 			Vectors.set(Matrices.col(annotationSampleMatrix, 0), restitutionszeitSample);
 		}
 		// the static calculated pMax Sample
@@ -1046,7 +1037,7 @@ public class AlgorithmController  implements Runnable{
 
 		//Concatenate Matrices without sample indexes for fft and druck
 		ColumnUnionMatrixView ret1 = new ColumnUnionMatrixView(new Matrix[] {
-				meta
+				swallowId
 				, new VectorAsMatrixView(absSampleId)
 				, new VectorAsMatrixView(relativeSampleId)
 				, annotationSampleMatrix
@@ -1060,8 +1051,18 @@ public class AlgorithmController  implements Runnable{
 				, patientFeatures
 		}); 
 
+		File dataInterpretation = folder.getDataInterpretation();
+		File output = new File (dataInterpretation, "preprocessed.csv");
+		
 		Matrix ret = new DefaultMatrix(ret1);
 
+		try {
+			Matrices.write(ret, output);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		return ret;
 
 
@@ -1081,7 +1082,6 @@ public class AlgorithmController  implements Runnable{
 		Matrix fft = folder.getFft();
 		int start;
 		int end;
-
 
 		if (folder.getChannelstart().contains("P")) {
 			start = Integer.parseInt(folder.getChannelstart().substring(1));

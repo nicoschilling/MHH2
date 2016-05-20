@@ -102,7 +102,7 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 
 		//DAten sind eingelesen!
 
-		// Parameter werden übergeben
+		// Parameter werden uebergeben
 
 
 		if (columnSelector == null) {
@@ -173,7 +173,7 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 
 		//DAten sind eingelesen!
 
-		// Parameter werden übergeben
+		// Parameter werden uebergeben
 
 
 		if (columnSelector == null) {
@@ -239,7 +239,7 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 	public AnalysisResult predict(DataInterpretation rf) throws ModelApplicationException {
 
 		/*
-		 * uggh - dieser Test ist wirklich nicht schön (aus Wiederverwendungssicht) ... funktioniert aber.
+		 * uggh - dieser Test ist wirklich nicht schoen (aus Wiederverwendungssicht) ... funktioniert aber.
 		 */
 		if (rf.getPmaxManuell() != DataInterpretation.PMAX_MANUAL_DEFAULT) {
 			return predict(rf, rf.getPmaxManuell());
@@ -570,7 +570,7 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 
 
 
-	public int countChanges(Vector input) {
+	public static int countChanges(Vector input) {
 		int count = 0;
 
 		int size = input.size();
@@ -592,8 +592,11 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 	 */
 	public void predictLabels(SwallowDS swallow, Vector parameters, Matrix predictedLabels) {
 
-		float[] predict = modelFunction.predictAsClassification(modelFunction.evaluate(Matrices.asArray( 
-				AlgorithmController.preprocess(swallow.data, getColumnSelector()) )
+		float[] predict = modelFunction.predictAsClassification(
+				modelFunction.evaluate(
+						Matrices.asArray( 
+				new ColumnSubsetMatrixView(swallow.data, getColumnSelector().getUsedIndexes()) 
+				)
 				, Vectors.toFloatArray(parameters)));
 		Vector predictVector = Vectors.floatArraytoVector(predict);
 
@@ -624,7 +627,6 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 		System.out.println(folder.getDataInterpretation());
 
 		int numRows = data.getNumRows();
-
 
 		if (pmaxSample < 0) {
 			idxMaxSample2 = (int) data.get(0, COL_PMAX_SAMPLE_IDX);
@@ -712,7 +714,8 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 	}
 
 
-	public SwallowDS preprocessSwallow(DataInterpretation folder, boolean skipLeading, boolean skipBetween,
+	public SwallowDS preprocessSwallow(DataInterpretation folder, boolean skipLeading, 
+			boolean skipBetween,
 			int pmaxSample) throws ModelApplicationException {
 
 		int idxMaxSample2;

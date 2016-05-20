@@ -22,7 +22,7 @@ public class LowerMiddleExtractor implements FeatureExtractor{
 		int middle;
 		
 		
-		//Berechne erste Hälfte
+		//Berechne erste Haelfte
 		if (length % 4 == 0) { middle = lowerSensor + (int) Math.ceil(length * 0.5);}
 		else {middle = (lowerSensor - 1) + (int) Math.ceil(length * 0.5);}
 		

@@ -64,19 +64,19 @@ public class ReadSplit implements Runnable{
 	
 	
 	/**
-	 * Anzahl der Train Schlücke
+	 * Anzahl der Train Schluecke
 	 * @author nico
 	 *	
 	 */
 	public int trainFoldersLength;
 	/**
-	 * Anzahl der Test Schlücke
+	 * Anzahl der Test Schluecke
 	 * @author nico
 	 *	
 	 */
 	public int testFoldersLength;
 	/**
-	 * Anzahl der Validation Schlücke
+	 * Anzahl der Validation Schluecke
 	 * @author nico
 	 *	
 	 */
@@ -158,21 +158,21 @@ public class ReadSplit implements Runnable{
 
 		File trainFolder = new File(splitFolder.getAbsolutePath()+"/train");
 		if (!trainFolder.isDirectory()) {
-			throw new RuntimeException("Illegal subdirectory structure, subdirectory \"train\" expected.");
+			throw new RuntimeException("Illegal subdirectory structure, subdirectory \"train\" expected in folder " + splitFolder + " !");
 		}
 		this.trainList = trainFolder.listFiles();
 		this.trainFoldersLength = trainList.length;
 		
 		File testFolder = new File(splitFolder.getAbsolutePath()+"/test");
 		if (!testFolder.isDirectory()) {
-			throw new RuntimeException("Illegal subdirectory structure, subdirectory \"test\" expected.");
+			throw new RuntimeException("Illegal subdirectory structure, subdirectory \"test\" expected in folder " + splitFolder + " !");
 		}
 		this.testList = testFolder.listFiles();
 		this.testFoldersLength = testList.length;
 		
 		File validationFolder = new File(splitFolder.getAbsolutePath()+"/validation");
 		if (!validationFolder.isDirectory()) {
-			throw new RuntimeException("Illegal subdirectory structure, subdirectory \"validation\" expected.");
+			throw new RuntimeException("Illegal subdirectory structure, subdirectory \"validation\" expected in folder " + splitFolder + " !");
 		}
 		this.validationList = validationFolder.listFiles();
 		this.validationFoldersLength = validationList.length;

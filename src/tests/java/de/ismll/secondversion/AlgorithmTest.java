@@ -41,7 +41,7 @@ public class AlgorithmTest {
 		sut.setRawData(fakeRawData());
 		sut.setColumnSelector(IntRange.convert("1,2"));
 		sut.setModelFunction(model);
-		sut.run();
+//		sut.run();
 	}
 
 	private MhhRawData fakeRawData() {

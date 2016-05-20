@@ -123,10 +123,10 @@ public class DataInterpretation extends SwallowData implements Runnable{
 		int samplerateI = Integer.parseInt(samplerate);
 		int rdStartTime = Parser.time2Sample(rdstart.trim());
 		rdStartSample = rdStartTime * samplerateI; 
-		log.info("Ruhedruck fängt an bei Zeit " + rdStartTime + " (Sample: " + rdStartSample + ", relativ: " + (rdStartSample-firstSample) + ")");
+		log.info("Ruhedruck faengt an bei Zeit " + rdStartTime + " (Sample: " + rdStartSample + ", relativ: " + (rdStartSample-firstSample) + ")");
 		int rdEndTime = Parser.time2Sample(rdend.trim());
 		rdEndSample = rdEndTime * samplerateI; 
-		log.info("Ruhedruck hört auf bei Zeit " + rdEndTime + " (Sample: " + rdEndSample + "), relativ: " + (rdEndSample-firstSample) + ")");
+		log.info("Ruhedruck hoert auf bei Zeit " + rdEndTime + " (Sample: " + rdEndSample + "), relativ: " + (rdEndSample-firstSample) + ")");
 		
 		File pmax_manuell = new File(dataInterpretation, FILENAME_PMAX_MANUAL);
 		if (!pmax_manuell.exists()) {

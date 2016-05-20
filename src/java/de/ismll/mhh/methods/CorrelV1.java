@@ -69,10 +69,10 @@ public class CorrelV1 implements Runnable {
 		
 		int rdStartTime = Parser.time2Sample(rdstartS.trim());
 		int rdStartSample = rdStartTime * samplerate; 
-		log.info("Ruhedruck fängt an bei Zeit " + rdStartTime + " (Sample: " + rdStartSample + ", relativ: " + (rdStartSample-firstSample) + ")");
+		log.info("Ruhedruck faengt an bei Zeit " + rdStartTime + " (Sample: " + rdStartSample + ", relativ: " + (rdStartSample-firstSample) + ")");
 		int rdEndTime = Parser.time2Sample(rdendS.trim());
 		int rdEndSample = rdEndTime * samplerate; 
-		log.info("Ruhedruck hört auf bei Zeit " + rdEndTime + " (Sample: " + rdEndSample + "), relativ: " + (rdEndSample-firstSample) + "");
+		log.info("Ruhedruck hoert auf bei Zeit " + rdEndTime + " (Sample: " + rdEndSample + "), relativ: " + (rdEndSample-firstSample) + "");
 		
 		int numFFTbins = 32;
 		

@@ -57,7 +57,7 @@ public class ApplyOnTest {
 
 
 
-		// Über alle Splits des Probanden
+		// Ueber alle Splits des Probanden
 
 		for (int split = 1; split <= swallows ; split++) {
 

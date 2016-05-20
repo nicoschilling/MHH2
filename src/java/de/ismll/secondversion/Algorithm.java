@@ -140,7 +140,7 @@ public class Algorithm implements Runnable{
 		
 		Matrix learnData = new RowUnionMatrixView(rawLearnData);
 
-		this.trainData = new DefaultMatrix( AlgorithmController.preprocess(learnData, columnSelector));
+		this.trainData = new DefaultMatrix( new ColumnSubsetMatrixView(learnData, columnSelector.getUsedIndexes()));
 		
 		Matrix trainLabels = new RowUnionMatrixView(rawLearnLabels);
 

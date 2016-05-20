@@ -21,7 +21,7 @@ public class UpperExtractor implements FeatureExtractor{
 		
 		int secondThird;
 		
-		//Berechne zweites Drittel und interVallänge des oberen Drittels
+		//Berechne zweites Drittel und interVallaenge des oberen Drittels
 		if (length % 3 == 0) { secondThird = lowerSensor + (int) Math.ceil(length * 0.666);}
 		else {secondThird = lowerSensor + (int) Math.ceil(length * 0.666) -1 ;}
 		

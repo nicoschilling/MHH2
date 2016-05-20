@@ -224,11 +224,11 @@ public class MergeData {
 
 				m.set(continuousRowIdx, currentCol++, pMax[mat].get(row, 1));
 				
-				//Schluckzugehörigkeit
+				//Schluckzugehoerigkeit
 				
 //				m.set(continuousRowIdx, currentCol++,  mat);
 
-				// Binäre Annotation
+				// Binaere Annotation
 
 				if (annotator == 0)
 				{
@@ -385,7 +385,7 @@ public class MergeData {
 			double[] estTestExpectationValues = new double[m.getNumColumns()];
 			double[] estTestVariances = new double[m.getNumColumns()];
 
-			for (int column = 1; column < m.getNumColumns() - 1  /*label und Schluckzugehörigkeit und index nicht skalieren*/ ; column++)
+			for (int column = 1; column < m.getNumColumns() - 1  /*label und Schluckzugehoerigkeit und index nicht skalieren*/ ; column++)
 			{
 				double trainColSum = 0;
 				double testColSum = 0;
@@ -409,7 +409,7 @@ public class MergeData {
 
 			}
 
-			for (int column = 1; column < m.getNumColumns() - 1 /*label und Schluckzugehörigkeit und index nicht skalieren*/; column++)
+			for (int column = 1; column < m.getNumColumns() - 1 /*label und Schluckzugehoerigkeit und index nicht skalieren*/; column++)
 			{
 				double trainVariance = 0;
 				double testVariance = 0;
@@ -433,7 +433,7 @@ public class MergeData {
 
 			for (int column = 0; column < m.getNumColumns()  ; column++)
 			{
-				if (column == 0 || column == (m.getNumColumns() - 1))  /*label und Schluckzugehörigkeit und index nicht skalieren*/
+				if (column == 0 || column == (m.getNumColumns() - 1))  /*label und Schluckzugehoerigkeit und index nicht skalieren*/
 				{
 					for (int row = 0; row < numTrain ; row++)
 					{
