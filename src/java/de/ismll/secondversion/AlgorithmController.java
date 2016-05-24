@@ -124,14 +124,8 @@ public class AlgorithmController  implements Runnable{
 	@Parameter(cmdline="modelFunction", description="Specifies the model Function to be used, i.e. a linear Model, factorizationMachine etc.")
 	public ModelFunctions modelFunction;
 
-	@Parameter(cmdline="serializeData", description="Optional. If given, serializes the train/validation/test data into this folder")
-	private File serializeData;
-
 	@Parameter(cmdline="columnSelector", description="Optional. If given, selects a subset of columns. WARNING: If given, make sure to exclude, e.g., the sample Index (col 0)!")
 	public IntRange columnSelector;
-
-	@Parameter(cmdline="annotation", description="File that contains manual annotations by experts, also contains pMax etc.")
-	private File annotation;
 
 	@Parameter(cmdline="runTable", description="Name of the run Table")
 	private String runTable = "run";
@@ -225,6 +219,9 @@ public class AlgorithmController  implements Runnable{
 	private LowerMiddleExtractor lowerMiddleFeatureExtractor;
 
 	private UpperMiddleExtractor upperMiddleFeatureExtractor;
+
+	@Parameter(cmdline="serializeTheData")
+	private boolean serializeTheData;
 
 	public AlgorithmController() {
 		extractor = new AllExtractor();
@@ -1051,16 +1048,19 @@ public class AlgorithmController  implements Runnable{
 				, patientFeatures
 		}); 
 
-		File dataInterpretation = folder.getDataInterpretation();
-		File output = new File (dataInterpretation, "preprocessed.csv");
-		
 		Matrix ret = new DefaultMatrix(ret1);
 
-		try {
-			Matrices.write(ret, output);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if (isSerializeTheData()) {
+			
+			File dataInterpretation = folder.getDataInterpretation();
+			File output = new File (dataInterpretation, "preprocessed_" + annotator + ".csv");
+		
+			try {
+				Matrices.write(ret, output);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
 		return ret;
@@ -1530,22 +1530,6 @@ public class AlgorithmController  implements Runnable{
 		this.readSplit = readSplit;
 	}
 
-	public File getAnnotation() {
-		return annotation;
-	}
-
-	public void setAnnotation(File annotation) {
-		this.annotation = annotation;
-	}
-
-	public File getSerializeData() {
-		return serializeData;
-	}
-
-	public void setSerializeData(File serializeData) {
-		this.serializeData = serializeData;
-	}
-
 	public IntRange getColumnSelector() {
 		return columnSelector;
 	}
@@ -1940,6 +1924,16 @@ public class AlgorithmController  implements Runnable{
 
 	public void setExperimentTable(String experimentTable) {
 		this.experimentTable = experimentTable;
+	}
+
+
+	public boolean isSerializeTheData() {
+		return serializeTheData;
+	}
+
+
+	public void setSerializeTheData(boolean serializeTheData) {
+		this.serializeTheData = serializeTheData;
 	}
 
 
