@@ -34,5 +34,5 @@ laplacian=${u_laplacian} \
 useValidation=true \
 annotationBaseDir=${annotationsbasedir} \
 includeRD=${u_includeRD} \
-serializeTheData=true
+serializeTheData=/tmp
 done
