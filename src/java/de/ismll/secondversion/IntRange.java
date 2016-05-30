@@ -1,5 +1,6 @@
 package de.ismll.secondversion;
 
+import java.util.Arrays;
 import java.util.StringTokenizer;
 
 /**
@@ -20,7 +21,7 @@ public class IntRange {
 	/**
 	 * Integer, specifying the size of the intVector v.
 	 */
-	int size;
+//	int size;
 
 	public IntRange() {
 
@@ -146,6 +147,13 @@ public class IntRange {
 
 	public void setUsedIndexes(int[] usedIndexes) {
 		this.usedIndexes = usedIndexes;
+	}
+	
+	@Override
+	public String toString() {
+		return new StringBuffer("IntRange containing the following indizes: ")
+				.append(Arrays.toString(usedIndexes))
+				.toString();
 	}
 
 

@@ -14,8 +14,8 @@ public class MhhRawData {
 		
 		trainData = new Matrix[trainSwallows];
 		trainDataLabels = new Matrix[trainSwallows];
-		trainRuhedruck = new Matrix[trainSwallows+testSwallows];
-		trainRuhedruckLabels = new Matrix[trainSwallows+testSwallows];
+//		trainRuhedruck = new Matrix[trainSwallows+testSwallows];
+//		trainRuhedruckLabels = new Matrix[trainSwallows+testSwallows];
 		instanceWeights = new Matrix[trainSwallows];
 		trainDataRelativeAnnotations = new int[trainSwallows];
 		trainDataAbsoluteAnnotations = new int[trainSwallows];
@@ -27,8 +27,8 @@ public class MhhRawData {
 		
 		testData = new Matrix[testSwallows];
 		testDataLabels = new Matrix[testSwallows];
-		testRuhedruck = new Matrix[testSwallows];
-		testRuhedruckLabels = new Matrix[testSwallows];
+//		testRuhedruck = new Matrix[testSwallows];
+//		testRuhedruckLabels = new Matrix[testSwallows];
 		testDataRelativeAnnotations = new int[testSwallows];
 		testDataAbsoluteAnnotations = new int[testSwallows];
 		
@@ -37,8 +37,8 @@ public class MhhRawData {
 	Matrix[] instanceWeights;
 	Matrix[] trainData;
 	Matrix[] trainDataLabels;
-	Matrix[] trainRuhedruck; 
-	Matrix[] trainRuhedruckLabels;
+//	Matrix[] trainRuhedruck; 
+//	Matrix[] trainRuhedruckLabels;
 	int[] trainDataRelativeAnnotations;
 	int[] trainDataAbsoluteAnnotations;
 	
@@ -49,8 +49,8 @@ public class MhhRawData {
 	
 	Matrix[] testData;
 	Matrix[] testDataLabels;
-	Matrix[] testRuhedruck;
-	Matrix[] testRuhedruckLabels;
+//	Matrix[] testRuhedruck;
+//	Matrix[] testRuhedruckLabels;
 	int[] testDataRelativeAnnotations;
 	int[] testDataAbsoluteAnnotations;
 	

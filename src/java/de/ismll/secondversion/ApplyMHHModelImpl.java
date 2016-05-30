@@ -994,8 +994,8 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 
 		ret.data=dataFiltered;
 		ret.labels=labelsFiltered;
-		ret.ruheDruck = ruheDruck;
-		ret.ruheDruckLabels = ruheDruckLabels2;
+//		ret.ruheDruck = ruheDruck;
+//		ret.ruheDruckLabels = ruheDruckLabels2;
 
 		return ret;
 	}

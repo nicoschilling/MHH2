@@ -17,25 +17,27 @@ public class AcidFeatureExtractor {
 		
 		Vector categoricalAcidFeatures = new DefaultVector(4);
 		
-		if (acid_level.equals("7")) {
-			categoricalAcidFeatures.set(0, 1);
-			System.out.println("This is a normal swallow");
-		}
-		else if(acid_level.equals("5")) {
-			categoricalAcidFeatures.set(1, 1);
-			System.out.println("This is a little acidic swallow");
-		}
-		else if(acid_level.equals("3")) {
-			categoricalAcidFeatures.set(2, 1);
-			System.out.println("This is a more acidic swallow");
-		}
-		else if(acid_level.equals("1.8")) {
-			categoricalAcidFeatures.set(3, 1);
-			System.out.println("This is a really acidic swallow");
-		}
-		else {
-			System.out.println("Acid Features are not of a known type and could not be parsed!");
-			System.out.println("Returning only zeros as categorical acid features...");
+		if (null != acid_level) {
+			if (acid_level.equals("7")) {
+				categoricalAcidFeatures.set(0, 1);
+				System.out.println("This is a normal swallow");
+			}
+			else if(acid_level.equals("5")) {
+				categoricalAcidFeatures.set(1, 1);
+				System.out.println("This is a little acidic swallow");
+			}
+			else if(acid_level.equals("3")) {
+				categoricalAcidFeatures.set(2, 1);
+				System.out.println("This is a more acidic swallow");
+			}
+			else if(acid_level.equals("1.8")) {
+				categoricalAcidFeatures.set(3, 1);
+				System.out.println("This is a really acidic swallow");
+			}
+			else {
+				System.out.println("Acid Features are not of a known type and could not be parsed!");
+				System.out.println("Returning only zeros as categorical acid features...");
+			}
 		}
 		
 		ret = new DefaultMatrix(folder.getDruck().getNumRows(),4);

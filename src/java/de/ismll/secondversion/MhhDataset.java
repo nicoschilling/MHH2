@@ -50,10 +50,10 @@ public class MhhDataset {
 	 */
 	public Matrix trainDataLabels;
 	
-	/**
-	 * Matrix mit TrainDaten plus RuheDruck von Test
-	 */
-	public Matrix ruheDruckTrainDataLabels;
+//	/**
+//	 * Matrix mit TrainDaten plus RuheDruck von Test
+//	 */
+//	public Matrix ruheDruckTrainDataLabels;
 	
 	/**
 	 * Matrix mit TestDaten Labels
@@ -162,14 +162,6 @@ public class MhhDataset {
 
 	public void setRuheDruckTrainData(Matrix ruheDruckTrainData) {
 		this.ruheDruckTrainData = ruheDruckTrainData;
-	}
-
-	public Matrix getRuheDruckTrainDataLabels() {
-		return ruheDruckTrainDataLabels;
-	}
-
-	public void setRuheDruckTrainDataLabels(Matrix ruheDruckTrainDataLabels) {
-		this.ruheDruckTrainDataLabels = ruheDruckTrainDataLabels;
 	}
 
 	public Matrix getInstanceWeights() {

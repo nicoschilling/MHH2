@@ -360,8 +360,8 @@ public class AlgorithmController  implements Runnable{
 			}
 			rawData.testData[i]=d.data;
 			rawData.testDataLabels[i]=d.labels;
-			rawData.testRuhedruck[i]=d.ruheDruck;
-			rawData.testRuhedruckLabels[i]=d.ruheDruckLabels;
+//			rawData.testRuhedruck[i]=d.ruheDruck;
+//			rawData.testRuhedruckLabels[i]=d.ruheDruckLabels;
 			rawData.testDataAbsoluteAnnotations[i]=absoluteAnnotation;
 			rawData.testDataRelativeAnnotations[i]=relativeAnnotation;
 
@@ -374,16 +374,16 @@ public class AlgorithmController  implements Runnable{
 
 		// Hinzufuegen des RuheDrucks zur Trainings Daten Matrix!
 
-		for (int i = 0; i < rawData.trainRuhedruck.length ; i++) {
-			if (i < readSplit.trainFolders.length) {
-				rawData.trainRuhedruck[i] = rawData.trainData[i];
-				rawData.trainRuhedruckLabels[i] = rawData.trainDataLabels[i];
-			}
-			else {
-				rawData.trainRuhedruck[i] = rawData.testRuhedruck[i - readSplit.trainFolders.length];
-				rawData.trainRuhedruckLabels[i] = rawData.testRuhedruckLabels[i - readSplit.trainFolders.length];
-			}
-		}
+//		for (int i = 0; i < rawData.trainRuhedruck.length ; i++) {
+//			if (i < readSplit.trainFolders.length) {
+//				rawData.trainRuhedruck[i] = rawData.trainData[i];
+//				rawData.trainRuhedruckLabels[i] = rawData.trainDataLabels[i];
+//			}
+//			else {
+//				rawData.trainRuhedruck[i] = rawData.testRuhedruck[i - readSplit.trainFolders.length];
+//				rawData.trainRuhedruckLabels[i] = rawData.testRuhedruckLabels[i - readSplit.trainFolders.length];
+//			}
+//		}
 
 
 
@@ -392,7 +392,7 @@ public class AlgorithmController  implements Runnable{
 		data.trainData = new RowUnionMatrixView(rawData.trainData);
 		data.instanceWeights = new RowUnionMatrixView(rawData.instanceWeights);
 		//		data.ruheDruckTrainData = new RowUnionMatrixView(rawData.trainRuhedruck);
-		data.ruheDruckTrainDataLabels = new RowUnionMatrixView(rawData.trainRuhedruckLabels);
+//		data.ruheDruckTrainDataLabels = new RowUnionMatrixView(rawData.trainRuhedruckLabels);
 		data.validationData = new RowUnionMatrixView(rawData.validationData);
 		data.testDataLabels = new RowUnionMatrixView(rawData.testDataLabels);
 		data.trainDataLabels = new RowUnionMatrixView(rawData.trainDataLabels);
@@ -800,19 +800,21 @@ public class AlgorithmController  implements Runnable{
 
 		ret.data=dataFiltered;
 		ret.labels=labelsFiltered;
-		ret.ruheDruck = ruheDruck;
+//		ret.ruheDruck = ruheDruck;
 		ret.throwAway = throwAway;
-		ret.ruheDruckLabels = ruheDruckLabels2;
+//		ret.ruheDruckLabels = ruheDruckLabels2;
 
 		return ret;
 	}
 
 	/** 
-	 * Computes the column-wise maximum's index of a given Matrix	
+	 * Computes the column-wise maximum's index of a given Matrix, returning the lower index if multiple maxima are found.
+	 * Beware: excludes the 0.th column
+	 * 	
 	 * @param in 
 	 * @return
 	 */
-	public static int getMax(Matrix in) {
+	public static int argmax(Matrix in) {
 		int numRows = in.getNumRows();
 		int numColumns = in.getNumColumns();
 
@@ -919,7 +921,7 @@ public class AlgorithmController  implements Runnable{
 		Vector maximumPressureVector = Vectors.floatArraytoVector(maximumPressure);
 
 		if (pmaxSample < 1) {
-			sampleIdxOfpMaxSample = (int) druck.get(getMax(sleeveDruck), 0);
+			sampleIdxOfpMaxSample = (int) druck.get(argmax(sleeveDruck), 0);
 		}
 		else {
 			sampleIdxOfpMaxSample = pmaxSample;
@@ -1097,7 +1099,7 @@ public class AlgorithmController  implements Runnable{
 
 
 
-		int idxMaxSampleC = (int) druck.get(getMax(sleeveDruck), 0);
+		int idxMaxSampleC = (int) druck.get(argmax(sleeveDruck), 0);
 
 		float[] ret = getTheMaxCurve(sleeveDruck);
 

@@ -33,6 +33,8 @@ public class DataInterpretation extends SwallowData implements Runnable{
 
 	public static final int PMAX_MANUAL_DEFAULT = -1;
 
+	public static final int DEFAULT_ANNOTATED_RESTITUTION_SAMPLE_WITHOUT_FILE = (int) Double.NaN;
+
 	Matrix fft;
 	
 	@Parameter(cmdline="interpretation")
@@ -49,6 +51,10 @@ public class DataInterpretation extends SwallowData implements Runnable{
 	private int pmaxManuell = PMAX_MANUAL_DEFAULT;
 	
 	int rdEndSample;
+
+	private int pmaxFromFile = -1;
+
+	private int annotatedRestitutionTimeSample= -1;
 	
 	@Override
 	public void run() {
@@ -183,12 +189,25 @@ public class DataInterpretation extends SwallowData implements Runnable{
 		return channelstart;
 	}
 
+	public int getChannelstartAsInt() {
+		String myChannelstart= channelstart;
+		if (myChannelstart.startsWith("P"))
+			myChannelstart=myChannelstart.substring(1);
+		return Integer.valueOf(myChannelstart);
+	}
+
 
 
 	public String getChannelend() {
 		return channelend;
 	}
-
+	
+	public int getChannelendAsInt() {
+		String myChannelend= channelend;
+		if (myChannelend.startsWith("P"))
+			myChannelend=myChannelend.substring(1);
+		return Integer.valueOf(myChannelend);
+	}
 
 
 	public String getRdend() {
@@ -273,5 +292,47 @@ public class DataInterpretation extends SwallowData implements Runnable{
 	public void setAcid_level(String acid_level) {
 		this.acid_level = acid_level;
 	}
+
+	public int getAnnotatedPmaxSample(String annotationBaseDir, String annotator) {
+		if (pmaxFromFile >= 0)
+			return pmaxFromFile;
+		
+		pmaxFromFile = readAnnotationFile (annotationBaseDir, annotator, Parser.ANNOTATION_COL_PMAX_SAMPLE, -1);
+
+		return pmaxFromFile;
+	}
+
+	/**
+	 * Returns the absolute Annotation for a given Swallow in a Read Folder Object. If there is no annotation, "NaN" will be returned
+	 * @param annotationBaseDir
+	 * @param annotator
+	 * @return
+	 */
+	public int getAnnotatedRestitutionTimeSample(String annotationBaseDir, String annotator) {
+		if (annotatedRestitutionTimeSample >= 0 )
+			return annotatedRestitutionTimeSample;
+		
+		annotatedRestitutionTimeSample = readAnnotationFile (annotationBaseDir, annotator, Parser.ANNOTATION_COL_RESTITUTIONSZEIT_SAMPLE, DEFAULT_ANNOTATED_RESTITUTION_SAMPLE_WITHOUT_FILE);
+		
+		return annotatedRestitutionTimeSample;
+	}
 	
+	private int readAnnotationFile(String annotationBaseDir, String annotator, int column, int defaultReturn) {
+		String annotationPath = annotationBaseDir + File.separator + proband + "-" + annotator + ".tsv";
+		log.debug("The annotation path is: " + annotationPath);
+
+		int ret = defaultReturn;
+		try {
+			Matrix annotations = Parser.readAnnotations(new File(annotationPath), getSamplerateAsInt());
+			ret = (int) annotations.get(swallowId-1, column);
+			log.info("Loaded value for column " + column + " from the file " + annotationPath + ". It is " + ret);
+		} catch (IOException e) {
+			
+		} catch (ArrayIndexOutOfBoundsException t){
+			log.info("There was an array out of bounds when reading annotations.... did you access the right file?");
+		}
+		return ret;
+
+	}
+
 }

@@ -23,9 +23,9 @@ public class SwallowData implements Runnable{
 	protected String samplerate;
 	protected Logger log = LogManager.getLogger(getClass());
 	protected int firstSample;
-	private int lastSample;
-	private int swallowId;
-	private int proband;
+	protected int lastSample;
+	protected int swallowId;
+	protected int proband;
 
 	public SwallowData() {
 		super();
