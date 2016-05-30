@@ -40,25 +40,6 @@ public class AlgorithmControllerTest {
 	}
 
 	@Test
-	public void testGetPmax() {
-		DataInterpretation di = new DataInterpretation();
-		di.setSwallowId(0);
-		di.setProband(0);
-		di.setSamplerate("0");
-		File tmpDir = new File("tmpdir");
-		tmpDir.deleteOnExit();
-		
-		sut.setAnnotationBaseDir(tmpDir.getAbsolutePath());
-		
-		int pmax = sut.getPmax(di);
-		
-		assertEquals(-1, pmax);
-		
-		
-	}
-	
-
-	@Test
 	public void testPreprocessSwallow() {
 		DataInterpretation inputData;
 		int inputAnnotation;

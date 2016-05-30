@@ -22,16 +22,16 @@ public class MhhRawData {
 		
 		validationData = new Matrix[validationSwallows];
 		validationDataLabels = new Matrix[validationSwallows];
-		validationDataRelativeAnnotations = new int[validationSwallows];
-		validationDataAbsoluteAnnotations = new int[validationSwallows];
-		
+		validationDataRelativeAnnotations = new int[trainSwallows];
+		validationDataAbsoluteAnnotations = new int[trainSwallows];
+
 		testData = new Matrix[testSwallows];
 		testDataLabels = new Matrix[testSwallows];
 //		testRuhedruck = new Matrix[testSwallows];
 //		testRuhedruckLabels = new Matrix[testSwallows];
 		testDataRelativeAnnotations = new int[testSwallows];
 		testDataAbsoluteAnnotations = new int[testSwallows];
-		
+
 	}
 	
 	Matrix[] instanceWeights;
@@ -39,19 +39,25 @@ public class MhhRawData {
 	Matrix[] trainDataLabels;
 //	Matrix[] trainRuhedruck; 
 //	Matrix[] trainRuhedruckLabels;
+	@Deprecated
 	int[] trainDataRelativeAnnotations;
+	@Deprecated
 	int[] trainDataAbsoluteAnnotations;
 	
 	Matrix[] validationData;
 	Matrix[] validationDataLabels;
+	@Deprecated
 	int[] validationDataRelativeAnnotations;
+	@Deprecated
 	int[] validationDataAbsoluteAnnotations;
 	
 	Matrix[] testData;
 	Matrix[] testDataLabels;
 //	Matrix[] testRuhedruck;
 //	Matrix[] testRuhedruckLabels;
+	@Deprecated
 	int[] testDataRelativeAnnotations;
+	@Deprecated
 	int[] testDataAbsoluteAnnotations;
 	
 	

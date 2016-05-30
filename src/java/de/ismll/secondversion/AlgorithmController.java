@@ -7,6 +7,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -92,9 +93,6 @@ public class AlgorithmController  implements Runnable{
 
 	@Parameter(cmdline="windowExtent", description="Hyperparameter: The length (one sided) that smoothes the predicted labels")
 	public int windowExtent;
-
-	@Parameter(cmdline="normalized", description="true, if normalized data should be used, false, otherwise.")
-	private boolean normalize=true;
 
 	@Parameter(cmdline="maxIterations", description="number of maximum iterations for train() Method")
 	public int maxIterations = 1000;
@@ -277,30 +275,35 @@ public class AlgorithmController  implements Runnable{
 		sample2Labels = new MhhEval(readSplit.testFolders.length,
 				readSplit.validationFolders.length, readSplit.trainFolders.length);
 
+		
+		PreprocessData pd = new PreprocessData();
+		// copy properties (members)
+		pd.setAnnotationBaseDir(annotationBaseDir);
+		pd.setAnnotator(annotator);
+		pd.setColumnSelector(columnSelector);
+		pd.setIncludeRD(includeRD);
+		pd.setReadSplit(readSplit);
+		pd.setTimeOrder(timeOrder);
+		pd.setWeightLength(weightLength);
+		pd.setWindowExtent(windowExtent);
+		pd.run();
+		
+		
 		// TRAIN!
 
-		for(int i = 0; i < readSplit.trainFolders.length; i ++) {
-			log.info("Training data ... " + readSplit.trainFolders[i].getSwallowId());
-			DataInterpretation folder = readSplit.trainFolders[i];
+		List<SwallowDS> trainingSwallowIterator = pd.getTrainingSwallows();
+		for(int i = 0; i < trainingSwallowIterator.size(); i ++) {
+			SwallowDS d = trainingSwallowIterator.get(0);
+			
+			int absoluteAnnotation = d.getAbsoluteIdxOfAnnotation();
+			int relativeAnnotation = absoluteAnnotation - (int) d.data.get(0, 0);
 
-			int absoluteAnnotation = getAnnotation(folder);
-			int relativeAnnotation = absoluteAnnotation - folder.getFirstSample();
-
-
-			int pmax = getPmax(folder);
-
-			SwallowDS d = null;
-			try {
-				d = preprocessSwallow(folder, absoluteAnnotation, pmax, skipLeading, skipBetween);
-			} catch (ModelApplicationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 			rawData.trainData[i]=d.data;
 			rawData.trainDataLabels[i]=d.labels;
 			rawData.instanceWeights[i]=d.instanceWeights;
+			// TODO: populate
 			rawData.trainDataAbsoluteAnnotations[i]=absoluteAnnotation;
-			rawData.trainDataRelativeAnnotations[i]=relativeAnnotation;
+//			rawData.trainDataRelativeAnnotations[i]=relativeAnnotation;
 
 			Matrix[] sampletoLabels = createSample2Labels(d.data);
 
@@ -309,27 +312,17 @@ public class AlgorithmController  implements Runnable{
 		}
 
 		// VALIDATION
+		List<SwallowDS> validationSwallows = pd.getValidationSwallows();
 
-		for(int i = 0; i < readSplit.validationFolders.length; i ++) {
-			log.info("Validation data ... " + readSplit.validationFolders[i].getSwallowId());
-			DataInterpretation folder = readSplit.validationFolders[i];
+		for(int i = 0; i < validationSwallows.size(); i ++) {
+			SwallowDS d = validationSwallows.get(i);
+			int absoluteAnnotation = d.getAbsoluteIdxOfAnnotation();
+			int relativeAnnotation = absoluteAnnotation - (int) d.data.get(0, 0);
 
-			int absoluteAnnotation = getAnnotation(folder);
-			int relativeAnnotation = absoluteAnnotation - folder.getFirstSample();
-
-			int pmax = getPmax(folder);
-
-			SwallowDS d = null;
-			try {
-				d = preprocessSwallow(folder, absoluteAnnotation, pmax, skipLeading, skipBetween);
-			} catch (ModelApplicationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 			rawData.validationData[i]=d.data;
 			rawData.validationDataLabels[i]=d.labels;
 			rawData.validationDataAbsoluteAnnotations[i] = absoluteAnnotation;
-			rawData.validationDataRelativeAnnotations[i] = relativeAnnotation;
+//			rawData.validationDataRelativeAnnotations[i] = relativeAnnotation;
 
 			Matrix[] sampletoLabels = createSample2Labels(d.data);
 
@@ -338,32 +331,17 @@ public class AlgorithmController  implements Runnable{
 		}
 
 		// TEST
+		List<SwallowDS> testSwallows = pd.getTestSwallows();
 
-		for(int i = 0; i < readSplit.testFolders.length; i ++) {
-			log.info("Test data ... " + readSplit.testFolders[i].getSwallowId());
-			DataInterpretation folder = readSplit.testFolders[i];
+		for(int i = 0; i < testSwallows.size(); i ++) {
+			SwallowDS d = testSwallows.get(i);
+			int absoluteAnnotation = d.getAbsoluteIdxOfAnnotation();
+			int relativeAnnotation = absoluteAnnotation - (int) d.data.get(0, 0);
 
-			int absoluteAnnotation = getAnnotation(folder);
-			int relativeAnnotation = absoluteAnnotation - folder.getFirstSample();
-
-
-
-
-			int pmax = getPmax(folder);
-
-			SwallowDS d = null;
-			try {
-				d = preprocessTestSwallow(folder, absoluteAnnotation, pmax, skipLeading, skipBetween);
-			} catch (ModelApplicationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 			rawData.testData[i]=d.data;
 			rawData.testDataLabels[i]=d.labels;
-//			rawData.testRuhedruck[i]=d.ruheDruck;
-//			rawData.testRuhedruckLabels[i]=d.ruheDruckLabels;
 			rawData.testDataAbsoluteAnnotations[i]=absoluteAnnotation;
-			rawData.testDataRelativeAnnotations[i]=relativeAnnotation;
+//			rawData.testDataRelativeAnnotations[i]=relativeAnnotation;
 
 			Matrix[] sampletoLabels = createSample2Labels(d.data);
 
@@ -481,330 +459,6 @@ public class AlgorithmController  implements Runnable{
 
 		algorithm.run(); 
 
-	}
-
-
-
-
-
-	public int getPmax(DataInterpretation folder) {
-		int pmax = 0;
-
-		int probandId = folder.getProband();
-		int swallowId = folder.getSwallowId();
-
-		String annotationPath = annotationBaseDir + File.separator + probandId + "-" + annotator + ".tsv";
-
-
-		// Parser modifizieren!
-
-		try {
-			annotations = Parser.readAnnotations(new File(annotationPath), folder.getSamplerateAsInt());
-			pmax = (int) annotations.get(swallowId-1, Parser.ANNOTATION_COL_PMAX_SAMPLE);
-			log.info("Pmax is given, will continue...");
-		} catch (IOException e) {
-			File dataInterpretation = folder.getDataInterpretation();
-			log.info("Pmax has not been provided for:  " + (null==dataInterpretation?"null":dataInterpretation.toString()));
-			log.info("The annotation path is: " + annotationPath);
-			pmax = -1;
-		} catch (ArrayIndexOutOfBoundsException t){
-			log.info("There was an array out of bounds when reading annotations.... did you access the right file?");
-			pmax = -1;
-		}
-
-		if(pmax == 0) { pmax = -1;}
-
-		return pmax;
-	}
-
-	/**
-	 * Returns the absolute Annotation for a given Swallow in a Read Folder Object. If there is no annotation, "NaN" will be returned
-	 * @param folder
-	 * @return
-	 */
-	public int getAnnotation(DataInterpretation folder) {
-		int restitutionszeitSample;
-
-		int probandId = folder.getProband();
-		int swallowId = folder.getSwallowId();
-
-		String annotationPath = annotationBaseDir + File.separator + probandId + "-" + annotator + ".tsv";
-
-		try {
-			annotations = Parser.readAnnotations(new File(annotationPath), folder.getSamplerateAsInt());
-			restitutionszeitSample = (int) annotations.get(swallowId-1, Parser.ANNOTATION_COL_RESTITUTIONSZEIT_SAMPLE);
-			log.info("Annotation is given, will continue...");
-		} catch (IOException e) {
-			log.info("Annotations have not been provided for:  " + folder.getDataInterpretation().toString());
-			log.info("The annotation path is: " + annotationPath);
-			restitutionszeitSample = (int) Double.NaN;
-		}
-		catch (ArrayIndexOutOfBoundsException t){
-			log.info("There was an array out of bounds when reading annotations.... did you access the right file?");
-			restitutionszeitSample = (int) Double.NaN;
-		}
-
-		return restitutionszeitSample;
-
-	}
-
-	/**
-	 * Reads a (training) swallow; preprocessing the data, s.t.:
-	 * 
-	 * <ol>
-	 * <li>Data is aggregated (e.g., concatenating FFT and Pressure samples, adding metadata, see {@link #concatenate(DataInterpretation)})
-	 * <li>Data is narrowed (e.g., removing non-informative samples (between rdend and pmaxsample)
-	 * <li>Labeling data (based on annotation) 
-	 * </ol>
-	 * @param colSelector 
-	 * 
-	 * 
-	 * @return 
-	 * @throws ModelApplicationException 
-	 */
-	public SwallowDS preprocessSwallow(DataInterpretation folder, int annotation, int pmax,  boolean skipLeading,
-			boolean skipBetween)
-					throws ModelApplicationException {
-		SwallowDS ret = new SwallowDS();
-
-		Matrix data = concatenate(log, folder, annotation, normalize, pmax);
-		int numRows = data.getNumRows();
-
-
-		int idxMaxSample2 = pmax;
-
-		int rdEndSample = folder.getRdEndSample();
-		int rdStartSample = folder.getRdStartSample();
-
-		//get instance Weight Matrix, set all Weights to 1
-
-		Matrix instanceWeights = new DefaultMatrix(numRows, 2);
-		Vectors.set(Matrices.col(instanceWeights, 1), 1); // <-------- Macht das was ich will??
-
-		ArrayList<Integer> throwAway = new ArrayList<>();
-
-		DefaultMatrix labels = new DefaultMatrix(data.getNumRows(), /*SampleId, label*/2);
-		// default clazz is -9999 (indicator for missing)
-		Vectors.set(Matrices.col(labels, 1), -9999);
-
-		//TODO: Add regression values as distance from annotation, depending on whether one wants classification or regression
-
-		for (int j = 0; j< numRows; j++) {
-			// copy over sample indizes to label matrix and to instanceWeight Matrix
-			float absSampleIdx = data.get(j, COL_ABS_SAMPLE_IDX);
-			labels.set(j, 0, (int) absSampleIdx); 
-			instanceWeights.set(j, 0, (int) absSampleIdx);
-
-
-			// now, determine label  TODO: Add regression values as distance from annotation, depending on whether one wants classification or regression
-			float currentDataSampleId = absSampleIdx;
-
-
-			// determine a weight for instance j
-
-			if (Math.abs(currentDataSampleId - annotation) < weightLength) {
-				float distance = Math.abs(currentDataSampleId - annotation);
-
-				instanceWeights.set( j, 1,  1/(weightLength - distance));
-			}
-
-
-			if (currentDataSampleId <= rdStartSample) {
-				if (skipLeading) {
-					throwAway.add(Integer.valueOf(j));
-				} else {
-					labels.set(j, 1, LABEL_NICHT_SCHLUCK);
-				}
-				continue;
-
-			}
-			if (currentDataSampleId>rdStartSample && currentDataSampleId < rdEndSample) {
-				labels.set(j, 1, LABEL_NICHT_SCHLUCK);
-				continue;
-			}
-			if (currentDataSampleId>=rdEndSample && currentDataSampleId <= idxMaxSample2) {
-				if (skipBetween) {
-					throwAway.add(Integer.valueOf(j));
-				} else {
-					labels.set(j, 1, LABEL_NICHT_SCHLUCK);
-				}
-				continue;
-			}
-			if (currentDataSampleId>idxMaxSample2 && currentDataSampleId < annotation) {
-				labels.set(j, 1, LABEL_SCHLUCK);
-			}
-			if (currentDataSampleId >= annotation) {
-				labels.set(j, 1, LABEL_NICHT_SCHLUCK);
-			}
-		}
-
-
-		//		for (int throwIndex : throwAway.)
-
-		DefaultBitVector throwVector = new DefaultBitVector(numRows);
-		Vectors.set(throwVector, true);
-		for (Integer j : throwAway) {
-			throwVector.set(j.intValue(), false);
-		}
-
-
-		RowSubsetMatrixView dataFiltered = new RowSubsetMatrixView(data, throwVector, true);
-		RowSubsetMatrixView labelsFiltered = new RowSubsetMatrixView(labels, throwVector, true);
-		RowSubsetMatrixView instanceWeightsFiltered = new RowSubsetMatrixView(instanceWeights, throwVector, true);
-
-		ret.data=new DefaultMatrix(dataFiltered);
-		ret.labels=new DefaultMatrix(labelsFiltered);
-		ret.instanceWeights = new DefaultMatrix(instanceWeightsFiltered);
-		ret.throwAway = throwAway;
-
-		return ret;
-	}
-
-	/**
-	 * Reads a (test) swallow; preprocessing the data, s.t.:
-	 * 
-	 * <ol>
-	 * <li>Data is aggregated (e.g., concatenating FFT and Pressure samples, adding metadata, see {@link #concatenate(DataInterpretation)})
-	 * <li>Data is narrowed (e.g., removing non-informative samples (between rdend and pmaxsample)
-	 * <li>RuheDruck is ectracted
-	 * <li>Labeling data (based on annotation) 
-	 * </ol>
-	 * @param colSelector 
-	 * 
-	 * 
-	 * @return 
-	 * @throws ModelApplicationException 
-	 */
-	public SwallowDS preprocessTestSwallow(DataInterpretation folder, int annotation, int pmax, boolean skipLeading, boolean skipBetween) throws ModelApplicationException {
-		SwallowDS ret = new SwallowDS();
-
-		Matrix data = concatenate(log, folder, annotation, normalize, pmax);
-		int numRows = data.getNumRows();
-
-
-		int idxMaxSample2 = pmax;
-
-		int rdEndSample = folder.getRdEndSample();
-		int rdStartSample = folder.getRdStartSample();
-
-
-		ArrayList<Integer> throwAway = new ArrayList<>();
-		ArrayList<Integer> ruheDruckSamples = new ArrayList<>();
-
-		DefaultMatrix labels = new DefaultMatrix(data.getNumRows(), /*SampleId, label*/2);
-		// default clazz is -9999 (indicator for missing)
-		Vectors.set(Matrices.col(labels, 1), -9999);
-
-		//TODO: Add regression values as distance from annotation, depending on whether one wants classification or regression
-
-		if (Double.isNaN(annotation)) {
-			for (int j = 0; j< numRows; j++) {
-				// copy over sample indizes to label matrix 
-				labels.set(j, 0, (int) data.get(j, COL_ABS_SAMPLE_IDX)); 
-
-				// now, determine label  
-				float currentDataSampleId = data.get(j, COL_ABS_SAMPLE_IDX);
-
-				if (currentDataSampleId <= rdStartSample) {
-					if (skipLeading) {
-						throwAway.add(Integer.valueOf(j));
-					} else {
-						labels.set(j, 1, -9999);
-					}
-					continue;
-
-				}
-				if (currentDataSampleId>rdStartSample && currentDataSampleId < rdEndSample) {
-					ruheDruckSamples.add(Integer.valueOf(j));
-					labels.set(j, 1, -9999);
-					continue;
-				}
-				if (currentDataSampleId>=rdEndSample && currentDataSampleId <= idxMaxSample2) {
-					if (skipBetween) {
-						throwAway.add(Integer.valueOf(j));
-					} else {
-						labels.set(j, 1, -9999);
-					}
-					continue;
-				}
-			}
-		}
-		else {
-			for (int j = 0; j< numRows; j++) {
-				// copy over sample indizes to label matrix 
-				labels.set(j, 0, (int) data.get(j, COL_ABS_SAMPLE_IDX)); 
-
-				// now, determine label  TODO: Add regression values as distance from annotation, depending on whether one wants classification or regression
-				float currentDataSampleId = data.get(j, COL_ABS_SAMPLE_IDX);
-
-				if (currentDataSampleId <= rdStartSample) {
-					if (skipLeading) {
-						throwAway.add(Integer.valueOf(j));
-					} else {
-						labels.set(j, 1, LABEL_NICHT_SCHLUCK);
-					}
-					continue;
-
-				}
-				if (currentDataSampleId>rdStartSample && currentDataSampleId < rdEndSample) {
-					ruheDruckSamples.add(Integer.valueOf(j));
-					labels.set(j, 1, LABEL_NICHT_SCHLUCK);
-					continue;
-				}
-				if (currentDataSampleId>=rdEndSample && currentDataSampleId <= idxMaxSample2) {
-					if (skipBetween) {
-						throwAway.add(Integer.valueOf(j));
-					} else {
-						labels.set(j, 1, LABEL_NICHT_SCHLUCK);
-					}
-					continue;
-				}
-				if (currentDataSampleId>idxMaxSample2 && currentDataSampleId < annotation) {
-					labels.set(j, 1, LABEL_SCHLUCK);
-				}
-				if (currentDataSampleId >= annotation) {
-					labels.set(j, 1, LABEL_NICHT_SCHLUCK);
-				}
-			}
-
-		}
-
-		DefaultBitVector ruheDruckVector = new DefaultBitVector(numRows);
-		Vectors.set(ruheDruckVector, false);
-		for (Integer j : ruheDruckSamples) {
-			ruheDruckVector.set(j.intValue(), true);
-		}
-
-
-		DefaultBitVector throwVector = new DefaultBitVector(numRows);
-		Vectors.set(throwVector, true);
-		for (Integer j : throwAway) {
-			throwVector.set(j.intValue(), false);
-		}
-
-		RowSubsetMatrixView ruheDruck = new RowSubsetMatrixView(data, ruheDruckVector, true);
-		RowSubsetMatrixView ruheDruckLabels = new RowSubsetMatrixView(labels, ruheDruckVector, true);
-
-		// Hier alle labels des Ruhedrucks auf -1 setzen, da kein Schluck!!!! In neue Matrix giessen weil es sonst nicht geht!!
-
-		Matrix ruheDruckLabels2 = new DefaultMatrix(ruheDruckLabels);
-
-		for (int row = 0; row < ruheDruckLabels.getNumRows() ; row++) {
-			ruheDruckLabels2.set(row, COL_LABEL_IN_LABELS, LABEL_NICHT_SCHLUCK);
-		}
-
-		RowSubsetMatrixView dataFiltered = new RowSubsetMatrixView(data, throwVector, true);
-		RowSubsetMatrixView labelsFiltered = new RowSubsetMatrixView(labels, throwVector, true);
-
-		//		System.out.println(ruheDruck.getNumRows() + " ist gleich " +  ruheDruckLabels2.getNumRows());
-
-		ret.data=dataFiltered;
-		ret.labels=labelsFiltered;
-//		ret.ruheDruck = ruheDruck;
-		ret.throwAway = throwAway;
-//		ret.ruheDruckLabels = ruheDruckLabels2;
-
-		return ret;
 	}
 
 	/** 
@@ -1720,17 +1374,6 @@ public class AlgorithmController  implements Runnable{
 		this.outputFolder = outputFolder;
 	}
 
-
-
-	public boolean isNormalize() {
-		return normalize;
-	}
-
-
-
-	public void setNormalize(boolean normalize) {
-		this.normalize = normalize;
-	}
 
 
 

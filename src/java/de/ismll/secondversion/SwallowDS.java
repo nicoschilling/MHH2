@@ -19,6 +19,8 @@ public class SwallowDS {
 	public Matrix instanceWeights;
 	public ArrayList<Integer> throwAway;
 
+	private int absoluteIdxOfAnnotation;
+
 	public String toString() {
 		String datadesc;
 		String labeldesc;
@@ -48,5 +50,13 @@ public class SwallowDS {
 			System.out.println("Unknown serialization scheme!");
 		}
 
+	}
+
+	public int getAbsoluteIdxOfAnnotation() {
+		return absoluteIdxOfAnnotation;
+	}
+
+	public void setAbsoluteIdxOfAnnotation(int absoluteIdxOfAnnotation) {
+		this.absoluteIdxOfAnnotation = absoluteIdxOfAnnotation;
 	}
 }

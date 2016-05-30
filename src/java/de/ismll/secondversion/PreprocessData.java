@@ -138,7 +138,7 @@ public class PreprocessData  implements Runnable{
 
 			SwallowDS d = null;
 			try {
-				d = preprocessTestSwallow(folder);
+				d = preprocessSwallow(folder);
 				trainingSwallows.add(d);
 			} catch (DataValidationException e) {
 				// TODO Auto-generated catch block
@@ -163,7 +163,7 @@ public class PreprocessData  implements Runnable{
 
 			SwallowDS d = null;
 			try {
-				d = preprocessTestSwallow(folder);
+				d = preprocessSwallow(folder);
 				validationSwallows.add(d);
 			} catch (DataValidationException e) {
 				// TODO Auto-generated catch block
@@ -181,7 +181,7 @@ public class PreprocessData  implements Runnable{
 
 			SwallowDS d = null;
 			try {
-				d = preprocessTestSwallow(folder);
+				d = preprocessSwallow(folder);
 				testSwallows.add(d);
 			} catch (DataValidationException e) {
 				// TODO Auto-generated catch block
@@ -204,15 +204,17 @@ public class PreprocessData  implements Runnable{
 	 * @return 
 	 * @throws DataValidationException 
 	 */
-	private SwallowDS preprocessTestSwallow(DataInterpretation folder) throws DataValidationException {
+	private SwallowDS preprocessSwallow(DataInterpretation folder) throws DataValidationException {
 		SwallowDS ret = new SwallowDS();
 
 		int annotation = folder.getAnnotatedRestitutionTimeSample(annotationBaseDir, annotator);
 		int idxAnnotatedPMaxSample = folder.getAnnotatedPmaxSample(annotationBaseDir, annotator);
+		ret.setAbsoluteIdxOfAnnotation(annotation);
+		
 		Matrix data = concatenate(folder);
 		int numRows = data.getNumRows();
 
-		boolean annotate = !Double.isNaN(annotation);
+		boolean performTheSamplewiseLabelingTask = !Double.isNaN(annotation);
 
 		int rdEndSample = folder.getRdEndSample();
 		int rdStartSample = folder.getRdStartSample();
@@ -234,7 +236,7 @@ public class PreprocessData  implements Runnable{
 			labels.set(j, 0, (int) currentDataSampleId);
 			instanceWeights.set(j, 0, (int) currentDataSampleId);
 
-			if (annotate) {
+			if (performTheSamplewiseLabelingTask) {
 				float distance = Math.abs(currentDataSampleId - annotation);
 				
 				if (distance < weightLength) {
@@ -246,14 +248,14 @@ public class PreprocessData  implements Runnable{
 				if (skipLeading) {
 					throwAway.add(Integer.valueOf(j));
 				} else {
-					if (annotate)
+					if (performTheSamplewiseLabelingTask)
 						labels.set(j, 1, LABEL_NICHT_SCHLUCK);
 				}
 				continue;
 
 			}
 			if (currentDataSampleId > rdStartSample && currentDataSampleId < rdEndSample) {
-				if (annotate)
+				if (performTheSamplewiseLabelingTask)
 					labels.set(j, 1, LABEL_NICHT_SCHLUCK);
 				continue;
 			}
@@ -261,17 +263,17 @@ public class PreprocessData  implements Runnable{
 				if (skipBetween) {
 					throwAway.add(Integer.valueOf(j));
 				} else {
-					if (annotate)
+					if (performTheSamplewiseLabelingTask)
 						labels.set(j, 1, LABEL_NICHT_SCHLUCK);
 				}
 				continue;
 			}
 			if (currentDataSampleId > idxAnnotatedPMaxSample && currentDataSampleId < annotation) {
-				if (annotate)
+				if (performTheSamplewiseLabelingTask)
 					labels.set(j, 1, LABEL_SCHLUCK);
 			}
 			if (currentDataSampleId >= annotation) {
-				if (annotate)
+				if (performTheSamplewiseLabelingTask)
 					labels.set(j, 1, LABEL_NICHT_SCHLUCK);
 			}
 		}
@@ -441,15 +443,15 @@ public class PreprocessData  implements Runnable{
 		return  new DefaultMatrix(ret1);
 	}
 
-	public List<SwallowDS> getTrainingSwallowIterator() {
+	public List<SwallowDS> getTrainingSwallows() {
 		return Collections.unmodifiableList(trainingSwallows);
 	}
 	
-	public List<SwallowDS> getValidationSwallowIterator() {
+	public List<SwallowDS> getValidationSwallows() {
 		return Collections.unmodifiableList(validationSwallows);
 	}
 	
-	public List<SwallowDS> getTestSwallowIterator() {
+	public List<SwallowDS> getTestSwallows() {
 		return Collections.unmodifiableList(testSwallows);
 	}
 	
