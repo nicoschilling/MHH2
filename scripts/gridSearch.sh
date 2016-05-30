@@ -26,14 +26,15 @@ u_annotator=${annotator?Error: no annotator found!}
 u_includeRD=${includeRD?Error: no includeRD found!}
 u_laplacian=${laplacian?Error: no laplacian found!}
 u_columnselector=${columnselector?Error: non columnselector found!}
+u_maxiterations=${maxIterations?Error: no maxIterations found!}
 
 for stepSize in  ${stepsizes[@]} ;do 
 for lambda in  ${lambdas[@]}   ; do
 for window in   ${windowextents[@]}  ; do
 for smoothReg in  ${smoothregularizations[@]}  ; do
 for smoothWindow in  ${smoothinwindows[@]}; do 
-qsub ${qsuboptions} -q ${queues} -N ${u_experimentidentifier}-step-${stepSize}-lambda-${lambda}-windowExtent-${window}-smoothReg-${smoothReg}-smoothWindow-${smoothWindow} \
-run.sh ${u_bootstrapclass} \
+# qsub ${qsuboptions} -q ${queues} -N ${u_experimentidentifier}-step-${stepSize}-lambda-${lambda}-windowExtent-${window}-smoothReg-${smoothReg}-smoothWindow-${smoothWindow} 
+./run.sh ${u_bootstrapclass} \
 splitFolder=${u_splitsdir}  \
 annotator=${u_annotator} \
 maxIterations=${u_maxiterations} \
