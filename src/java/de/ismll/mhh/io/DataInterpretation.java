@@ -5,15 +5,10 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
 
-import javax.management.RuntimeErrorException;
-
 import de.ismll.bootstrap.BootstrapException;
 import de.ismll.bootstrap.CommandLineParser;
 import de.ismll.bootstrap.Parameter;
-import de.ismll.table.IntVector;
 import de.ismll.table.Matrix;
-import de.ismll.utilities.Assert;
-import de.ismll.utilities.Tools;
 
 public class DataInterpretation extends SwallowData implements Runnable{
 
@@ -35,22 +30,22 @@ public class DataInterpretation extends SwallowData implements Runnable{
 
 	public static final int DEFAULT_ANNOTATED_RESTITUTION_SAMPLE_WITHOUT_FILE = (int) Double.NaN;
 
-	Matrix fft;
+	private Matrix fft;
 	
 	@Parameter(cmdline="interpretation")
 	private File dataInterpretation;
 	
-	String channelstart;
-	String channelend;
-	String rdend;
-	String rdstart;
-	int rdStartSample;
+	private String channelstart;
+	private String channelend;
+	private String rdend;
+	private String rdstart;
+	private int rdStartSample;
 	
 	private String acid_level;
 
 	private int pmaxManuell = PMAX_MANUAL_DEFAULT;
 	
-	int rdEndSample;
+	private int rdEndSample;
 
 	private int pmaxFromFile = -1;
 
@@ -68,30 +63,25 @@ public class DataInterpretation extends SwallowData implements Runnable{
 		
 		super.run();
 		
-		
 		File acidFile = new File(dataInterpretation, FILENAME_ACID_LEVEL);
+		acid_level="unknown";
 		if (acidFile.exists()) {
 			try {
 				acid_level = Parser.readFileCompletely(
-						new File(dataInterpretation, FILENAME_ACID_LEVEL))
+						acidFile)
 						.trim();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-		else {
-			acid_level="unknown";
-		}
-		
 		
 		try {
 			fft = Parser.readCSVFile(new File(dataInterpretation,
 					FILENAME_FFT_CSV));
 		} catch (IOException e) {
 			throw new RuntimeException(
-					"Failed to load data interpretation file"
-							+ FILENAME_CHANNELSTART);
+					"Failed to load fft file "
+							+ FILENAME_FFT_CSV);
 		}
 		try {
 			channelstart = Parser.readFileCompletely(
@@ -99,7 +89,7 @@ public class DataInterpretation extends SwallowData implements Runnable{
 					.trim();
 		} catch (IOException e) {
 			throw new RuntimeException(
-					"Failed to load data interpretation file"
+					"Failed to load channel start file "
 							+ FILENAME_CHANNELSTART);
 		}
 		try {
@@ -108,7 +98,7 @@ public class DataInterpretation extends SwallowData implements Runnable{
 					.trim();
 		} catch (IOException e) {
 			throw new RuntimeException(
-					"Failed to load data interpretation file"
+					"Failed to load channel end file "
 							+ FILENAME_CHANNELEND);
 		}
 		try {
@@ -116,15 +106,15 @@ public class DataInterpretation extends SwallowData implements Runnable{
 					new File(dataInterpretation, FILENAME_RDSTART)).trim();
 		} catch (IOException e) {
 			throw new RuntimeException(
-					"Failed to load data interpretation file"
+					"Failed to load rd start file "
 							+ FILENAME_RDSTART);
 		}
 		try {
-		rdend = Parser.readFileCompletely(                                                                      
+			rdend = Parser.readFileCompletely(                                                                      
 				new File(dataInterpretation, FILENAME_RDEND)).trim();                                      
 		} catch (IOException e) {
 			throw new RuntimeException(
-					"Failed to load data interpretation file" + FILENAME_RDEND);
+					"Failed to load rd end file " + FILENAME_RDEND);
 		}
 		int samplerateI = Integer.parseInt(samplerate);
 		int rdStartTime = Parser.time2Sample(rdstart.trim());
@@ -136,16 +126,14 @@ public class DataInterpretation extends SwallowData implements Runnable{
 		
 		File pmax_manuell = new File(dataInterpretation, FILENAME_PMAX_MANUAL);
 		if (!pmax_manuell.exists()) {
-			log.debug("No manual pmax file exists / detected. Using default (" + PMAX_MANUAL_DEFAULT + ")");			
-		}else {
+			log.debug("No manual pmax file exists / detected. Using default (" + PMAX_MANUAL_DEFAULT + ")");
+		} else {
 			try {
 				
-				String pmax_manualS = Parser.readFileCompletely(                                                                      
-						new File(dataInterpretation, FILENAME_PMAX_MANUAL)).trim();
+				String pmax_manualS = Parser.readFileCompletely(pmax_manuell).trim();
 				this.pmaxManuell = Parser.time2Sample(pmax_manualS, samplerateI);
 				log.info("Using manual pmax sample at index " + pmaxManuell);
-			} catch (IOException e) {
-				
+			} catch (IOException e) {				
 				throw new RuntimeException(
 						"Failed to load data interpretation file" + FILENAME_RDEND);
 			}
@@ -161,8 +149,7 @@ public class DataInterpretation extends SwallowData implements Runnable{
 			DataInterpretation di = new DataInterpretation();
 			di.setDataInterpretation(new File(source));
 			di.run();
-			return di;
-			
+			return di;			
 		}
 	
 		throw new BootstrapException("Could not convert " + in + " into a valid DataInterpretation object.");
@@ -175,15 +162,11 @@ public class DataInterpretation extends SwallowData implements Runnable{
 		oln(where,"endIdx=" + channelend.trim().substring(1) + ";");
 		oln(where,"startTraining=" + (int)(Parser.time2Sample(rdstart.trim(),Integer.parseInt(samplerate))-druck.get(0, 0)) + ";");
 		oln(where,"endTraining=" + (int)(Parser.time2Sample(rdend.trim(),Integer.parseInt(samplerate))-druck.get(0, 0)) + ";");
-		
 	}
-	
 
 	public Matrix getFft() {
 		return fft;
 	}
-
-
 
 	public String getChannelstart() {
 		return channelstart;
@@ -195,8 +178,6 @@ public class DataInterpretation extends SwallowData implements Runnable{
 			myChannelstart=myChannelstart.substring(1);
 		return Integer.valueOf(myChannelstart);
 	}
-
-
 
 	public String getChannelend() {
 		return channelend;
@@ -218,13 +199,6 @@ public class DataInterpretation extends SwallowData implements Runnable{
 	public String getRdstart() {
 		return rdstart;
 	}
-
-//	public static void main(String[] args) {
-//		DataInterpretation rf = new DataInterpretation();
-//		rf.setSchluckverzeichnis(new File(args[0]));
-//		rf.run();
-//		rf.toMathematicaOutput(System.out);
-//	}
 
 	public int getRdStartSample() {
 		return rdStartSample;
@@ -267,7 +241,6 @@ public class DataInterpretation extends SwallowData implements Runnable{
 	}
 
 	public void setDataInterpretation(File interpretationDirectory) {
-		
 		expect(FILENAME_FFT_CSV);
 		expect(FILENAME_CHANNELSTART);
 		expect(FILENAME_CHANNELEND);
