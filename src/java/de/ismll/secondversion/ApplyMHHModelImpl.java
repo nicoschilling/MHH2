@@ -104,7 +104,6 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 
 
 		if (columnSelector == null) {
-			int offset=5;
 			//			columnSelector = new IntRange(offset + "," + (parameters.size()+offset-1));
 			//			columnSelector = new IntRange("5,24;26,"+ (parameters.size()+offset));  // PMAX FIX FOR OLD MODELS!
 			columnSelector = new IntRange("33,166"); // All features
@@ -828,8 +827,6 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 
 		String annotationPath = getAnnotationBaseDir() + probandId + "-" + getAnnotator() + ".tsv";
 
-
-
 		try {
 			annotations = Parser.readAnnotations(new File(annotationPath), folder.getSamplerateAsInt());
 			restitutionszeitSample = (int) annotations.get(swallowId-1, Parser.ANNOTATION_COL_RESTITUTIONSZEIT_SAMPLE);
@@ -997,100 +994,72 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 	///// GETTERS AND SETTERS
 
 
-
-
 	public boolean isSkipBetween() {
 		return skipBetween;
 	}
-
-
 
 	public void setSkipBetween(boolean skipBetween) {
 		this.skipBetween = skipBetween;
 	}
 
-
-
 	public boolean isSkipLeading() {
 		return skipLeading;
 	}
 
-
-
 	public void setSkipLeading(boolean skipLeading) {
 		this.skipLeading = skipLeading;
 	}
-
 
 	@Override
 	public int getWindowExtent() {
 		return windowExtent;
 	}
 
-
 	@Override
 	public void setWindowExtent(int windowExtent) {
 		this.windowExtent = windowExtent;
 	}
 
-
 	public ModelFunctions getModelFunction() {
 		return modelFunction;
 	}
-
 
 	public void setModelFunction(ModelFunctions modelFunction) {
 		this.modelFunction = modelFunction;
 	}
 
-
-
 	public IntRange getColumnSelector() {
 		return columnSelector;
 	}
-
-
 
 	public void setColumnSelector(IntRange columnSelector) {
 		this.columnSelector = columnSelector;
 	}
 
-
-
 	public String getAnnotationBaseDir() {
 		return annotationBaseDir;
 	}
-
-
 
 	public void setAnnotationBaseDir(String annotationBaseDir) {
 		this.annotationBaseDir = annotationBaseDir;
 	}
 
-
-
 	public String getAnnotator() {
 		return annotator;
 	}
-
-
 
 	public void setAnnotator(String annotator) {
 		this.annotator = annotator;
 	}
 
-
-
 	public void setAveragePredictions(Matrix averagePredictions) {
 		this.averagePredictions = averagePredictions;
 	}
-
 
 	@Override
 	public Matrix getAveragePredictions() {
 		return averagePredictions;
 	}
-
 
 	/**
 	 * @param directory
@@ -1102,8 +1071,6 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 
 		// directory kann einmal das Verzeichnis sein, in dem Parameter und Window Extent liegen, Oder ein Verzeichnis von
 		// Verzeichnissen in denen Parameter und Window Extent liegen = ENSEMBLE
-
-
 
 		Vector[] parameterVectors;
 		int[] windowExtents;
@@ -1169,10 +1136,5 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 		}
 		return "unknown";
 	}
-
-
-
-
-
 
 }
