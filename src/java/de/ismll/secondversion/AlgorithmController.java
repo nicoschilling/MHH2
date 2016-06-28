@@ -413,10 +413,6 @@ public class AlgorithmController  implements Runnable{
 
 		algorithm.setLaplacian(this.laplacian);
 		algorithm.setSmoothWindow(this.smoothWindow);
-		algorithm.setSmoothReg(this.smoothReg);
-
-		algorithm.setAnnotationBaseDir(annotationBaseDir);
-		algorithm.setAnnotator(annotator);
 		algorithm.setDatabase(database);
 		algorithm.setRunKey(runKey);
 		algorithm.setSplitNumber(splitNumber);
