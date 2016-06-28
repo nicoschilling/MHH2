@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.LogManager;
@@ -71,8 +70,8 @@ public class PreprocessData  implements Runnable{
 	private boolean skipLeading=true;
 	private boolean skipBetween=true;
 
-	@Parameter(cmdline="serializeTheData")
-	private File serializeTheData;
+	@Parameter(cmdline="serializationOutput")
+	private File serializationOutput;
 
 	private final AllExtractor extractor;
 
@@ -86,7 +85,6 @@ public class PreprocessData  implements Runnable{
 
 	private final UpperMiddleExtractor upperMiddleFeatureExtractor;
 
-
 	private final TimeFeatureExtractor timeFeatureExtractor;
 
 	private final AcidFeatureExtractor acidFeatureExtractor;
@@ -96,6 +94,12 @@ public class PreprocessData  implements Runnable{
 	private final List<SwallowDS> trainingSwallows;
 	private final List<SwallowDS> validationSwallows;
 	private final List<SwallowDS> testSwallows;
+
+	private File outputTrainingFileDir;
+	
+	private File outputValidationFileDir;
+
+	private File outputTestFileDir;
 
 	public PreprocessData() {
 		extractor = new AllExtractor();
@@ -113,7 +117,6 @@ public class PreprocessData  implements Runnable{
 		validationSwallows = new ArrayList<>();
 		testSwallows = new ArrayList<>();
 	}
-
 	
 	@Override
 	public void run() {
@@ -132,6 +135,16 @@ public class PreprocessData  implements Runnable{
 
 		// TRAIN!
 
+		if (null != serializationOutput) {
+			outputTrainingFileDir = new File(serializationOutput, Proportion.TRAIN.getLabel() );
+			createIfNotExists(outputTrainingFileDir);
+			outputValidationFileDir = new File(serializationOutput, Proportion.VALIDATION.getLabel());
+			createIfNotExists(outputValidationFileDir);
+			outputTestFileDir = new File(serializationOutput, Proportion.TEST.getLabel());
+			createIfNotExists(outputTestFileDir);
+			
+		}
+		
 		for(int i = 0; i < readSplit.trainFolders.length; i ++) {
 			log.info("Training data ... " + readSplit.trainFolders[i].getSwallowId());
 			DataInterpretation folder = readSplit.trainFolders[i];
@@ -145,10 +158,9 @@ public class PreprocessData  implements Runnable{
 				e.printStackTrace();
 			}
 			
-			if (null != serializeTheData) {
+			if (null != serializationOutput) {
 				try {
-					d.serialize(serializeTheData, 1, 
-							String.format("p-%1$s-s-%1$s", folder.getProband(), folder.getSwallowId()));
+					d.serialize(outputTrainingFileDir, String.format("p-%1$s-s-%1$s", folder.getProband(), folder.getSwallowId()));
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -169,7 +181,13 @@ public class PreprocessData  implements Runnable{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
+			if (null != serializationOutput) {
+				try {
+					d.serialize(outputValidationFileDir, String.format("p-%1$s-s-%1$s", folder.getProband(), folder.getSwallowId()));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 
 		// TEST
@@ -187,7 +205,20 @@ public class PreprocessData  implements Runnable{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			
+			if (null != serializationOutput) {
+				try {
+					d.serialize(outputTestFileDir, String.format("p-%1$s-s-%1$s", folder.getProband(), folder.getSwallowId()));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 		}
+	}
+
+	private static void createIfNotExists(File folder) {
+		if (!folder.exists())
+			folder.mkdirs();
 	}
 
 	/**
@@ -521,12 +552,12 @@ public class PreprocessData  implements Runnable{
 		this.timeOrder = timeOrder;
 	}
 
-	public File getSerializeTheData() {
-		return serializeTheData;
+	public File getSerializationOutput() {
+		return serializationOutput;
 	}
 
-	public void setSerializeTheData(File serializeTheData) {
-		this.serializeTheData = serializeTheData;
+	public void setSerializationOutput(File serializationOutput) {
+		this.serializationOutput = serializationOutput;
 	}
 
 }

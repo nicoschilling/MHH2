@@ -225,7 +225,6 @@ public class AlgorithmController  implements Runnable{
 		upperFeatureExtractor = new UpperExtractor();
 		lowerMiddleFeatureExtractor = new LowerMiddleExtractor();
 		upperMiddleFeatureExtractor = new UpperMiddleExtractor();
-	
 	}
 
 
@@ -284,6 +283,7 @@ public class AlgorithmController  implements Runnable{
 		pd.setWeightLength(weightLength);
 		pd.setWindowExtent(windowExtent);
 		pd.run();
+		
 		
 		
 		// TRAIN!

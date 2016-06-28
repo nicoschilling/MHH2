@@ -4,10 +4,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+
 import de.ismll.table.Matrices;
 import de.ismll.table.Matrix;
 
 public class SwallowDS {
+
+	protected Logger log = LogManager.getLogger(getClass());
 
 	final static String LINE_SEPARATOR = System.lineSeparator();
 
@@ -37,19 +42,15 @@ public class SwallowDS {
 		return "SwallowDS container:" + LINE_SEPARATOR + datadesc + LINE_SEPARATOR + labeldesc;
 	}
 
-	public void serialize(File serializeTheData, int scheme, String format) throws IOException {
-		switch (scheme) {
-		case 1:
-			if (!serializeTheData.isDirectory()) {
-				throw new IOException("The file parameter needs to be a directory when using scheme '1'!");
-			}
-			Matrices.write(data, new File(serializeTheData, format + ".data.csv"));
-			
-			break;
-		default:
-			System.out.println("Unknown serialization scheme!");
+	public void serialize(File directory, String filename) throws IOException {
+		if (!directory.isDirectory()) {
+			throw new IOException("The first parameter needs to be a directory");
 		}
-
+		File datafile = new File(directory, filename + ".data.csv");
+		log.info("Writing data file to " + datafile);
+		Matrices.write(data, datafile);
+		
+		
 	}
 
 	public int getAbsoluteIdxOfAnnotation() {
