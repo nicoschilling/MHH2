@@ -3,3 +3,11 @@ lib/
 build/
 project.properties
 *~
+.settings/org.eclipse.jdt.core.prefs
+.classpath
+.gradle/
+.settings/org.eclipse.core.resources.prefs
+*.properties
+build.log
+output/
+
