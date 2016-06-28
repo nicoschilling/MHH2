@@ -396,7 +396,6 @@ public class AlgorithmController  implements Runnable{
 		// Algorithm Objekt initialisieren
 		Algorithm algorithm = new Algorithm();
 
-//		algorithm.setData(data);
 		algorithm.setRawData(rawData);
 
 		// Parameter an den Algorithmus uebergeben	

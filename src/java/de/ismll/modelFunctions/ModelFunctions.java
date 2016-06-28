@@ -11,8 +11,6 @@ import de.ismll.evaluation.Accuracy;
 import de.ismll.secondversion.Algorithm;
 import de.ismll.secondversion.AlgorithmController;
 import de.ismll.secondversion.IntRange;
-import de.ismll.secondversion.MhhDataset;
-import de.ismll.secondversion.MhhRawData;
 import de.ismll.secondversion.Quality;
 import de.ismll.table.Matrices;
 import de.ismll.table.Matrix;

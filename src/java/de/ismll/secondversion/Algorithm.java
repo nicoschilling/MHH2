@@ -50,9 +50,6 @@ public class Algorithm implements Runnable{
 	private static final int COL_SAMPLE_IN_LABELS = 0;
 	private static final int COL_LABEL_IN_LABELS = 1;
 
-
-
-	private MhhDataset data;
 	private MhhRawData rawData;
 
 	private Matrix trainData;
