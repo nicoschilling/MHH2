@@ -252,7 +252,7 @@ public class AlgorithmController  implements Runnable{
 
 
 
-		File[] trainList = readSplit.trainList;
+		File[] trainList = readSplit.getTrainList();
 
 		log.info("Working on " + trainList.length + " training files");
 		log.info("Working on " + columnSelector.getUsedIndexes().length + " predictor variables");
