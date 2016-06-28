@@ -156,21 +156,21 @@ public class ReadSplit implements Runnable{
 	public void setFields(File splitFolder) {
 		this.setSplitFolder(splitFolder);
 
-		File trainFolder = new File(splitFolder.getAbsolutePath()+"/train");
+		File trainFolder = new File(splitFolder.getAbsolutePath()+"/" + Proportion.TRAIN.getLabel());
 		if (!trainFolder.isDirectory()) {
 			throw new RuntimeException("Illegal subdirectory structure, subdirectory \"train\" expected in folder " + splitFolder + " !");
 		}
 		this.trainList = trainFolder.listFiles();
 		this.trainFoldersLength = trainList.length;
 		
-		File testFolder = new File(splitFolder.getAbsolutePath()+"/test");
+		File testFolder = new File(splitFolder.getAbsolutePath()+"/"+ Proportion.TEST.getLabel());
 		if (!testFolder.isDirectory()) {
 			throw new RuntimeException("Illegal subdirectory structure, subdirectory \"test\" expected in folder " + splitFolder + " !");
 		}
 		this.testList = testFolder.listFiles();
 		this.testFoldersLength = testList.length;
 		
-		File validationFolder = new File(splitFolder.getAbsolutePath()+"/validation");
+		File validationFolder = new File(splitFolder.getAbsolutePath()+"/" + Proportion.VALIDATION.getLabel());
 		if (!validationFolder.isDirectory()) {
 			throw new RuntimeException("Illegal subdirectory structure, subdirectory \"validation\" expected in folder " + splitFolder + " !");
 		}
