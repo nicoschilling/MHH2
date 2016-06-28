@@ -186,18 +186,13 @@ public class AlgorithmController  implements Runnable{
 
 	protected Logger log = LogManager.getLogger(getClass());
 
-	public MhhDataset data = new MhhDataset();
-
-	private Matrix annotations;
-	private boolean skipLeading=true;
-	private boolean skipBetween=true;
+	private MhhDataset data = new MhhDataset();
 
 	private Vector finalParameters;
 	private float[] finalParametersArray;
-	private Vector predictions;
 
-	MhhEval sample2Labels;
-	MhhRawData rawData;
+	private MhhEval sample2Labels;
+	private MhhRawData rawData;
 
 	private Database database;
 
@@ -249,9 +244,6 @@ public class AlgorithmController  implements Runnable{
 			}
 		}
 		
-
-
-
 		File[] trainList = readSplit.getTrainList();
 
 		log.info("Working on " + trainList.length + " training files");
@@ -284,13 +276,11 @@ public class AlgorithmController  implements Runnable{
 		pd.setWindowExtent(windowExtent);
 		pd.run();
 		
-		
-		
 		// TRAIN!
 
-		List<SwallowDS> trainingSwallowIterator = pd.getTrainingSwallows();
-		for(int i = 0; i < trainingSwallowIterator.size(); i ++) {
-			SwallowDS d = trainingSwallowIterator.get(0);
+		List<SwallowDS> trainingSwallows = pd.getTrainingSwallows();
+		for(int i = 0; i < trainingSwallows.size(); i ++) {
+			SwallowDS d = trainingSwallows.get(i);
 			
 			int absoluteAnnotation = d.getAbsoluteIdxOfAnnotation();
 			int relativeAnnotation = absoluteAnnotation - (int) d.data.get(0, 0);
@@ -361,8 +351,6 @@ public class AlgorithmController  implements Runnable{
 //		}
 
 
-
-
 		data.testData = new RowUnionMatrixView(rawData.testData);
 		data.trainData = new RowUnionMatrixView(rawData.trainData);
 		data.instanceWeights = new RowUnionMatrixView(rawData.instanceWeights);
@@ -394,11 +382,6 @@ public class AlgorithmController  implements Runnable{
 			}
 		}
 
-
-
-
-
-
 		// Initialize ModelFunction
 		System.out.println(modelFunction.getClass());
 		System.out.println("initializing model function from " + this.getIterTable());
@@ -408,9 +391,6 @@ public class AlgorithmController  implements Runnable{
 		// Initialize LossFunction
 
 		lossFunction.setLearnRate(stepSize);
-
-
-
 
 
 		// Algorithm Objekt initialisieren
@@ -732,7 +712,7 @@ public class AlgorithmController  implements Runnable{
 			boolean normalize) {
 
 		Matrix druck = folder.getDruck();
-		Matrix fft = folder.getFft();
+//		Matrix fft = folder.getFft();
 		int start;
 		int end;
 
@@ -750,62 +730,62 @@ public class AlgorithmController  implements Runnable{
 
 
 
-		int idxMaxSampleC = (int) druck.get(argmax(sleeveDruck), 0);
+//		int idxMaxSampleC = (int) druck.get(argmax(sleeveDruck), 0);
 
 		float[] ret = getTheMaxCurve(sleeveDruck);
 
 
-		Vector sampleIdx = Matrices.col(druck, 0);
-
-		if (normalize) {
-			druck = normalize(ColumnSubsetMatrixView.create(folder.getDruck(), new DefaultIntVector(new int[] {0})));
-			fft = normalize(ColumnSubsetMatrixView.create(folder.getFft(), new DefaultIntVector(new int[] {0})));
-			log.info("The swallow: " + folder.getSwallowId() + " by Proband " + folder.getProband() + " is normalized");
-		}
-
-		int numRows = druck.getNumRows();
-
-		//				int idxMaxSample = (int) annotations.get(folder.getIdAsInt()-1, Parser.ANNOTATION_COL_PMAX_SAMPLE);
-		//
-		//				System.out.println("Gelesenes Pmax Sample: " + idxMaxSample + "  Berechnetes: " + idxMaxSampleC);
-
-
-		//		VectorAsMatrixView;
-		DefaultMatrix meta = new DefaultMatrix(numRows, 1);
-		DefaultMatrix annotationSampleMatrix = new DefaultMatrix(numRows, 1);
-		DefaultMatrix pMaxSampleMatrix = new DefaultMatrix(numRows, 1);
-
-		// set swallow as meta 0 column idx
-		Vectors.set(Matrices.col(meta, COL_SWALLOW_IDX), folder.getSwallowId());
-
-		// the absolute sample id:
-		Vector absSampleId = sampleIdx;
-
-		// compute relative samples:
-		DefaultVector relativeSampleId = new DefaultVector(absSampleId);
-		Vectors.add(relativeSampleId, -1*absSampleId.get(0));
-
-		// the static annotation sample
-		if (restitutionszeitSample < 0)
-			Vectors.set(Matrices.col(annotationSampleMatrix, 0), 0); // defaults to 0
-		else {
-			Vectors.set(Matrices.col(annotationSampleMatrix, 0), restitutionszeitSample);
-		}
-		// the static calculated pMax Sample
-		Vectors.set(Matrices.col(pMaxSampleMatrix, 0), idxMaxSampleC);
-
-
-
-		//Concatenate Matrices without sample indexes for fft and druck
-		ColumnUnionMatrixView ret1 = new ColumnUnionMatrixView(new Matrix[] {
-				meta
-				, new VectorAsMatrixView(absSampleId)
-				, new VectorAsMatrixView(relativeSampleId)
-				, annotationSampleMatrix
-				, pMaxSampleMatrix
-				, druck
-				, fft
-		}); 
+//		Vector sampleIdx = Matrices.col(druck, 0);
+//
+//		if (normalize) {
+//			druck = normalize(ColumnSubsetMatrixView.create(folder.getDruck(), new DefaultIntVector(new int[] {0})));
+//			fft = normalize(ColumnSubsetMatrixView.create(folder.getFft(), new DefaultIntVector(new int[] {0})));
+//			log.info("The swallow: " + folder.getSwallowId() + " by Proband " + folder.getProband() + " is normalized");
+//		}
+//
+//		int numRows = druck.getNumRows();
+//
+//		//				int idxMaxSample = (int) annotations.get(folder.getIdAsInt()-1, Parser.ANNOTATION_COL_PMAX_SAMPLE);
+//		//
+//		//				System.out.println("Gelesenes Pmax Sample: " + idxMaxSample + "  Berechnetes: " + idxMaxSampleC);
+//
+//
+//		//		VectorAsMatrixView;
+//		DefaultMatrix meta = new DefaultMatrix(numRows, 1);
+//		DefaultMatrix annotationSampleMatrix = new DefaultMatrix(numRows, 1);
+//		DefaultMatrix pMaxSampleMatrix = new DefaultMatrix(numRows, 1);
+//
+//		// set swallow as meta 0 column idx
+//		Vectors.set(Matrices.col(meta, COL_SWALLOW_IDX), folder.getSwallowId());
+//
+//		// the absolute sample id:
+//		Vector absSampleId = sampleIdx;
+//
+//		// compute relative samples:
+//		DefaultVector relativeSampleId = new DefaultVector(absSampleId);
+//		Vectors.add(relativeSampleId, -1*absSampleId.get(0));
+//
+//		// the static annotation sample
+//		if (restitutionszeitSample < 0)
+//			Vectors.set(Matrices.col(annotationSampleMatrix, 0), 0); // defaults to 0
+//		else {
+//			Vectors.set(Matrices.col(annotationSampleMatrix, 0), restitutionszeitSample);
+//		}
+//		// the static calculated pMax Sample
+//		Vectors.set(Matrices.col(pMaxSampleMatrix, 0), idxMaxSampleC);
+//
+//
+//
+//		//Concatenate Matrices without sample indexes for fft and druck
+//		ColumnUnionMatrixView ret1 = new ColumnUnionMatrixView(new Matrix[] {
+//				meta
+//				, new VectorAsMatrixView(absSampleId)
+//				, new VectorAsMatrixView(relativeSampleId)
+//				, annotationSampleMatrix
+//				, pMaxSampleMatrix
+//				, druck
+//				, fft
+//		}); 
 		return ret;
 
 
@@ -829,61 +809,7 @@ public class AlgorithmController  implements Runnable{
 
 		return ret;
 
-
-		//		float[] estExpectationValues = new float[input.getNumColumns()];
-		//		float[] estStandardDeviations = new float[input.getNumColumns()];
-		//		
-		//		//Compute the estimated Expectation Values
-		//		for (int column = 0; column < input.getNumColumns() ; column++) {
-		//			float colSum = 0;
-		//			for (int row = 0; row < input.getNumRows() ; row++) {
-		//				colSum += input.get(row, column);
-		//			}
-		//			estExpectationValues[column] = colSum/(input.getNumRows());
-		//		}
-		//		//Compute the estimated Standard Deviations
-		//		for (int column = 0; column < input.getNumColumns() ; column++) {
-		//			float colVariance = 0;
-		//			for (int row = 0; row < input.getNumRows() ; row++) {
-		//				colVariance += (input.get(row, column) - estExpectationValues[column])*(input.get(row, column) - estExpectationValues[column]);
-		//			}
-		//			estStandardDeviations[column] = (float) Math.sqrt(colVariance/(input.getNumRows()-1));   
-		//		}
-		//		//Fill the scaled Matrix
-		//		for (int row = 0; row < ret.getNumRows() ; row++) {
-		//			for (int column = 0; column < ret.getNumColumns() ; column++) {
-		//				if (estStandardDeviations[column] != 0) {
-		//					float scaledValue = (input.get(row, column) - estExpectationValues[column])/(estStandardDeviations[column]);
-		//					ret.set(row, column, scaledValue );
-		//				}
-		//			}
-		//		}
-		//		return ret;
 	}
-
-	//	public static Matrix[] createSample2Labels(SwallowDS input) {
-	//
-	//
-	//		Matrix predictedLabels;
-	//		Matrix avgLabels;
-	//
-	//		Vector swallowIdx = Vectors.col(input, COL_SWALLOW_IDX);
-	//		Vector absSamples = Vectors.col(input, COL_ABS_SAMPLE_IDX);
-	//		Vector relSamples = Vectors.col(input, COL_REL_SAMPLE_IDX);
-	//		Vector annotationSamples = Vectors.col(input, COL_ANNOTATION_SAMPLE_IDX);
-	//		Vector pMaxSamples = Vectors.col(input, COL_PMAX_SAMPLE_IDX);
-	//		//		Vector labels = new DefaultVector(pMaxSamples.size());
-	//		Vector predictedlabels = new DefaultVector(swallowIdx);
-	//		Vector avglabels = new DefaultVector(swallowIdx);
-	//
-	//		predictedLabels = new ColumnUnionMatrixView(new Vector[] { swallowIdx, absSamples, relSamples,
-	//				annotationSamples, pMaxSamples, predictedlabels });
-	//		avgLabels = new ColumnUnionMatrixView(new Vector[] { swallowIdx, absSamples, relSamples,
-	//				annotationSamples, pMaxSamples, avglabels } );
-	//
-	//		return new Matrix[] {predictedLabels , avgLabels} ;
-	//	}
-
 
 	/**
 	 * Creates two container Matrices by doing the following:
@@ -898,7 +824,6 @@ public class AlgorithmController  implements Runnable{
 	 * Old doc: Creates sample2Labels with metaData, and null for unpredicted values
 	 */
 	public static Matrix[] createSample2Labels(Matrix input) {
-
 
 		Matrix predictedLabels;
 		Matrix avgLabels;
@@ -919,29 +844,6 @@ public class AlgorithmController  implements Runnable{
 
 		return new Matrix[] {predictedLabels , avgLabels} ;
 	}
-
-
-
-	public void computeSample2avgLabel(int windowExtent, Matrix[] predictedLabels, Matrix[] avgLabels) {
-		if (predictedLabels.length!=avgLabels.length) {
-			log.error("Dimension mismatch at computing sample2avglabels!");
-		}
-		for (int i = 0; i < predictedLabels.length ; i++) {
-			computeSample2avgLabel(windowExtent, predictedLabels[i], avgLabels[i]);
-		}
-
-	}
-
-	private int[] predictAnnotations(Matrix[] sample2labels) {
-		int[] ret = new int[sample2labels.length];
-		for (int i = 0; i < sample2labels.length ; i++) {
-			int annotation = predictAnnotation(sample2labels[i],log);
-			ret[i] = annotation;
-		}
-		return ret;
-	}
-
-
 
 	/**
 	 * Computes average Labels according to windowExtent. Can then be used for deducing the annotation
@@ -1095,11 +997,7 @@ public class AlgorithmController  implements Runnable{
 			
 		}
 
-
-
 	}
-
-
 
 	/**
 	 * Computes for a given sample2Label Matrix the Annotation!
@@ -1168,10 +1066,6 @@ public class AlgorithmController  implements Runnable{
 
 		return annotation;
 	}
-
-
-
-
 
 
 	// Getters and Setters
@@ -1271,14 +1165,7 @@ public class AlgorithmController  implements Runnable{
 		this.modelFunction = modelFunction;
 	}
 
-	public long getRunKey() {
-		return runKey;
-	}
-
-	private void setRunKey(long runKey) {
-		this.runKey = runKey;
-	}
-
+	
 	public String getAnnotator() {
 		return annotator;
 	}
