@@ -179,9 +179,6 @@ public class AlgorithmController  implements Runnable{
 	@Parameter(cmdline="usePatientFeatures")
 	private boolean usePatientFeatures=true;
 
-
-
-
 	public String outputFolder;
 
 	private int nrAttributes;
