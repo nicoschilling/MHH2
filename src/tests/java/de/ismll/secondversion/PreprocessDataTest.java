@@ -92,8 +92,6 @@ public class PreprocessDataTest {
 			Matrix result = sut.concatenate(inputDataInterpretation);
 			fail("Shall throw an exception, because 1 (inputPmaxSample) is smaller than the first sample");
 		} catch (DataValidationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	
 	

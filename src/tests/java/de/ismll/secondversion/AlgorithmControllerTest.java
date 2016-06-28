@@ -99,8 +99,7 @@ public class AlgorithmControllerTest {
 			Matrix result = sut.concatenate(inputLogger,inputDataInterpretation, inputRestitutionszeitSample, inputNormalize, inputPmaxSample);
 			fail("Shall throw an exception, because 1 (inputPmaxSample) is smaller than the first sample");
 		} catch (ModelApplicationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			
 		}
 	
 	
