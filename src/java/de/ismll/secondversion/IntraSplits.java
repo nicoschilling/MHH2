@@ -1,15 +1,12 @@
 package de.ismll.secondversion;
 
-import gnu.trove.impl.hash.TIntIntHash;
 import gnu.trove.map.hash.TFloatIntHashMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 
 import de.ismll.mhh.io.DataInterpretation;
-import de.ismll.mhh.io.SwallowData;
 import de.ismll.myfm.util.IO;
 
 public class IntraSplits implements Runnable {

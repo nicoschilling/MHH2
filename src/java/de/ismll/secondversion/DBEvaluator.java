@@ -1,8 +1,6 @@
 package de.ismll.secondversion;
 
 import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -44,15 +42,6 @@ public class DBEvaluator {
 		
 	}
 
-	
-
-	
-	
-
-	
-	
-	
-	
 	
 
 }

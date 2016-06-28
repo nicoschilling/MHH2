@@ -469,16 +469,6 @@ public class Algorithm implements Runnable{
 	}
 
 
-	public MhhDataset getData() {
-		return data;
-	}
-
-
-	public void setData(MhhDataset data) {
-		this.data = data;
-	}
-
-
 	public MhhRawData getRawData() {
 		return rawData;
 	}

@@ -13,7 +13,6 @@ import de.ismll.evaluation.Accuracy;
 import de.ismll.exceptions.ModelApplicationException;
 import de.ismll.mhh.io.Parser;
 import de.ismll.mhh.io.DataInterpretation;
-import de.ismll.mhh.io.SwallowData;
 import de.ismll.modelFunctions.LinearRegressionPrediction;
 import de.ismll.modelFunctions.ModelFunctions;
 import de.ismll.secondversion.SwallowDS;
@@ -27,7 +26,6 @@ import de.ismll.table.impl.DefaultVector;
 import de.ismll.table.projections.ColumnSubsetMatrixView;
 import de.ismll.table.projections.RowSubsetMatrixView;
 import static de.ismll.secondversion.DatasetFormat.*;
-
 
 public class ApplyMHHModelImpl implements ApplyMHHModel {
 
@@ -586,9 +584,9 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 	/** 
 	 * Predicts Labels of a given swallow as input data, uses learned model parameters,
 	 *  writes the predicted labels into the sample2Labels Matrix
-	 * @param data
+	 * @param swallow
 	 * @param parameters
-	 * @param sample2labels
+	 * @param predictedLabels
 	 */
 	public void predictLabels(SwallowDS swallow, Vector parameters, Matrix predictedLabels) {
 

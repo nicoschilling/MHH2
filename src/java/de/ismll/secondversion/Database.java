@@ -7,7 +7,6 @@ import org.apache.log4j.Logger;
 
 import de.ismll.bootstrap.Parameter;
 import de.ismll.database.dao.DataStoreException;
-import de.ismll.database.dao.Datatypes;
 import de.ismll.database.dao.Entity;
 import de.ismll.database.dao.PgStore;
 import de.ismll.database.dao.Table;

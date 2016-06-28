@@ -3,13 +3,10 @@ package de.ismll.secondversion;
 import java.io.File;
 import java.io.IOException;
 
-import de.ismll.bootstrap.BootstrapException;
 import de.ismll.bootstrap.Parameter;
 import de.ismll.mhh.io.Parser;
 import de.ismll.storage.FileStorageTarget;
-import de.ismll.table.Matrices;
 import de.ismll.table.Matrix;
-import de.ismll.table.ReaderConfig;
 
 public class ExtractMatrixEntry implements Runnable{
 

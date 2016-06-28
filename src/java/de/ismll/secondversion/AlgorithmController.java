@@ -186,7 +186,7 @@ public class AlgorithmController  implements Runnable{
 
 	protected Logger log = LogManager.getLogger(getClass());
 
-	private MhhDataset data = new MhhDataset();
+//	private MhhDataset data = new MhhDataset();
 
 	private Vector finalParameters;
 	private float[] finalParametersArray;
@@ -351,24 +351,24 @@ public class AlgorithmController  implements Runnable{
 //		}
 
 
-		data.testData = new RowUnionMatrixView(rawData.testData);
-		data.trainData = new RowUnionMatrixView(rawData.trainData);
-		data.instanceWeights = new RowUnionMatrixView(rawData.instanceWeights);
-		//		data.ruheDruckTrainData = new RowUnionMatrixView(rawData.trainRuhedruck);
-//		data.ruheDruckTrainDataLabels = new RowUnionMatrixView(rawData.trainRuhedruckLabels);
-		data.validationData = new RowUnionMatrixView(rawData.validationData);
-		data.testDataLabels = new RowUnionMatrixView(rawData.testDataLabels);
-		data.trainDataLabels = new RowUnionMatrixView(rawData.trainDataLabels);
-		data.validationDataLabels = new RowUnionMatrixView(rawData.validationDataLabels);
+//		data.testData = new RowUnionMatrixView(rawData.testData);
+//		data.trainData = new RowUnionMatrixView(rawData.trainData);
+//		data.instanceWeights = new RowUnionMatrixView(rawData.instanceWeights);
+//		//		data.ruheDruckTrainData = new RowUnionMatrixView(rawData.trainRuhedruck);
+////		data.ruheDruckTrainDataLabels = new RowUnionMatrixView(rawData.trainRuhedruckLabels);
+//		data.validationData = new RowUnionMatrixView(rawData.validationData);
+//		data.testDataLabels = new RowUnionMatrixView(rawData.testDataLabels);
+//		data.trainDataLabels = new RowUnionMatrixView(rawData.trainDataLabels);
+//		data.validationDataLabels = new RowUnionMatrixView(rawData.validationDataLabels);
 
-		log.info("Maximum number of predictors: " + (data.testData.getNumColumns()) + " where we have " + NUM_META_COLUMNS + " Meta Columns.");
-		log.info("In total we have " + (data.testData.getNumColumns() - NUM_META_COLUMNS) + " predictors for learning!");
+		log.info("Maximum number of predictors: " + (rawData.testData[0].getNumColumns()) + " where we have " + NUM_META_COLUMNS + " Meta Columns.");
+		log.info("In total we have " + (rawData.testData[0].getNumColumns() - NUM_META_COLUMNS) + " predictors for learning!");
 
 		this.nrAttributes = columnSelector.getUsedIndexes().length;
 
-		int trainInstances = data.trainData.getNumRows();
+//		int trainInstances = rawData.trainData[*].getNumRows();
 
-		log.info("Working on " + trainInstances + " Training Instances.");
+//		log.info("Working on " + trainInstances + " Training Instances.");
 
 
 		if(this.useDatabase) {
@@ -396,7 +396,7 @@ public class AlgorithmController  implements Runnable{
 		// Algorithm Objekt initialisieren
 		Algorithm algorithm = new Algorithm();
 
-		algorithm.setData(data);
+//		algorithm.setData(data);
 		algorithm.setRawData(rawData);
 
 		// Parameter an den Algorithmus uebergeben	
