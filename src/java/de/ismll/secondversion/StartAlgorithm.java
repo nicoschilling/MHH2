@@ -20,9 +20,6 @@ public class StartAlgorithm {
 
 		System.out.println("Command Line has been parsed! Will run Algcon now...");
 
-//ColumnSubsetMatrixView v;
-//v.get(5,4);
-
 		algcon.run();
 
 	}

@@ -4,31 +4,21 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import de.ismll.database.dao.DataStoreException;
-import de.ismll.database.dao.Entity;
-import de.ismll.database.dao.Table;
-import de.ismll.evaluation.Accuracy;
-import de.ismll.exceptions.ModelApplicationException;
 import de.ismll.lossFunctions.LossFunction;
 import de.ismll.mhh.io.DataInterpretation;
 import de.ismll.mhh.io.SwallowData;
-import de.ismll.modelFunctions.LinearRegressionPrediction;
 import de.ismll.modelFunctions.ModelFunctions;
-import de.ismll.myfm.util.Printers;
 import de.ismll.table.IntVector;
-import de.ismll.table.Matrices;
 import de.ismll.table.Matrix;
 import de.ismll.table.Vector;
 import de.ismll.table.Vectors;
+import de.ismll.table.impl.DefaultIntVector;
 import de.ismll.table.impl.DefaultMatrix;
-import de.ismll.table.impl.DefaultVector;
 import de.ismll.table.projections.ColumnSubsetMatrixView;
-import de.ismll.table.projections.IntVectorView;
 import de.ismll.table.projections.RowSubsetMatrixView;
 import de.ismll.table.projections.RowUnionMatrixView;
-import de.ismll.utilities.Assert;
 
 public class Algorithm implements Runnable{
-
 
 	protected Logger log = LogManager.getLogger(getClass());
 
@@ -41,28 +31,16 @@ public class Algorithm implements Runnable{
 	private int windowExtent;
 	private float lambda;
 	private String algorithmType;
-	public LossFunction lossFunction;
+	private LossFunction lossFunction;
 	private ModelFunctions modelFunction;
-
-	private String annotator;
-	private String annotationBaseDir;
-
-	private static final int COL_SAMPLE_IN_LABELS = 0;
-	private static final int COL_LABEL_IN_LABELS = 1;
 
 	private MhhRawData rawData;
 
 	private Matrix trainData;
 
-
 	private DataInterpretation[] validationFolders;
 
 	private String forWhat = "accuracy";
-
-
-	private float bestAccuracySoFar = 0;
-	private float bestSampleDifference = Integer.MAX_VALUE;
-
 
 	private Database database;
 	private long runKey;
@@ -70,18 +48,14 @@ public class Algorithm implements Runnable{
 	private int splitNumber;
 	private int probandNumber;
 
-
 	private boolean laplacian;
 	private int smoothWindow;
-	private float smoothReg;
-
-	public ApplyMHHModelImpl apply;
 
 	private boolean printParameters=false;
+
 	private boolean useDatabase;
 	
 	private boolean useValidation;
-
 
 
 	@Override 
@@ -134,7 +108,6 @@ public class Algorithm implements Runnable{
 			
 		}
 		
-		
 		Matrix learnData = new RowUnionMatrixView(rawLearnData);
 
 		this.trainData = new DefaultMatrix( new ColumnSubsetMatrixView(learnData, columnSelector.getUsedIndexes()));
@@ -142,10 +115,6 @@ public class Algorithm implements Runnable{
 		Matrix trainLabels = new RowUnionMatrixView(rawLearnLabels);
 
 		// Start iterating!
-		float[] history = new float[10];
-		int historyIdx=0;
-		double oldRSS=Double.MAX_VALUE;
-
 
 		Quality qualityOnLearn;
 		qualityOnLearn = modelFunction.evaluateModel(rawLearnData, rawLearnLabels, rawLearnAnnotations,
@@ -160,41 +129,34 @@ public class Algorithm implements Runnable{
 		
 		// IF TESTRUN, merge validation with train and PREDICT ON TEST :-)
 
-//		Vector allLabelsVector = Vectors.col(data.trainDataLabels, COL_LABEL_IN_LABELS);
-//		float major = modelFunction.computeMajorityClassAccuracy(allLabelsVector);
 
 		log.info("Learn Acc: " + qualityOnLearn.getAccuracy() + " Apply Acc: " + qualityOnApply.getAccuracy()  + " Learn SD: " + 
 				qualityOnLearn.getSampleDifference() 
 				+ " Apply SD: " + qualityOnApply.getSampleDifference());
 
 		float bestAcc = 0;
-//		maxIterations=100;
 		for (int iteration = 0; iteration < maxIterations ; iteration++) {
 
 			int[] randomBatch = lossFunction.computeRandomBatch(trainData.getNumRows(), 100);
 
-			Vector pointers1 =  new DefaultVector(randomBatch.length);
+			IntVector pointers =  new DefaultIntVector(randomBatch.length);
 
-			for (int i = 0; i < pointers1.size() ; i++) {
-				pointers1.set(i, randomBatch[i]);
+			for (int i = 0; i < pointers.size() ; i++) {
+				pointers.set(i, randomBatch[i]);
 			}
 
-			IntVector pointers = new IntVectorView(pointers1);
-
 			Matrix currentTrainData = new DefaultMatrix( new RowSubsetMatrixView(trainData, pointers) );
-
 
 			Matrix labelMatrix = new RowSubsetMatrixView(trainLabels, pointers);
 			Vector labelsVector = Vectors.col(labelMatrix, 1);
 
 			float[] labels = Vectors.toFloatArray(labelsVector);
 
-
-			if (!this.isLaplacian()) {
-				lossFunction.iterate(modelFunction, currentTrainData, labels);
+			if (isLaplacian()) {
+				lossFunction.iterateLap(modelFunction, trainData, randomBatch, labels, this.smoothWindow);
 			}
 			else {
-				lossFunction.iterateLap(modelFunction, trainData, randomBatch, labels, this.smoothWindow);
+				lossFunction.iterate(modelFunction, currentTrainData, labels);
 			}
 
 
@@ -216,23 +178,8 @@ public class Algorithm implements Runnable{
 				bestAcc = accuracy;
 			}
 
-			//			history[historyIdx++] = accuracy;
-			//			if (historyIdx>=history.length)
-			//				historyIdx=0;
-			//			if (iteration>=history.length-1) {
-			//				double accuracyVariance = Vectors.variance(DefaultVector.wrap(history));
-			////				log.info("Variance: " + accuracyVariance);
-			//				if (accuracyVariance > 0.03) { // uggh - hard-coded number :-(
-			//					throw new RuntimeException("Convergence variance too high - early stopping.");
-			//				}
-			//			}
-
-
-			
-
-			log.info("iteration " + iteration  + "  Learn Acc: " + qualityOnLearn.getAccuracy() + " Apply Acc: "
-			+ qualityOnApply.getAccuracy()  + " Learn SD: " + 
-					qualityOnLearn.getSampleDifference() 
+			log.info("iteration " + iteration + "  Learn Acc: " + qualityOnLearn.getAccuracy() + " Apply Acc: "
+					+ qualityOnApply.getAccuracy() + " Learn SD: " + qualityOnLearn.getSampleDifference()
 					+ " Apply SD: " + qualityOnApply.getSampleDifference());
 
 			float sampleDifference = qualityOnApply.getSampleDifference();
@@ -247,32 +194,12 @@ public class Algorithm implements Runnable{
 					log.fatal("Unable to connect to database!");
 					e.printStackTrace();
 				}
-
-
 			}
 		}
 		
 		System.out.println("bestAccuracy over full run is: " + bestAcc);
 
-
-
-
-
 	}
-
-
-	public static float computeSigmoid(float value) {
-		float result;
-		result = (float) (1/(1 + Math.exp(-value)));
-		return result;
-	}
-
-	public static float computeSquaredSigmoid(float value) {
-		float result;
-		result = (float) ((Math.exp(-value))/((1 + Math.exp(-value))*(1 + Math.exp(-value))));
-		return result;
-	}
-
 
 	//Getters and Setters!
 
@@ -375,17 +302,6 @@ public class Algorithm implements Runnable{
 		this.smoothWindow = smoothWindow;
 	}
 
-
-	public float getSmoothReg() {
-		return smoothReg;
-	}
-
-
-	public void setSmoothReg(float smoothReg) {
-		this.smoothReg = smoothReg;
-	}
-
-
 	public int getProbandNumber() {
 		return probandNumber;
 	}
@@ -434,27 +350,6 @@ public class Algorithm implements Runnable{
 	public void setColumnSelector(IntRange columnSelector) {
 		this.columnSelector = columnSelector;
 	}
-
-
-	public String getAnnotator() {
-		return annotator;
-	}
-
-
-	public void setAnnotator(String annotator) {
-		this.annotator = annotator;
-	}
-
-
-	public String getAnnotationBaseDir() {
-		return annotationBaseDir;
-	}
-
-
-	public void setAnnotationBaseDir(String annotationBaseDir) {
-		this.annotationBaseDir = annotationBaseDir;
-	}
-
 
 	public boolean isPrintParameters() {
 		return printParameters;

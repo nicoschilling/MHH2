@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 import de.ismll.evaluation.Accuracy;
 import de.ismll.secondversion.Algorithm;
 import de.ismll.secondversion.AlgorithmController;
+import de.ismll.secondversion.Calculations;
 import de.ismll.secondversion.IntRange;
 import de.ismll.secondversion.Quality;
 import de.ismll.table.Matrices;
@@ -252,8 +253,8 @@ public abstract class ModelFunctions {
 		return ret;
 	}
 	
-	public float computeSigmoid(float x) {
-		return Algorithm.computeSigmoid(x);
+	public double computeSigmoid(float x) {
+		return Calculations.computeSigmoid(x);
 //		float exp = (float) Math.exp(-x);
 //		float ret = 1/(1+exp);
 //		return ret;
@@ -263,7 +264,7 @@ public abstract class ModelFunctions {
 	public float[] computeSigmoids(float[] x) {
 		float[] ret = new float[x.length];
 		for (int i = 0; i < ret.length ; i++) {
-			ret[i] = computeSigmoid(x[i]);
+			ret[i] = (float)computeSigmoid(x[i]);
 		}
 		return ret;
 	}

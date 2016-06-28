@@ -80,19 +80,4 @@ public class AlgorithmTest {
 		
 		return ret;
 	}
-	@Test
-	public void testComputeSigmoid___1() {
-		assertEquals(0.268, Algorithm.computeSigmoid(-1), 0.001);
-	}
-
-	@Test
-	public void testComputeSigmoid_0() {
-		assertEquals(0.5, Algorithm.computeSigmoid(0), 0.001);
-	}
-
-	@Test
-	public void testComputeSigmoid_1() {
-		assertEquals(0.731, Algorithm.computeSigmoid(1), 0.001);
-	}
-
 }

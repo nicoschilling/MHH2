@@ -105,7 +105,7 @@ public class LogisticLoss extends LossFunction{
 			
 			float[] sigmoidSurroundings = function.computeSigmoids(predictSurroundings);
 			
-			float sigmoidInstance = function.computeSigmoid(predictInstance);
+			float sigmoidInstance = (float)function.computeSigmoid(predictInstance);
 			
 			for (int i = 0; i < sigmoidDifferences[0].length ; i++) {
 				sigmoidDifferences[instance][i] = sigmoidSurroundings[i] - sigmoidInstance;
