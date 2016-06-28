@@ -328,10 +328,8 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 
 		int annotation = AlgorithmController.predictAnnotation(avgLabels, log);
 
-		Matrix averagePredictions = new DefaultMatrix(new ColumnSubsetMatrixView(avgLabels,
+		this.averagePredictions = new DefaultMatrix(new ColumnSubsetMatrixView(avgLabels,
 				new int[] {COL_REL_SAMPLE_IDX, COL_LABEL_IN_SAMPLE2LABEL}));
-
-		setAveragePredictions(averagePredictions);
 
 		Vector predictions = Vectors.col(avgLabels, COL_LABEL_IN_SAMPLE2LABEL);
 
@@ -449,10 +447,8 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 
 		int annotation = AlgorithmController.predictAnnotation(avgLabels, log);
 
-		Matrix averagePredictions = new DefaultMatrix(new ColumnSubsetMatrixView(avgLabels,
+		this.averagePredictions = new DefaultMatrix(new ColumnSubsetMatrixView(avgLabels,
 				new int[] {COL_REL_SAMPLE_IDX, COL_LABEL_IN_SAMPLE2LABEL}));
-
-		setAveragePredictions(averagePredictions);
 
 		Vector predictions = Vectors.col(avgLabels, COL_LABEL_IN_SAMPLE2LABEL);
 
@@ -1085,22 +1081,15 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 
 
 
-	@Override
 	public void setAveragePredictions(Matrix averagePredictions) {
 		this.averagePredictions = averagePredictions;
-
 	}
-
 
 
 	@Override
 	public Matrix getAveragePredictions() {
 		return averagePredictions;
 	}
-
-
-
-
 
 
 	/**
