@@ -8,6 +8,12 @@ if [ ! 'x'$1 = 'x' ]; then
 	. $1
 fi
 
+
+if [ ! 'x'$2 = 'x' ]; then
+	# try to source in a configuration
+	. $2
+fi
+
 if [ 'x'$stepsizes = 'x' ]; then
 	echo "Error. The check for the \$stepsizes array failed. You probably have to configure some paramters before using this script ..."
 	exit 1
