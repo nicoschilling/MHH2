@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.ismll</groupId>
 	<artifactId>mhh</artifactId>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 
 	<build>
 		<sourceDirectory>src/java</sourceDirectory>
@@ -54,7 +54,7 @@
 			<artifactId>MyFM</artifactId>
 			<version>1.0</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/MyFM-1.0.jar</systemPath>
+			<systemPath>/tmp/MyFM-1.0.jar</systemPath>
 		</dependency>
 	</dependencies>
 	<properties>
