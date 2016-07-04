@@ -1,7 +1,8 @@
 
 
 
-== Usage
+Usage
+=====
 
 The project uses the Gradle build system
 
