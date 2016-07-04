@@ -29,9 +29,9 @@ slots=1
 
 echo meta.cp=${cp}
 echo meta.date.start=`date`
-if [ -f ../bin/MHH2 ]; then
+if [ -f ../bin/mhh2 ]; then
 #	echo "Deployment!"
-	../bin/MHH2 "$@"
+	../bin/mhh2 "$@"
 else
 	cd ../../..
 	# workaround for issue with gradle passing command line arguments:
