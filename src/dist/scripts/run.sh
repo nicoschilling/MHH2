@@ -34,7 +34,15 @@ slots=1
 
 echo meta.cp=${cp}
 echo meta.date.start=`date`
-java -XX:ParallelGCThreads=${slots} -XX:ConcGCThreads=${slots} -classpath $cp $JAVA_OPTS de.ismll.console.Generic "$@"
+if [ -f ../bin/MHH2 ]; then
+	echo "Deployment!"
+	../bin/MHH2 "$@"
+else
+	cd ../../..
+	gradle run -Pexec.args="$@" 
+#java -XX:ParallelGCThreads=${slots} -XX:ConcGCThreads=${slots} -classpath $cp $JAVA_OPTS de.ismll.console.Generic "$@"
 ##### -XX:ParallelGCThreads=${slots} -XX:+UseG1GC -XX:+ScavengeBeforeFullGC -XX:ConcGCThreads=${slots}
+	cd src/dist/scripts
+fi
 echo $?
 echo meta.date.end=`date`
