@@ -35,9 +35,8 @@ dependencies {
 
 mainClassName = "de.ismll.console.Generic"
 
-
 run {
-	if(project.getProperty("exec.args") != null) {
+	if(project.hasProperty("exec.args")) {
 		args project.getProperty("exec.args").split()
 	}
 }
