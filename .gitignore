@@ -11,4 +11,5 @@ project.properties
 *.properties
 build.log
 output/
-
+.project
+bin/
