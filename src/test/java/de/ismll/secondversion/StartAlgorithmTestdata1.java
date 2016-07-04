@@ -10,6 +10,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import de.ismll.modelFunctions.ModelFunctions;
+
 public class StartAlgorithmTestdata1 {
 
 	private static final String SPLITDIR = "testdata1/";
@@ -47,7 +49,7 @@ public class StartAlgorithmTestdata1 {
 				,"laplacian=true"
 				,"useValidation=true"
 				,"descentDirection=logistic"
-				,"modelFunction=lm"
+				,"modelFunction=" + ModelFunctions.MODEL_TYPE_LINEAR_MODEL
 				,"annotationBaseDir=" + resourcesDirectory + File.separator + ANNOTATIONDIR
 				,"includeRD=true"
 				//,"runLapTable=run_${u_experimentidentifier}"
@@ -58,7 +60,7 @@ public class StartAlgorithmTestdata1 {
 	}
 	
 	@Test
-	public void testNegativeIterations() {
+	public void testLinearModelNegativeIterations() {
 		StartAlgorithm.main(new String[] {
 				 "splitFolder=" +  resourcesDirectory + File.separator  + SPLITDIR
 				,"annotator=" + ANNOTATOR
@@ -70,7 +72,7 @@ public class StartAlgorithmTestdata1 {
 				,"laplacian=true"
 				,"useValidation=true"
 				,"descentDirection=logistic"
-				,"modelFunction=lm"
+				,"modelFunction="+ ModelFunctions.MODEL_TYPE_LINEAR_MODEL
 				,"annotationBaseDir=" + resourcesDirectory + File.separator + ANNOTATIONDIR
 				,"includeRD=true"
 				//,"runLapTable=run_${u_experimentidentifier}"
@@ -81,7 +83,7 @@ public class StartAlgorithmTestdata1 {
 	}
 	
 	@Test
-	public void testNonLaplacian() {
+	public void testLinearModelNonLaplacian() {
 		StartAlgorithm.main(new String[] {
 				 "splitFolder=" +  resourcesDirectory + File.separator  + SPLITDIR
 				,"annotator=" + ANNOTATOR
@@ -93,7 +95,7 @@ public class StartAlgorithmTestdata1 {
 				,"laplacian=false"
 				,"useValidation=true"
 				,"descentDirection=logistic"
-				,"modelFunction=lm"
+				,"modelFunction="+ ModelFunctions.MODEL_TYPE_LINEAR_MODEL
 				,"annotationBaseDir=" + resourcesDirectory + File.separator + ANNOTATIONDIR
 				,"includeRD=true"
 				//,"runLapTable=run_${u_experimentidentifier}"
@@ -103,7 +105,7 @@ public class StartAlgorithmTestdata1 {
 		});
 	}
 	@Test
-	public void testWithoutValidation() {
+	public void testLinearModelWithoutValidation() {
 		StartAlgorithm.main(new String[] {
 				 "splitFolder=" +  resourcesDirectory + File.separator  + SPLITDIR
 				,"annotator=" + ANNOTATOR
@@ -115,7 +117,7 @@ public class StartAlgorithmTestdata1 {
 				,"laplacian=true"
 				,"useValidation=false"
 				,"descentDirection=logistic"
-				,"modelFunction=lm"
+				,"modelFunction="+ ModelFunctions.MODEL_TYPE_LINEAR_MODEL
 				,"annotationBaseDir=" + resourcesDirectory + File.separator + ANNOTATIONDIR
 				,"includeRD=true"
 				//,"runLapTable=run_${u_experimentidentifier}"
@@ -125,7 +127,7 @@ public class StartAlgorithmTestdata1 {
 		});
 	}
 	@Test
-	public void testWithoutRd() {
+	public void testLinearModelWithoutRd() {
 		StartAlgorithm.main(new String[] {
 				 "splitFolder=" +  resourcesDirectory + File.separator  + SPLITDIR
 				,"annotator=" + ANNOTATOR
@@ -137,7 +139,96 @@ public class StartAlgorithmTestdata1 {
 				,"laplacian=true"
 				,"useValidation=true"
 				,"descentDirection=logistic"
-				,"modelFunction=lm"
+				,"modelFunction="+ ModelFunctions.MODEL_TYPE_LINEAR_MODEL
+				,"annotationBaseDir=" + resourcesDirectory + File.separator + ANNOTATIONDIR
+				,"includeRD=false"
+				//,"runLapTable=run_${u_experimentidentifier}"
+				//,"iterTable=iter_${u_experimentidentifier}"
+				,"smoothReg=0.001"
+				,"smoothWindow=0.001"
+		});
+	}
+	@Test
+	public void testFactorizationModelNegativeIterations() {
+		StartAlgorithm.main(new String[] {
+				 "splitFolder=" +  resourcesDirectory + File.separator  + SPLITDIR
+				,"annotator=" + ANNOTATOR
+				,"maxIterations=-1"
+				,"stepSize=0.001"
+				,"lambda=0.1"
+				,"windowExtent=75"
+				,"columnSelector=33,166"
+				,"laplacian=true"
+				,"useValidation=true"
+				,"descentDirection=logistic"
+				,"modelFunction="+ ModelFunctions.MODEL_TYPE_FACTORIZATION_MODEL
+				,"annotationBaseDir=" + resourcesDirectory + File.separator + ANNOTATIONDIR
+				,"includeRD=true"
+				//,"runLapTable=run_${u_experimentidentifier}"
+				//,"iterTable=iter_${u_experimentidentifier}"
+				,"smoothReg=0.001"
+				,"smoothWindow=0.001"
+		});
+	}
+	
+	@Test
+	public void testFactorizationModelNonLaplacian() {
+		StartAlgorithm.main(new String[] {
+				 "splitFolder=" +  resourcesDirectory + File.separator  + SPLITDIR
+				,"annotator=" + ANNOTATOR
+				,"maxIterations=-1"
+				,"stepSize=0.001"
+				,"lambda=0.1"
+				,"windowExtent=75"
+				,"columnSelector=33,166"
+				,"laplacian=false"
+				,"useValidation=true"
+				,"descentDirection=logistic"
+				,"modelFunction="+ ModelFunctions.MODEL_TYPE_FACTORIZATION_MODEL
+				,"annotationBaseDir=" + resourcesDirectory + File.separator + ANNOTATIONDIR
+				,"includeRD=true"
+				//,"runLapTable=run_${u_experimentidentifier}"
+				//,"iterTable=iter_${u_experimentidentifier}"
+				,"smoothReg=0.001"
+				,"smoothWindow=0.001"
+		});
+	}
+	@Test
+	public void testFactorizationModelWithoutValidation() {
+		StartAlgorithm.main(new String[] {
+				 "splitFolder=" +  resourcesDirectory + File.separator  + SPLITDIR
+				,"annotator=" + ANNOTATOR
+				,"maxIterations=1"
+				,"stepSize=0.001"
+				,"lambda=0.1"
+				,"windowExtent=75"
+				,"columnSelector=33,166"
+				,"laplacian=true"
+				,"useValidation=false"
+				,"descentDirection=logistic"
+				,"modelFunction="+ ModelFunctions.MODEL_TYPE_FACTORIZATION_MODEL
+				,"annotationBaseDir=" + resourcesDirectory + File.separator + ANNOTATIONDIR
+				,"includeRD=true"
+				//,"runLapTable=run_${u_experimentidentifier}"
+				//,"iterTable=iter_${u_experimentidentifier}"
+				,"smoothReg=0.001"
+				,"smoothWindow=0.001"
+		});
+	}
+	@Test
+	public void testFactorizationModelWithoutRd() {
+		StartAlgorithm.main(new String[] {
+				 "splitFolder=" +  resourcesDirectory + File.separator  + SPLITDIR
+				,"annotator=" + ANNOTATOR
+				,"maxIterations=1"
+				,"stepSize=0.001"
+				,"lambda=0.1"
+				,"windowExtent=75"
+				,"columnSelector=33,166"
+				,"laplacian=true"
+				,"useValidation=true"
+				,"descentDirection=logistic"
+				,"modelFunction="+ ModelFunctions.MODEL_TYPE_FACTORIZATION_MODEL
 				,"annotationBaseDir=" + resourcesDirectory + File.separator + ANNOTATIONDIR
 				,"includeRD=false"
 				//,"runLapTable=run_${u_experimentidentifier}"

@@ -68,9 +68,7 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 	private Matrix[] validationLabels;
 	private float[] validationAnnotations;
 	
-	public AlgorithmController algcon;
-
-
+	private AlgorithmController algcon;
 
 	public void setValidation(DataInterpretation[] folders) throws ModelApplicationException {
 		// SETS VALIDATION DATA ONLY ONCE

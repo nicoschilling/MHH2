@@ -23,6 +23,8 @@ import de.ismll.table.projections.ColumnSubsetMatrixView;
 
 public abstract class ModelFunctions {
 	
+	public static final String MODEL_TYPE_LINEAR_MODEL = "lm";
+	public static final String MODEL_TYPE_FACTORIZATION_MODEL = "fm";
 	private float bestAccuracy;
 	private float bestSampleDiff;
 
@@ -160,10 +162,10 @@ public abstract class ModelFunctions {
 		str = (String) in;
 
 		switch(str) {
-		case "lm":
+		case MODEL_TYPE_LINEAR_MODEL:
 			return new LinearRegressionPrediction();
 
-		case "fm":
+		case MODEL_TYPE_FACTORIZATION_MODEL:
 			return new FmModel();
 
 			//TODO: Add and implement more different Models!!
@@ -250,11 +252,7 @@ public abstract class ModelFunctions {
 	
 	public double computeSigmoid(float x) {
 		return Calculations.computeSigmoid(x);
-//		float exp = (float) Math.exp(-x);
-//		float ret = 1/(1+exp);
-//		return ret;
 	}
-	
 	
 	public float[] computeSigmoids(float[] x) {
 		float[] ret = new float[x.length];
