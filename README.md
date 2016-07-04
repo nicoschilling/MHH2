@@ -1,5 +1,11 @@
 
 
+Dependency Note
+===============
+
+This project requires the native library MyFM-1.0.jar from ISMLL for some parts of the implementation. This library is not yet contained in any public repository.
+During build, it is assumed to be located at /tmp.
+
 
 Usage
 =====
