@@ -2,8 +2,6 @@ package de.ismll.secondversion;
 
 import static org.junit.Assert.*;
 
-import java.io.File;
-
 import static de.ismll.secondversion.DatasetFormat.*;
 
 import org.apache.log4j.Logger;

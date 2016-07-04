@@ -7,12 +7,8 @@ import de.ismll.bootstrap.Parameter;
 import de.ismll.exceptions.ModelApplicationException;
 import de.ismll.mhh.io.DataInterpretation;
 import de.ismll.secondversion.AnalysisResult;
-import de.ismll.secondversion.ApplyMHHModel;
-import de.ismll.secondversion.ApplyMHHModelImpl;
 import de.ismll.storage.StorageException;
-import de.ismll.storage.StorageTarget;
 import de.ismll.storage.StorageTargetFactory;
-import de.ismll.utilities.Props;
 
 public class ApplyModel implements Runnable {
 

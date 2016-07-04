@@ -26,7 +26,6 @@ public class BestAccFinder {
 		
 		float accuracy = 0;
 		float bestAccuracy = 0;
-		@SuppressWarnings("unused")
 		String filename = null;
 		
 		for (File file : files)

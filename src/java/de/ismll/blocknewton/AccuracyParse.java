@@ -2,11 +2,13 @@ package de.ismll.blocknewton;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 import de.ismll.table.Matrices;
 import de.ismll.table.Matrix;
+import de.ismll.table.ReaderConfig;
 import de.ismll.table.impl.DefaultMatrix;
-import de.ismll.table.io.CSV;
+import de.ismll.utilities.Buffer;
 
 
 public class AccuracyParse {
@@ -42,7 +44,10 @@ public class AccuracyParse {
 	public void readAccuracies() throws IOException {
 		for (int i=0 ; i < countSwallow ; i++)
 		{
-			accuracies[i] = CSV.read(new File(Hyperparameters.saveDir+"/accuracies_"+i));
+			try(InputStream newInputStream = Buffer.newInputStream(new File(Hyperparameters.saveDir+"/accuracies_"+i))) {
+				accuracies[i] = Matrices.readDense(newInputStream, ReaderConfig.CSV);
+			} 
+
 		}
 	}
 

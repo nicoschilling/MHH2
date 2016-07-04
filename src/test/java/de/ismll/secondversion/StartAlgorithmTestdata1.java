@@ -3,10 +3,7 @@ package de.ismll.secondversion;
 import static org.junit.Assert.*;
 
 import java.io.File;
-import java.net.URL;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
