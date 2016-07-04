@@ -1,0 +1,10 @@
+
+
+Run regression testing
+
+	./gridSearch.sh ../configurations/bcs.properties ../configurations/test.regression.properties
+
+Shall execute (but likely does not output any meaningful result) ...
+
+
+
