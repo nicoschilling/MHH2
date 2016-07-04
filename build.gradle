@@ -1,0 +1,44 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+
+apply plugin: 'application'
+
+version '1.0'
+group 'de.ismll'
+
+repositories {
+	maven {
+		url ("http://dl.bintray.com/busche/busche-it")
+	}
+	mavenCentral()
+	flatDir {
+       dirs '/tmp'
+   }
+}
+
+
+sourceSets.main.java.srcDir "src/java"
+sourceSets.test.java.srcDir "src/tests/java"
+
+dependencies {
+	compile 'log4j:log4j:1.2.14'
+	compile 'nz.ac.waikato.cms.weka:weka-dev:3.7.12'
+	compile 'commons-dbcp:commons-dbcp:1.4'
+	compile 'postgresql:postgresql:8.4-702.jdbc4'
+	compile 'de.ismll:bootstrap:1.2.0'
+	compile 'de.ismll:matrix:1.2.0'
+	compile 'de.ismll:MyFM:1.0'
+	compile 'net.sf.trove4j:trove4j:3.0.3'
+	
+	testCompile 'junit:junit:4.8.2'
+}
+
+mainClassName = "de.ismll.console.Generic"
+
+
+run {
+	if(project.getProperty("exec.args") != null) {
+		args project.getProperty("exec.args").split()
+	}
+}
+
