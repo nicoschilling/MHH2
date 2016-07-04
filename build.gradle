@@ -36,8 +36,9 @@ dependencies {
 mainClassName = "de.ismll.console.Generic"
 
 run {
-	if(project.hasProperty("exec.args")) {
-		args project.getProperty("exec.args").split()
+	if(null != System.getProperty("exec.args")) {
+		args System.getProperty("exec.args").split()
 	}
+	//println "Command line args to be used: <<" + args + ">>"
 }
 

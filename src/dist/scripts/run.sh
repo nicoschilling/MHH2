@@ -24,22 +24,19 @@ if [ $JAVA_HOME'w' = 'w' ]; then
 	export JAVA_HOME=/usr/java/latest
 fi
 
-cp="."
-for f in `ls *.jar -1`; do
-        cp=${cp}":"${f}
-done
-
 slots=1
  
 
 echo meta.cp=${cp}
 echo meta.date.start=`date`
 if [ -f ../bin/MHH2 ]; then
-	echo "Deployment!"
+#	echo "Deployment!"
 	../bin/MHH2 "$@"
 else
 	cd ../../..
-	gradle run -Pexec.args="$@" 
+	# workaround for issue with gradle passing command line arguments:
+	dd="$@"
+	gradle run -Dexec.args="$dd"
 #java -XX:ParallelGCThreads=${slots} -XX:ConcGCThreads=${slots} -classpath $cp $JAVA_OPTS de.ismll.console.Generic "$@"
 ##### -XX:ParallelGCThreads=${slots} -XX:+UseG1GC -XX:+ScavengeBeforeFullGC -XX:ConcGCThreads=${slots}
 	cd src/dist/scripts
