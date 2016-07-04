@@ -4,6 +4,7 @@ build/
 project.properties
 *~
 .settings/org.eclipse.jdt.core.prefs
+.settings/
 .classpath
 .gradle/
 .settings/org.eclipse.core.resources.prefs
