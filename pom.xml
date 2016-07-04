@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.ismll</groupId>
 	<artifactId>mhh</artifactId>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 
 	<build>
 		<sourceDirectory>src/java</sourceDirectory>
@@ -60,6 +60,7 @@
 	<properties>
 		<maven.compiler.source>1.7</maven.compiler.source>
 		<maven.compiler.target>1.7</maven.compiler.target>
+		<maven.javadoc.failOnError>false</maven.javadoc.failOnError>
 	</properties>
 
       <repositories>
