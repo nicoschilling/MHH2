@@ -579,9 +579,6 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 	/** 
 	 * Predicts Labels of a given swallow as input data, uses learned model parameters,
 	 *  writes the predicted labels into the sample2Labels Matrix
-	 * @param swallow
-	 * @param parameters
-	 * @param predictedLabels
 	 */
 	public void predictLabels(SwallowDS swallow, Vector parameters, Matrix predictedLabels) {
 
@@ -691,14 +688,11 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 	 * Reads a swallow; preprocessing the data, s.t.:
 	 * 
 	 * <ol>
-	 * <li>Data is aggregated (e.g., concatenating FFT and Pressure samples, adding metadata, see {@link #concatenate(DataInterpretation)})
+	 * <li>Data is aggregated (e.g., concatenating FFT and Pressure samples, adding metadata, see concatenate(DataInterpretation)
 	 * <li>Data is narrowed (e.g., removing non-informative samples (between rdend and pmaxsample)
 	 * </ol>
-	 * @param colSelector 
 	 * 
 	 * 
-	 * @return 
-	 * @throws ModelApplicationException 
 	 */
 	public SwallowDS preprocessSwallow(DataInterpretation folder, boolean skipLeading, boolean skipBetween)
 			throws ModelApplicationException {
@@ -814,8 +808,6 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 
 	/**
 	 * Returns the absolute Annotation for a given Swallow in a Read Folder Object. If there is no annotation, "NaN" will be returned
-	 * @param folder
-	 * @return
 	 */
 	public int getAnnotation(DataInterpretation folder) {
 		int restitutionszeitSample;
@@ -845,16 +837,13 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 	 * Reads a (test) swallow; preprocessing the data, s.t.:
 	 * 
 	 * <ol>
-	 * <li>Data is aggregated (e.g., concatenating FFT and Pressure samples, adding metadata, see {@link #concatenate(DataInterpretation)})
+	 * <li>Data is aggregated (e.g., concatenating FFT and Pressure samples, adding metadata, see concatenate)
 	 * <li>Data is narrowed (e.g., removing non-informative samples (between rdend and pmaxsample)
 	 * <li>RuheDruck is ectracted
 	 * <li>Labeling data (based on annotation) 
 	 * </ol>
-	 * @param colSelector 
 	 * 
 	 * 
-	 * @return 
-	 * @throws ModelApplicationException 
 	 */
 	public SwallowDS preprocessTestSwallow(DataInterpretation folder, int annotation, boolean skipLeading, boolean skipBetween) throws ModelApplicationException {
 		SwallowDS ret = new SwallowDS();
@@ -1062,7 +1051,6 @@ public class ApplyMHHModelImpl implements ApplyMHHModel {
 	}
 
 	/**
-	 * @param directory
 	 * @return a valid object instance
 	 * @throws IOException if file reading fails
 	 */

@@ -437,8 +437,6 @@ public class AlgorithmController  implements Runnable{
 	 * Computes the column-wise maximum's index of a given Matrix, returning the lower index if multiple maxima are found.
 	 * Beware: excludes the 0.th column
 	 * 	
-	 * @param in 
-	 * @return
 	 */
 	public static int argmax(Matrix in) {
 		int numRows = in.getNumRows();
@@ -473,8 +471,6 @@ public class AlgorithmController  implements Runnable{
 
 	/** 
 	 * Computes the row-wise maximum of a given matrix! Row wise means the maximum for each row is computed, a vector with length being equal to numrows is returned!
-	 * @param in 
-	 * @return
 	 */
 	public static float[] getTheMaxCurve(Matrix in) {
 		int numRows = in.getNumRows();
@@ -498,11 +494,8 @@ public class AlgorithmController  implements Runnable{
 
 	/**
 	 * Concatenates the Data of a given Read Folder Object, normalizes the data and includes meta data!
-	 * @param folder
 	 * @param restitutionszeitSample if <0, ignore the annotation and return a dummy (const) column
-	 * @param normalize 
 	 * @return Matrix of normalized pressure, fft and meta
-	 * @throws ModelApplicationException 
 	 */
 	public  Matrix concatenate(Logger log, DataInterpretation folder, int restitutionszeitSample, boolean normalize)
 			throws ModelApplicationException {
@@ -513,12 +506,9 @@ public class AlgorithmController  implements Runnable{
 
 	/**
 	 * Concatenates the Data of a given Read Folder Object, normalizes the data and includes meta data!
-	 * @param folder
 	 * @param restitutionszeitSample if <0, ignore the annotation and return a dummy (const) column
-	 * @param normalize 
 	 * @param pmaxSample if < 0 wont be used but will be computed, otherwise it will be used!
 	 * @return Matrix of normalized pressure, fft and meta
-	 * @throws ModelApplicationException 
 	 */
 	public  Matrix concatenate(Logger log, DataInterpretation folder, 
 			int restitutionszeitSample,
@@ -698,9 +688,7 @@ public class AlgorithmController  implements Runnable{
 
 	/**
 	 * Concatenates the Data of a given Read Folder Object, normalizes the data and includes meta data!
-	 * @param folder
 	 * @param restitutionszeitSample if <0, ignore the annotation and return a dummy (const) column
-	 * @param normalize 
 	 * @return Matrix of normalized pressure, fft and meta
 	 */
 	public static float[] concatenateForPmax(Logger log, DataInterpretation folder, int restitutionszeitSample,
@@ -842,7 +830,6 @@ public class AlgorithmController  implements Runnable{
 
 	/**
 	 * Computes average Labels according to windowExtent. Can then be used for deducing the annotation
-	 * @param windowExtent, predictedLabels, avgLabels
 	 */
 	@SuppressWarnings("cast")
 	public static void computeSample2avgLabel( int windowExtent, Matrix predictedLabels, Matrix avgLabels) {
@@ -944,7 +931,6 @@ public class AlgorithmController  implements Runnable{
 	
 	/**
 	 * Computes average Labels according to windowExtent. Can then be used for deducing the annotation
-	 * @param windowExtent, predictedLabels, avgLabels
 	 */
 	@SuppressWarnings("cast")
 	public static void newComputeSample2avgLabel( int windowExtent, Matrix predictedLabels, Matrix avgLabels) {
@@ -996,8 +982,6 @@ public class AlgorithmController  implements Runnable{
 
 	/**
 	 * Computes for a given sample2Label Matrix the Annotation!
-	 * @param labels
-	 * @return
 	 */
 	public static int predictAnnotation(Matrix sample2labels, Logger log) {
 		int annotation = 0;

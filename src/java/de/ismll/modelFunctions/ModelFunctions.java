@@ -225,9 +225,6 @@ public abstract class ModelFunctions {
 
 	/**
 	 * Returns an array of predicted values given a dataset and parameters.
-	 * @param data
-	 * @param parameters
-	 * @return
 	 */
 	public float[] evaluate(float[][] data, float[] parameters) {
 		log.fatal("The chosen model function does not implement evaluate()");
@@ -237,8 +234,6 @@ public abstract class ModelFunctions {
 
 	/**
 	 * Morphs the output of evaluate into categorical variables, i.e. for binary classificiation doing logistic regression
-	 * @param predict
-	 * @return
 	 */
 	public float[] predictAsClassification(float[] predict) {
 		float[] ret = new float[predict.length];

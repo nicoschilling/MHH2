@@ -17,14 +17,8 @@ import de.ismll.table.io.weka.ArffEncoder;
 import de.ismll.table.io.weka.ArffEncoder.Type;
 import de.ismll.utilities.Tools;
 
-
-
 public class MergeData {
 
-	/**
-	 * @param args
-	 * @throws IOException 
-	 */
 	public static void main(String[] args) throws IOException {
 
 		int proband = 3;

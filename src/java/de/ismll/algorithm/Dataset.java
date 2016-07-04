@@ -41,9 +41,6 @@ public class Dataset {
 
 	/**
 	 * Returns the number of instances and variables of the Dataset specified by the file given
-	 * @param file
-	 * @param filetype
-	 * @return 
 	 */
 	public int[] readDimensions(File file, Filetype filetype, String delimiter) {
 		switch(filetype) {
@@ -133,8 +130,6 @@ public class Dataset {
 	/**
 	 * Reads the whole Data and builds a float-array out of it!
 	 * @param file File that contains the Data.
-	 * @param filetype
-	 * @param delimiter 
 	 */
 	public float[][] readData(File file, Filetype filetype, String delimiter)
 	{

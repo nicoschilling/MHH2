@@ -85,8 +85,6 @@ public class IntRange {
 
 	/**
 	 * Converts a String to an IntRange Object. Intervals on used indexes are seperated by a comma, you can use a semicolon to use more than one interval. Example: 1,5;15,22 will use the indexes 1 to 5 and 15 to 22
-	 * @param in
-	 * @return
 	 */
 	public static IntRange convert(Object in) {
 		String use;

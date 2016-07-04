@@ -277,9 +277,6 @@ public class DataInterpretation extends SwallowData implements Runnable{
 
 	/**
 	 * Returns the absolute Annotation for a given Swallow in a Read Folder Object. If there is no annotation, "NaN" will be returned
-	 * @param annotationBaseDir
-	 * @param annotator
-	 * @return
 	 */
 	public int getAnnotatedRestitutionTimeSample(String annotationBaseDir, String annotator) {
 		if (annotatedRestitutionTimeSample >= 0 )
